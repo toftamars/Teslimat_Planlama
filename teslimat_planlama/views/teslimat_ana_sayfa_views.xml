@@ -57,6 +57,11 @@
                                     <field name="durum_text"/>
                                     <field name="durum_icon" readonly="1"/>
                                     <field name="doluluk_bar" widget="html"/>
+                                    <button name="action_teslimat_olustur" 
+                                            string="📝 Oluştur" 
+                                            type="object" 
+                                            class="btn-primary"
+                                            attrs="{'invisible': [('durum', '=', 'dolu'), ('kalan_kapasite', '<=', 0)]}"/>
                                 </tree>
                             </field>
                         </page>

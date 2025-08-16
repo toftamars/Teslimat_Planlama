@@ -82,3 +82,30 @@ class TeslimatAnaSayfaTarih(models.Model):
             raise AccessError("Bu kayıtları silmek için yönetici yetkisi gereklidir!")
         
         return super().unlink()
+    
+    def action_teslimat_olustur(self):
+        """Seçilen tarih için teslimat belgesi oluştur"""
+        self.ensure_one()
+        
+        # Ana sayfa bilgilerini al
+        ana_sayfa = self.ana_sayfa_id
+        if not ana_sayfa or not ana_sayfa.arac_id or not ana_sayfa.ilce_id:
+            raise AccessError("Gerekli bilgiler eksik!")
+        
+        # Teslimat belgesi oluştur
+        teslimat_belgesi = self.env['teslimat.belgesi'].create({
+            'arac_id': ana_sayfa.arac_id.id,
+            'ilce_id': ana_sayfa.ilce_id.id,
+            'teslimat_tarihi': self.tarih,
+            'durum': 'hazir',
+            'aciklama': f"{self.gun_adi} - {ana_sayfa.ilce_id.name} ilçesi için otomatik oluşturuldu"
+        })
+        
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'teslimat.belgesi',
+            'res_id': teslimat_belgesi.id,
+            'view_mode': 'form',
+            'target': 'current',
+            'name': f'Teslimat Belgesi - {self.tarih}'
+        }
