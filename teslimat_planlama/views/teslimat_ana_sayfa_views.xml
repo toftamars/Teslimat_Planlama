@@ -17,7 +17,8 @@
                     <group>
                         <group>
                             <field name="sorgu_tarihi" widget="date"/>
-                            <field name="ilce_id" domain="[('aktif', '=', True)]"/>
+                            <field name="ilce_id" domain="[('aktif', '=', True), ('teslimat_aktif', '=', True)]" 
+                                   options="{'no_create': True, 'no_edit': True}"/>
                         </group>
                         <group>
                             <field name="gun_id" readonly="1"/>

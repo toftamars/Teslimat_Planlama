@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- İstanbul Şehri -->
+        <record id="istanbul_sehir" model="teslimat.sehir">
+            <field name="name">İstanbul</field>
+            <field name="ulke_kodu">TR</field>
+            <field name="aktif">True</field>
+        </record>
+        
+        <!-- İstanbul İlçeleri - Anadolu Yakası -->
+        <record id="maltepe_ilce" model="teslimat.ilce">
+            <field name="name">Maltepe</field>
+            <field name="sehir_id" ref="istanbul_sehir"/>
+            <field name="yaka_tipi">anadolu</field>
+            <field name="aktif">True</field>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="kartal_ilce" model="teslimat.ilce">
+            <field name="name">Kartal</field>
+            <field name="sehir_id" ref="istanbul_sehir"/>
+            <field name="yaka_tipi">anadolu</field>
+            <field name="aktif">True</field>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="pendik_ilce" model="teslimat.ilce">
+            <field name="name">Pendik</field>
+            <field name="sehir_id" ref="istanbul_sehir"/>
+            <field name="yaka_tipi">anadolu</field>
+            <field name="aktif">True</field>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="uskudar_ilce" model="teslimat.ilce">
+            <field name="name">Üsküdar</field>
+            <field name="sehir_id" ref="istanbul_sehir"/>
+            <field name="yaka_tipi">anadolu</field>
+            <field name="aktif">True</field>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="kadikoy_ilce" model="teslimat.ilce">
+            <field name="name">Kadıköy</field>
+            <field name="sehir_id" ref="istanbul_sehir"/>
+            <field name="yaka_tipi">anadolu</field>
+            <field name="aktif">True</field>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <!-- İstanbul İlçeleri - Avrupa Yakası -->
+        <record id="beyoglu_ilce" model="teslimat.ilce">
+            <field name="name">Beyoğlu</field>
+            <field name="sehir_id" ref="istanbul_sehir"/>
+            <field name="yaka_tipi">avrupa</field>
+            <field name="aktif">True</field>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="sisli_ilce" model="teslimat.ilce">
+            <field name="name">Şişli</field>
+            <field name="sehir_id" ref="istanbul_sehir"/>
+            <field name="yaka_tipi">avrupa</field>
+            <field name="aktif">True</field>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="besiktas_ilce" model="teslimat.ilce">
+            <field name="name">Beşiktaş</field>
+            <field name="sehir_id" ref="istanbul_sehir"/>
+            <field name="yaka_tipi">avrupa</field>
+            <field name="aktif">True</field>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="bakirkoy_ilce" model="teslimat.ilce">
+            <field name="name">Bakırköy</field>
+            <field name="sehir_id" ref="istanbul_sehir"/>
+            <field name="yaka_tipi">avrupa</field>
+            <field name="aktif">True</field>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="bahcelievler_ilce" model="teslimat.ilce">
+            <field name="name">Bahçelievler</field>
+            <field name="sehir_id" ref="istanbul_sehir"/>
+            <field name="yaka_tipi">avrupa</field>
+            <field name="aktif">True</field>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <!-- Teslimat Günleri -->
+        <record id="pazartesi_gun" model="teslimat.gun">
+            <field name="name">Pazartesi</field>
+            <field name="gun_kodu">pazartesi</field>
+            <field name="sequence">10</field>
+            <field name="aktif">True</field>
+            <field name="gunluk_maksimum_teslimat">50</field>
+            <field name="yaka_tipi">her_ikisi</field>
+        </record>
+        
+        <record id="sali_gun" model="teslimat.gun">
+            <field name="name">Salı</field>
+            <field name="gun_kodu">sali</field>
+            <field name="sequence">20</field>
+            <field name="aktif">True</field>
+            <field name="gunluk_maksimum_teslimat">50</field>
+            <field name="yaka_tipi">her_ikisi</field>
+        </record>
+        
+        <record id="carsamba_gun" model="teslimat.gun">
+            <field name="name">Çarşamba</field>
+            <field name="gun_kodu">carsamba</field>
+            <field name="sequence">30</field>
+            <field name="aktif">True</field>
+            <field name="gunluk_maksimum_teslimat">50</field>
+            <field name="yaka_tipi">her_ikisi</field>
+        </record>
+        
+        <record id="persembe_gun" model="teslimat.gun">
+            <field name="name">Perşembe</field>
+            <field name="gun_kodu">persembe</field>
+            <field name="sequence">40</field>
+            <field name="aktif">True</field>
+            <field name="gunluk_maksimum_teslimat">50</field>
+            <field name="yaka_tipi">her_ikisi</field>
+        </record>
+        
+        <record id="cuma_gun" model="teslimat.gun">
+            <field name="name">Cuma</field>
+            <field name="gun_kodu">cuma</field>
+            <field name="sequence">50</field>
+            <field name="aktif">True</field>
+            <field name="gunluk_maksimum_teslimat">50</field>
+            <field name="yaka_tipi">her_ikisi</field>
+        </record>
+        
+        <record id="cumartesi_gun" model="teslimat.gun">
+            <field name="name">Cumartesi</field>
+            <field name="gun_kodu">cumartesi</field>
+            <field name="sequence">60</field>
+            <field name="aktif">True</field>
+            <field name="gunluk_maksimum_teslimat">50</field>
+            <field name="yaka_tipi">her_ikisi</field>
+        </record>
+        
+        <!-- Teslimat Araçları -->
+        <record id="anadolu_arac" model="teslimat.arac">
+            <field name="name">Anadolu Yakası Araç</field>
+            <field name="arac_tipi">anadolu_yakasi</field>
+            <field name="gunluk_teslimat_limiti">7</field>
+            <field name="aktif">True</field>
+        </record>
+        
+        <record id="avrupa_arac" model="teslimat.arac">
+            <field name="name">Avrupa Yakası Araç</field>
+            <field name="arac_tipi">avrupa_yakasi</field>
+            <field name="gunluk_teslimat_limiti">7</field>
+            <field name="aktif">True</field>
+        </record>
+        
+        <record id="kucuk_arac_1" model="teslimat.arac">
+            <field name="name">Küçük Araç 1</field>
+            <field name="arac_tipi">kucuk_arac_1</field>
+            <field name="gunluk_teslimat_limiti">5</field>
+            <field name="aktif">True</field>
+        </record>
+        
+        <record id="kucuk_arac_2" model="teslimat.arac">
+            <field name="name">Küçük Araç 2</field>
+            <field name="arac_tipi">kucuk_arac_2</field>
+            <field name="gunluk_teslimat_limiti">5</field>
+            <field name="aktif">True</field>
+        </record>
+        
+        <record id="ek_arac" model="teslimat.arac">
+            <field name="name">Ek Araç</field>
+            <field name="arac_tipi">ek_arac</field>
+            <field name="gunluk_teslimat_limiti">3</field>
+            <field name="aktif">True</field>
+        </record>
+    </data>
+</odoo>

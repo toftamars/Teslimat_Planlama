@@ -25,6 +25,7 @@
                'data': [
                'security/ir.model.access.csv',
                'data/ir_sequence_data.xml',
+               'data/demo_data.xml',
                'views/teslimat_planlama_views.xml',
                'views/teslimat_ana_sayfa_views.xml',
                'views/menu_views.xml',
