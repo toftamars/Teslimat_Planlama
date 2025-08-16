@@ -61,7 +61,7 @@
                                             string="📝 Oluştur" 
                                             type="object" 
                                             class="btn-primary"
-                                            attrs="{'invisible': [('durum', '=', 'dolu'), ('kalan_kapasite', '<=', 0)]}"/>
+                                            attrs="{'invisible': [('olustur_butonu_goster', '=', False)]}"/>
                                 </tree>
                             </field>
                         </page>
