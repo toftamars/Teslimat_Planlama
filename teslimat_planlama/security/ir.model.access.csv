@@ -3,3 +3,5 @@ access_teslimat_planlama_user,teslimat.planlama.user,model_teslimat_planlama,bas
 access_teslimat_planlama_manager,teslimat.planlama.manager,model_teslimat_planlama,stock.group_stock_manager,1,1,1,1
 access_teslimat_transfer_user,teslimat.transfer.user,model_teslimat_transfer,base.group_user,1,1,1,0
 access_teslimat_transfer_manager,teslimat.transfer.manager,model_teslimat_transfer,stock.group_stock_manager,1,1,1,1
+access_teslimat_ana_sayfa_user,teslimat.ana.sayfa.user,model_teslimat_ana_sayfa,base.group_user,1,1,1,0
+access_teslimat_ana_sayfa_manager,teslimat.ana.sayfa.manager,model_teslimat_ana_sayfa,stock.group_stock_manager,1,1,1,1

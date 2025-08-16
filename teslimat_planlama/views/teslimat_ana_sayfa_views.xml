@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Ana Sayfa Form View -->
+    <record id="view_teslimat_ana_sayfa_form" model="ir.ui.view">
+        <field name="name">teslimat.ana.sayfa.form</field>
+        <field name="model">teslimat.ana.sayfa</field>
+        <field name="arch" type="xml">
+            <form string="Teslimat Ana Sayfa - Kapasite Sorgulama">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <span>📊 Teslimat Kapasite Sorgulama</span>
+                        </h1>
+                    </div>
+                    
+                    <!-- Sorgulama Alanları -->
+                    <group>
+                        <group>
+                            <field name="sorgu_tarihi" widget="date"/>
+                            <field name="ilce_id" domain="[('aktif', '=', True)]"/>
+                        </group>
+                        <group>
+                            <field name="gun_id" readonly="1"/>
+                            <field name="ilce_uygun_mu" readonly="1"/>
+                        </group>
+                    </group>
+                    
+                    <!-- Sorgula Butonu -->
+                    <group>
+                        <button name="action_sorgula" 
+                                string="🔍 Sorgula" 
+                                type="object" 
+                                class="btn-primary"
+                                attrs="{'invisible': [('ilce_id', '=', False)]}"/>
+                    </group>
+                    
+                    <!-- Sonuç Alanları -->
+                    <notebook>
+                        <page string="📊 İlçe Kapasitesi" attrs="{'invisible': [('ilce_uygun_mu', '=', False)]}">
+                            <group>
+                                <group>
+                                    <field name="toplam_kapasite" readonly="1"/>
+                                    <field name="kullanilan_kapasite" readonly="1"/>
+                                </group>
+                                <group>
+                                    <field name="kalan_kapasite" readonly="1"/>
+                                    <field name="teslimat_sayisi" readonly="1"/>
+                                </group>
+                            </group>
+                            
+                            <!-- Uygun Araçlar -->
+                            <field name="uygun_araclar" readonly="1">
+                                <tree>
+                                    <field name="name"/>
+                                    <field name="arac_tipi"/>
+                                    <field name="gunluk_teslimat_limiti"/>
+                                    <field name="mevcut_kapasite"/>
+                                    <field name="kalan_kapasite"/>
+                                    <field name="aktif"/>
+                                </tree>
+                            </field>
+                        </page>
+                        
+                        <page string="🌟 Günlük Genel Kapasite" attrs="{'invisible': [('gun_id', '=', False)]}">
+                            <group>
+                                <group>
+                                    <field name="gunluk_toplam_kapasite" readonly="1"/>
+                                    <field name="gunluk_kullanilan_kapasite" readonly="1"/>
+                                </group>
+                                <group>
+                                    <field name="gunluk_kalan_kapasite" readonly="1"/>
+                                    <field name="gunluk_teslimat_sayisi" readonly="1"/>
+                                </group>
+                            </group>
+                            
+                            <!-- Yaka Bazlı Kapasite -->
+                            <group string="🗺️ Yaka Bazlı Kapasite">
+                                <group>
+                                    <field name="anadolu_yaka_kapasite" readonly="1"/>
+                                </group>
+                                <group>
+                                    <field name="avrupa_yaka_kapasite" readonly="1"/>
+                                </group>
+                            </group>
+                        </page>
+                        
+                        <page string="ℹ️ Uygunluk Bilgisi">
+                            <field name="uygunluk_mesaji" readonly="1" nolabel="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Ana Sayfa Action -->
+    <record id="action_teslimat_ana_sayfa" model="ir.actions.act_window">
+        <field name="name">Ana Sayfa</field>
+        <field name="res_model">teslimat.ana.sayfa</field>
+        <field name="view_mode">form</field>
+        <field name="target">current</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                📊 Teslimat kapasite sorgulama sayfasına hoş geldiniz!
+            </p>
+            <p>
+                Tarih ve ilçe seçerek kapasite bilgilerini sorgulayabilirsiniz.
+            </p>
+        </field>
+    </record>
+
+    <!-- Ana Sayfa Menu -->
+    <menuitem id="menu_teslimat_ana_sayfa"
+              name="🏠 Ana Sayfa"
+              parent="menu_teslimat_planlama_root"
+              action="action_teslimat_ana_sayfa"
+              sequence="1"/>
+</odoo>
