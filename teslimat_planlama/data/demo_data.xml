@@ -8,7 +8,7 @@
             <field name="aktif">True</field>
         </record>
         
-        <!-- İstanbul İlçeleri - Anadolu Yakası -->
+        <!-- İstanbul İlçeleri - Anadolu Yakası (13 ilçe) -->
         <record id="maltepe_ilce" model="teslimat.ilce">
             <field name="name">Maltepe</field>
             <field name="sehir_id" ref="istanbul_sehir"/>
@@ -33,6 +33,14 @@
             <field name="teslimat_aktif">True</field>
         </record>
         
+        <record id="tuzla_ilce" model="teslimat.ilce">
+            <field name="name">Tuzla</field>
+            <field name="sehir_id" ref="istanbul_sehir"/>
+            <field name="yaka_tipi">anadolu</field>
+            <field name="aktif">True</field>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
         <record id="uskudar_ilce" model="teslimat.ilce">
             <field name="name">Üsküdar</field>
             <field name="sehir_id" ref="istanbul_sehir"/>
@@ -49,7 +57,63 @@
             <field name="teslimat_aktif">True</field>
         </record>
         
-        <!-- İstanbul İlçeleri - Avrupa Yakası -->
+        <record id="atasehir_ilce" model="teslimat.ilce">
+            <field name="name">Ataşehir</field>
+            <field name="sehir_id" ref="istanbul_sehir"/>
+            <field name="yaka_tipi">anadolu</field>
+            <field name="aktif">True</field>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="umraniye_ilce" model="teslimat.ilce">
+            <field name="name">Ümraniye</field>
+            <field name="sehir_id" ref="istanbul_sehir"/>
+            <field name="yaka_tipi">anadolu</field>
+            <field name="aktif">True</field>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="sancaktepe_ilce" model="teslimat.ilce">
+            <field name="name">Sancaktepe</field>
+            <field name="sehir_id" ref="istanbul_sehir"/>
+            <field name="yaka_tipi">anadolu</field>
+            <field name="aktif">True</field>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="cekmekoy_ilce" model="teslimat.ilce">
+            <field name="name">Çekmeköy</field>
+            <field name="sehir_id" ref="istanbul_sehir"/>
+            <field name="yaka_tipi">anadolu</field>
+            <field name="aktif">True</field>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="beykoz_ilce" model="teslimat.ilce">
+            <field name="name">Beykoz</field>
+            <field name="sehir_id" ref="istanbul_sehir"/>
+            <field name="yaka_tipi">anadolu</field>
+            <field name="aktif">True</field>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="sile_ilce" model="teslimat.ilce">
+            <field name="name">Şile</field>
+            <field name="sehir_id" ref="istanbul_sehir"/>
+            <field name="yaka_tipi">anadolu</field>
+            <field name="aktif">True</field>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="sultanbeyli_ilce" model="teslimat.ilce">
+            <field name="name">Sultanbeyli</field>
+            <field name="sehir_id" ref="istanbul_sehir"/>
+            <field name="yaka_tipi">anadolu</field>
+            <field name="aktif">True</field>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <!-- İstanbul İlçeleri - Avrupa Yakası (23 ilçe) -->
         <record id="beyoglu_ilce" model="teslimat.ilce">
             <field name="name">Beyoğlu</field>
             <field name="sehir_id" ref="istanbul_sehir"/>
@@ -74,6 +138,22 @@
             <field name="teslimat_aktif">True</field>
         </record>
         
+        <record id="kagithane_ilce" model="teslimat.ilce">
+            <field name="name">Kağıthane</field>
+            <field name="sehir_id" ref="istanbul_sehir"/>
+            <field name="yaka_tipi">avrupa</field>
+            <field name="aktif">True</field>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="sariyer_ilce" model="teslimat.ilce">
+            <field name="name">Sarıyer</field>
+            <field name="sehir_id" ref="istanbul_sehir"/>
+            <field name="yaka_tipi">avrupa</field>
+            <field name="aktif">True</field>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
         <record id="bakirkoy_ilce" model="teslimat.ilce">
             <field name="name">Bakırköy</field>
             <field name="sehir_id" ref="istanbul_sehir"/>
@@ -84,6 +164,142 @@
         
         <record id="bahcelievler_ilce" model="teslimat.ilce">
             <field name="name">Bahçelievler</field>
+            <field name="sehir_id" ref="istanbul_sehir"/>
+            <field name="yaka_tipi">avrupa</field>
+            <field name="aktif">True</field>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="gungoren_ilce" model="teslimat.ilce">
+            <field name="name">Güngören</field>
+            <field name="sehir_id" ref="istanbul_sehir"/>
+            <field name="yaka_tipi">avrupa</field>
+            <field name="aktif">True</field>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="esenler_ilce" model="teslimat.ilce">
+            <field name="name">Esenler</field>
+            <field name="sehir_id" ref="istanbul_sehir"/>
+            <field name="yaka_tipi">avrupa</field>
+            <field name="aktif">True</field>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="bagcilar_ilce" model="teslimat.ilce">
+            <field name="name">Bağcılar</field>
+            <field name="sehir_id" ref="istanbul_sehir"/>
+            <field name="yaka_tipi">avrupa</field>
+            <field name="aktif">True</field>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="eyupsultan_ilce" model="teslimat.ilce">
+            <field name="name">Eyüpsultan</field>
+            <field name="sehir_id" ref="istanbul_sehir"/>
+            <field name="yaka_tipi">avrupa</field>
+            <field name="aktif">True</field>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="gaziosmanpasa_ilce" model="teslimat.ilce">
+            <field name="name">Gaziosmanpaşa</field>
+            <field name="sehir_id" ref="istanbul_sehir"/>
+            <field name="yaka_tipi">avrupa</field>
+            <field name="aktif">True</field>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="kucukcekmece_ilce" model="teslimat.ilce">
+            <field name="name">Küçükçekmece</field>
+            <field name="sehir_id" ref="istanbul_sehir"/>
+            <field name="yaka_tipi">avrupa</field>
+            <field name="aktif">True</field>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="avcilar_ilce" model="teslimat.ilce">
+            <field name="name">Avcılar</field>
+            <field name="sehir_id" ref="istanbul_sehir"/>
+            <field name="yaka_tipi">avrupa</field>
+            <field name="aktif">True</field>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="basaksehir_ilce" model="teslimat.ilce">
+            <field name="name">Başakşehir</field>
+            <field name="sehir_id" ref="istanbul_sehir"/>
+            <field name="yaka_tipi">avrupa</field>
+            <field name="aktif">True</field>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="sultangazi_ilce" model="teslimat.ilce">
+            <field name="name">Sultangazi</field>
+            <field name="sehir_id" ref="istanbul_sehir"/>
+            <field name="yaka_tipi">avrupa</field>
+            <field name="aktif">True</field>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="arnavutkoy_ilce" model="teslimat.ilce">
+            <field name="name">Arnavutköy</field>
+            <field name="sehir_id" ref="istanbul_sehir"/>
+            <field name="yaka_tipi">avrupa</field>
+            <field name="aktif">True</field>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="fatih_ilce" model="teslimat.ilce">
+            <field name="name">Fatih</field>
+            <field name="sehir_id" ref="istanbul_sehir"/>
+            <field name="yaka_tipi">avrupa</field>
+            <field name="aktif">True</field>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="zeytinburnu_ilce" model="teslimat.ilce">
+            <field name="name">Zeytinburnu</field>
+            <field name="sehir_id" ref="istanbul_sehir"/>
+            <field name="yaka_tipi">avrupa</field>
+            <field name="aktif">True</field>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="bayrampasa_ilce" model="teslimat.ilce">
+            <field name="name">Bayrampaşa</field>
+            <field name="sehir_id" ref="istanbul_sehir"/>
+            <field name="yaka_tipi">avrupa</field>
+            <field name="aktif">True</field>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="esenyurt_ilce" model="teslimat.ilce">
+            <field name="name">Esenyurt</field>
+            <field name="sehir_id" ref="istanbul_sehir"/>
+            <field name="yaka_tipi">avrupa</field>
+            <field name="aktif">True</field>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="beylikduzu_ilce" model="teslimat.ilce">
+            <field name="name">Beylikdüzü</field>
+            <field name="sehir_id" ref="istanbul_sehir"/>
+            <field name="yaka_tipi">avrupa</field>
+            <field name="aktif">True</field>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="silivri_ilce" model="teslimat.ilce">
+            <field name="name">Silivri</field>
+            <field name="sehir_id" ref="istanbul_sehir"/>
+            <field name="yaka_tipi">avrupa</field>
+            <field name="aktif">True</field>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="catalca_ilce" model="teslimat.ilce">
+            <field name="name">Çatalca</field>
             <field name="sehir_id" ref="istanbul_sehir"/>
             <field name="yaka_tipi">avrupa</field>
             <field name="aktif">True</field>
