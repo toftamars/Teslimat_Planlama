@@ -40,17 +40,17 @@
                     <!-- Sonuç Alanları -->
                     <notebook>
                         <page string="📅 Tarih Bazlı Kapasite" attrs="{'invisible': [('ilce_uygun_mu', '=', False)]}">
-                            <field name="tarih_listesi" readonly="1">
+                            <field name="tarih_listesi">
                                 <tree>
-                                    <field name="tarih"/>
-                                    <field name="gun_adi"/>
-                                    <field name="teslimat_sayisi"/>
-                                    <field name="toplam_kapasite"/>
-                                    <field name="kalan_kapasite"/>
-                                    <field name="doluluk_orani" widget="percentage"/>
-                                    <field name="durum_text"/>
+                                    <field name="tarih" readonly="1"/>
+                                    <field name="gun_adi" readonly="1"/>
+                                    <field name="teslimat_sayisi" readonly="1"/>
+                                    <field name="toplam_kapasite" readonly="1"/>
+                                    <field name="kalan_kapasite" readonly="1"/>
+                                    <field name="doluluk_orani" widget="percentage" readonly="1"/>
+                                    <field name="durum_text" readonly="1"/>
                                     <field name="durum_icon" readonly="1"/>
-                                    <field name="doluluk_bar" widget="html"/>
+                                    <field name="doluluk_bar" widget="html" readonly="1"/>
                                     <button name="action_teslimat_olustur" 
                                             string="📝 Oluştur" 
                                             type="object" 
