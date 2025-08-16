@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Ana Menu -->
+    <menuitem id="menu_teslimat_planlama_root" 
+              name="Teslimat Planlama" 
+              sequence="50"/>
+
+    <!-- Alt Menüler -->
+    <menuitem id="menu_teslimat_planlama" 
+              name="Planlamalar" 
+              parent="menu_teslimat_planlama_root" 
+              sequence="10"/>
+
+    <menuitem id="menu_teslimat_transfer" 
+              name="Transferler" 
+              parent="menu_teslimat_planlama_root" 
+              sequence="20"/>
+
+    <!-- Action Menüleri -->
+    <menuitem id="menu_action_teslimat_planlama" 
+              name="Teslimat Planlamaları" 
+              parent="menu_teslimat_planlama" 
+              action="action_teslimat_planlama" 
+              sequence="10"/>
+
+    <menuitem id="menu_action_teslimat_transfer" 
+              name="Teslimat Transferler" 
+              parent="menu_teslimat_transfer" 
+              action="action_teslimat_transfer" 
+              sequence="10"/>
+</odoo>

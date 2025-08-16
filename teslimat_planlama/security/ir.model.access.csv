@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_teslimat_planlama_user,teslimat.planlama.user,model_teslimat_planlama,base.group_user,1,1,1,0
+access_teslimat_planlama_manager,teslimat.planlama.manager,model_teslimat_planlama,stock.group_stock_manager,1,1,1,1
+access_teslimat_transfer_user,teslimat.transfer.user,model_teslimat_transfer,base.group_user,1,1,1,0
+access_teslimat_transfer_manager,teslimat.transfer.manager,model_teslimat_transfer,stock.group_stock_manager,1,1,1,1

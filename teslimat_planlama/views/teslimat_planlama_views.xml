@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Teslimat Planlama Tree View -->
+    <record id="view_teslimat_planlama_tree" model="ir.ui.view">
+        <field name="name">teslimat.planlama.tree</field>
+        <field name="model">teslimat.planlama</field>
+        <field name="arch" type="xml">
+            <tree string="Teslimat Planlamaları">
+                <field name="name"/>
+                <field name="tarih"/>
+                <field name="durum"/>
+                <field name="toplam_transfer"/>
+                <field name="toplam_urun"/>
+                <field name="baslangic_tarihi"/>
+                <field name="bitis_tarihi"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Teslimat Planlama Form View -->
+    <record id="view_teslimat_planlama_form" model="ir.ui.view">
+        <field name="name">teslimat.planlama.form</field>
+        <field name="model">teslimat.planlama</field>
+        <field name="arch" type="xml">
+            <form string="Teslimat Planlaması">
+                <header>
+                    <button name="action_onayla" string="Onayla" type="object" 
+                            class="oe_highlight" states="taslak"/>
+                    <button name="action_baslat" string="Başlat" type="object" 
+                            class="oe_highlight" states="onaylandi"/>
+                    <button name="action_tamamla" string="Tamamla" type="object" 
+                            class="oe_highlight" states="calisiyor"/>
+                    <button name="action_iptal" string="İptal" type="object" 
+                            states="taslak,onaylandi,calisiyor"/>
+                    <field name="durum" widget="statusbar" 
+                           statusbar_visible="taslak,onaylandi,calisiyor,tamamlandi"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Plan Adı"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="tarih"/>
+                            <field name="baslangic_tarihi"/>
+                            <field name="bitis_tarihi"/>
+                        </group>
+                        <group>
+                            <field name="toplam_transfer"/>
+                            <field name="toplam_urun"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Müşteriler">
+                            <field name="musteri_ids" widget="many2many_tags"/>
+                        </page>
+                        <page string="Ürünler">
+                            <field name="urun_ids" widget="many2many_tags"/>
+                        </page>
+                        <page string="Transferler">
+                            <field name="transfer_ids">
+                                <tree editable="bottom">
+                                    <field name="sira_no"/>
+                                    <field name="transfer_no"/>
+                                    <field name="name"/>
+                                    <field name="musteri_id"/>
+                                    <field name="kaynak_konum"/>
+                                    <field name="hedef_konum"/>
+                                    <field name="urun_id"/>
+                                    <field name="miktar"/>
+                                    <field name="birim"/>
+                                    <field name="planlanan_tarih"/>
+                                    <field name="durum"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="Notlar">
+                            <field name="notlar" placeholder="Teslimat planlama notları..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Teslimat Planlama Search View -->
+    <record id="view_teslimat_planlama_search" model="ir.ui.view">
+        <field name="name">teslimat.planlama.search</field>
+        <field name="model">teslimat.planlama</field>
+        <field name="arch" type="xml">
+            <search string="Teslimat Planlama Arama">
+                <field name="name"/>
+                <field name="musteri_ids"/>
+                <field name="urun_ids"/>
+                <filter string="Taslak" name="taslak" domain="[('durum','=','taslak')]"/>
+                <filter string="Onaylandı" name="onaylandi" domain="[('durum','=','onaylandi')]"/>
+                <filter string="Çalışıyor" name="calisiyor" domain="[('durum','=','calisiyor')]"/>
+                <filter string="Tamamlandı" name="tamamlandi" domain="[('durum','=','tamamlandi')]"/>
+                <group expand="0" string="Grupla">
+                    <filter string="Durum" name="durum" context="{'group_by':'durum'}"/>
+                    <filter string="Tarih" name="tarih" context="{'group_by':'tarih'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Teslimat Transfer Tree View -->
+    <record id="view_teslimat_transfer_tree" model="ir.ui.view">
+        <field name="name">teslimat.transfer.tree</field>
+        <field name="model">teslimat.transfer</field>
+        <field name="arch" type="xml">
+            <tree string="Teslimat Transferler">
+                <field name="sira_no"/>
+                <field name="name"/>
+                <field name="planlama_id"/>
+                <field name="kaynak_konum"/>
+                <field name="hedef_konum"/>
+                <field name="urun_id"/>
+                <field name="miktar"/>
+                <field name="durum"/>
+                <field name="planlanan_tarih"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Teslimat Transfer Form View -->
+    <record id="view_teslimat_transfer_form" model="ir.ui.view">
+        <field name="name">teslimat.transfer.form</field>
+        <field name="model">teslimat.transfer</field>
+        <field name="arch" type="xml">
+            <form string="Teslimat Transfer">
+                <header>
+                    <button name="action_transfer_belgesi_olustur" string="Teslimat Belgesi Oluştur" 
+                            type="object" class="oe_highlight" 
+                            states="bekliyor,hazirlaniyor"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Transfer Adı"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="planlama_id"/>
+                            <field name="sira_no"/>
+                            <field name="transfer_no" placeholder="Transfer belgesi numarasını girin"/>
+                            <field name="stock_picking_id"/>
+                        </group>
+                        <group>
+                            <field name="durum"/>
+                            <field name="planlanan_tarih"/>
+                            <field name="gerceklesen_tarih"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group>
+                            <field name="musteri_id"/>
+                            <field name="kaynak_konum"/>
+                            <field name="hedef_konum"/>
+                        </group>
+                        <group>
+                            <field name="urun_id"/>
+                            <field name="miktar"/>
+                            <field name="birim"/>
+                        </group>
+                    </group>
+                    <field name="notlar" placeholder="Transfer notları..."/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Actions -->
+    <record id="action_teslimat_planlama" model="ir.actions.act_window">
+        <field name="name">Teslimat Planlamaları</field>
+        <field name="res_model">teslimat.planlama</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_teslimat_planlama_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                İlk teslimat planlamasını oluşturun!
+            </p>
+        </field>
+    </record>
+
+    <record id="action_teslimat_transfer" model="ir.actions.act_window">
+        <field name="name">Teslimat Transferler</field>
+        <field name="res_model">teslimat.transfer</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                İlk teslimat transferini oluşturun!
+            </p>
+        </field>
+    </record>
+</odoo>
