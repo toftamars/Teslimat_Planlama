@@ -12,7 +12,7 @@ class TeslimatAnaSayfa(models.Model):
     ilce_id = fields.Many2one('teslimat.ilce', string='İlçe', required=True)
     
     # Sonuç Alanları (Hesaplanan)
-    uarih_listesi = fields.One2many('teslimat.ana.sayfa.tarih', 'ana_sayfa_id', string='Uygun Tarihler', compute='_compute_tarih_listesi')
+    tarih_listesi = fields.One2many('teslimat.ana.sayfa.tarih', 'ana_sayfa_id', string='Uygun Tarihler', compute='_compute_tarih_listesi')
     uygun_arac_ids = fields.Many2many('teslimat.arac', string='Uygun Araçlar', compute='_compute_uygun_araclar')
     
     # İlçe Bazlı Kapasite
@@ -148,11 +148,11 @@ class TeslimatAnaSayfa(models.Model):
                         'durum_text': durum_text
                     })
                 
-                record.uarikh_listesi = [(5, 0, 0)]  # Mevcut kayıtları temizle
+                record.tarih_listesi = [(5, 0, 0)]  # Mevcut kayıtları temizle
                 for tarih_bilgi in tarihler:
-                    record.uarikh_listesi = [(0, 0, tarih_bilgi)]
+                    record.tarih_listesi = [(0, 0, tarih_bilgi)]
             else:
-                record.uarikh_listesi = [(5, 0, 0)]
+                record.tarih_listesi = [(5, 0, 0)]
 
     @api.depends('ilce_id', 'arac_id')
     def _compute_uygun_araclar(self):

@@ -22,7 +22,6 @@
                                    options="{'no_create': True, 'no_edit': True}"/>
                         </group>
                         <group>
-                            <field name="gun_id" readonly="1"/>
                             <field name="ilce_uygun_mu" readonly="1"/>
                         </group>
                     </group>
@@ -39,7 +38,7 @@
                     <!-- Sonuç Alanları -->
                     <notebook>
                         <page string="📅 Tarih Bazlı Kapasite" attrs="{'invisible': [('ilce_uygun_mu', '=', False)]}">
-                            <field name="uarikh_listesi" readonly="1">
+                            <field name="tarih_listesi" readonly="1">
                                 <tree>
                                     <field name="tarih"/>
                                     <field name="gun_adi"/>
