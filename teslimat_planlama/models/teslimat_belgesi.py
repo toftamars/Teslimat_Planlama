@@ -111,6 +111,108 @@ class TeslimatBelgesi(models.Model):
             if ilce:
                 self.ilce_id = ilce.id
     
+    @api.onchange('arac_id', 'teslimat_tarihi')
+    def _onchange_arac_date(self):
+        """Araç ve tarih değiştiğinde otomatik kontroller"""
+        if not self.arac_id or not self.teslimat_tarihi:
+            return
+        
+        # Kontrol edilen kriterler:
+        # 1. Aracın günlük teslimat limiti dolmuş mu?
+        # 2. Teslimat yöneticisi yetkisi var mı?
+        # 3. Uyarı mesajları göster
+        
+        warnings = []
+        errors = []
+        
+        # 1. Araç kapasite kontrolü
+        if self.arac_id:
+            # Aynı gün aynı araç için mevcut teslimat sayısını hesapla
+            gunluk_teslimat = self.env['teslimat.belgesi'].search_count([
+                ('arac_id', '=', self.arac_id.id),
+                ('teslimat_tarihi', '=', self.teslimat_tarihi),
+                ('durum', 'in', ['hazir', 'yolda']),
+                ('id', '!=', self.id)
+            ])
+            
+            kalan_kapasite = self.arac_id.gunluk_teslimat_limiti - gunluk_teslimat
+            
+            if kalan_kapasite <= 0:
+                errors.append(f"Bu araç için günlük teslimat limiti dolu! (Limit: {self.arac_id.gunluk_teslimat_limiti})")
+            elif kalan_kapasite <= 2:
+                warnings.append(f"Araç kapasitesi kritik seviyede! (Kalan: {kalan_kapasite})")
+            else:
+                warnings.append(f"Araç kapasitesi: {kalan_kapasite}/{self.arac_id.gunluk_teslimat_limiti}")
+            
+            # Araç durumu kontrolü
+            if self.arac_id.gecici_kapatma:
+                errors.append(f"Araç geçici olarak kapatılmış! Sebep: {self.arac_id.kapatma_sebebi or 'Belirtilmemiş'}")
+            
+            if not self.arac_id.aktif:
+                errors.append("Araç aktif değil!")
+        
+        # 2. Tarih uygunluk kontrolü
+        if self.teslimat_tarihi:
+            # Haftanın gününü belirle
+            day_mapping = {
+                0: 'pazartesi',
+                1: 'sali', 
+                2: 'carsamba',
+                3: 'persembe',
+                4: 'cuma',
+                5: 'cumartesi',
+                6: 'pazar'
+            }
+            
+            day_of_week = day_mapping.get(self.teslimat_tarihi.weekday())
+            
+            if day_of_week == 'pazar':
+                errors.append("Pazar günü teslimat yapılmaz!")
+            else:
+                # Gün müsaitlik kontrolü
+                availability = self.env['teslimat.gun'].check_availability(
+                    self.teslimat_tarihi, 
+                    self.ilce_id.id if self.ilce_id else None
+                )
+                
+                if not availability['available']:
+                    errors.append(f"Tarih uygun değil: {availability['reason']}")
+                else:
+                    warnings.append(f"Seçilen gün: {availability['day_name']}")
+        
+        # 3. İlçe-araç uyumluluğu kontrolü
+        if self.arac_id and self.ilce_id:
+            if self.arac_id.arac_tipi in ['anadolu_yakasi', 'avrupa_yakasi']:
+                if self.arac_id.arac_tipi == 'anadolu_yakasi' and self.ilce_id.yaka_tipi == 'avrupa':
+                    errors.append("Anadolu Yakası aracı Avrupa Yakası ilçesine gidemez!")
+                elif self.arac_id.arac_tipi == 'avrupa_yakasi' and self.ilce_id.yaka_tipi == 'anadolu':
+                    errors.append("Avrupa Yakası aracı Anadolu Yakası ilçesine gidemez!")
+        
+        # 4. Teslimat yöneticisi yetkisi kontrolü
+        user = self.env.user
+        is_manager = user.has_group('stock.group_stock_manager')
+        
+        if not is_manager and errors:
+            # Yönetici olmayan kullanıcı için ek uyarı
+            warnings.append("Bazı hatalar var. Teslimat yöneticisi onayı gerekebilir.")
+        
+        # Uyarı ve hata mesajlarını göster
+        if errors:
+            return {
+                'warning': {
+                    'title': 'Teslimat Hatası',
+                    'message': '\n'.join(errors)
+                }
+            }
+        
+        if warnings:
+            return {
+                'warning': {
+                    'title': 'Teslimat Uyarısı',
+                    'message': '\n'.join(warnings)
+                }
+            }
+    
     def action_hazirla(self):
         """Teslimatı hazır duruma getir"""
         self.write({'durum': 'hazir'})
