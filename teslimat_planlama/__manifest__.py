@@ -10,6 +10,8 @@
         - Transfer işlemleri
         - Stok bilgileri entegrasyonu
         - Teslimat planı oluşturma
+        
+        NOT: SMS özellikleri şu anda deaktif, gelecekte eklenebilir
     """,
     'author': 'Your Company',
     'website': 'https://www.yourcompany.com',
