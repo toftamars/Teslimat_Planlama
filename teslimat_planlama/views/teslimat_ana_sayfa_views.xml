@@ -49,16 +49,7 @@
                             </group>
                             
                             <!-- Uygun Araçlar -->
-                            <field name="uygun_araclar" readonly="1">
-                                <tree>
-                                    <field name="name"/>
-                                    <field name="arac_tipi"/>
-                                    <field name="gunluk_teslimat_limiti"/>
-                                    <field name="mevcut_kapasite"/>
-                                    <field name="kalan_kapasite"/>
-                                    <field name="aktif"/>
-                                </tree>
-                            </field>
+                            <field name="uygun_arac_ids" readonly="1" widget="many2many_tags"/>
                         </page>
                         
                         <page string="🌟 Günlük Genel Kapasite" attrs="{'invisible': [('gun_id', '=', False)]}">

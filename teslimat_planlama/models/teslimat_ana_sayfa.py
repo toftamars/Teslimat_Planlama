@@ -12,7 +12,7 @@ class TeslimatAnaSayfa(models.Model):
     
     # Sonuç Alanları (Hesaplanan)
     gun_id = fields.Many2one('teslimat.gun', string='Teslimat Günü', compute='_compute_gun', store=True)
-    uygun_araclar = fields.One2many('teslimat.arac', string='Uygun Araçlar', compute='_compute_uygun_araclar')
+    uygun_arac_ids = fields.Many2many('teslimat.arac', string='Uygun Araçlar', compute='_compute_uygun_araclar')
     
     # İlçe Bazlı Kapasite
     toplam_kapasite = fields.Integer(string='Toplam Kapasite', compute='_compute_kapasite_bilgileri')
@@ -107,11 +107,11 @@ class TeslimatAnaSayfa(models.Model):
                         ('gecici_kapatma', '=', False)
                     ])
                 
-                record.uygun_araclar = araclar.ids
+                record.uygun_arac_ids = araclar.ids
             else:
-                record.uygun_araclar = []
+                record.uygun_arac_ids = []
 
-    @api.depends('ilce_id', 'gun_id', 'sorgu_tarihi', 'uygun_araclar')
+    @api.depends('ilce_id', 'gun_id', 'sorgu_tarihi', 'uygun_arac_ids')
     def _compute_kapasite_bilgileri(self):
         """Kapasite bilgilerini hesapla"""
         for record in self:
@@ -202,7 +202,7 @@ class TeslimatAnaSayfa(models.Model):
                 'message': f"""
                     📊 {self.ilce_id.name} İlçesi - {self.gun_id.name}
                     
-                    🚗 Uygun Araç Sayısı: {len(self.uygun_araclar)}
+                    🚗 Uygun Araç Sayısı: {len(self.uygun_arac_ids)}
                     📦 İlçe Toplam Kapasite: {self.toplam_kapasite}
                     ✅ İlçe Kullanılan: {self.kullanilan_kapasite}
                     🔄 İlçe Kalan: {self.kalan_kapasite}
