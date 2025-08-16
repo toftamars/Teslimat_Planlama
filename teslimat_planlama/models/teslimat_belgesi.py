@@ -1,0 +1,166 @@
+from odoo import models, fields, api, _
+from odoo.exceptions import ValidationError
+
+
+class TeslimatBelgesi(models.Model):
+    _name = 'teslimat.belgesi'
+    _description = 'Teslimat Belgesi'
+    _order = 'teslimat_tarihi desc, name'
+
+    name = fields.Char(string='Teslimat No', required=True, copy=False, readonly=True, 
+                      default=lambda self: _('Yeni'))
+    teslimat_tarihi = fields.Date(string='Teslimat Tarihi', required=True, default=fields.Date.today)
+    
+    # Müşteri Bilgileri
+    musteri_id = fields.Many2one('res.partner', string='Müşteri', required=True, 
+                                domain=[('customer_rank', '>', 0)])
+    
+    # Araç ve İlçe Bilgileri
+    arac_id = fields.Many2one('teslimat.arac', string='Araç', required=True)
+    ilce_id = fields.Many2one('teslimat.ilce', string='İlçe', required=True)
+    
+    # Transfer Belgesi Entegrasyonu
+    transfer_no = fields.Char(string='Transfer No', help='Transfer belgesi numarası')
+    stock_picking_id = fields.Many2one('stock.picking', string='Transfer Belgesi')
+    
+    # Ürün Bilgileri
+    urun_id = fields.Many2one('product.product', string='Ürün', required=True)
+    miktar = fields.Float(string='Miktar', required=True)
+    birim = fields.Many2one('uom.uom', string='Birim', related='urun_id.uom_id', readonly=True)
+    
+    # Durum Bilgileri
+    durum = fields.Selection([
+        ('taslak', 'Taslak'),
+        ('hazir', 'Hazır'),
+        ('yolda', 'Yolda'),
+        ('teslim_edildi', 'Teslim Edildi'),
+        ('iptal', 'İptal')
+    ], string='Durum', default='taslak', required=True)
+    
+    # Zaman Bilgileri
+    planlanan_teslimat_saati = fields.Selection([
+        ('09:00', '09:00'),
+        ('10:00', '10:00'),
+        ('11:00', '11:00'),
+        ('12:00', '12:00'),
+        ('13:00', '13:00'),
+        ('14:00', '14:00'),
+        ('15:00', '15:00'),
+        ('16:00', '16:00'),
+        ('17:00', '17:00')
+    ], string='Planlanan Teslimat Saati')
+    
+    gercek_teslimat_saati = fields.Datetime(string='Gerçek Teslimat Saati')
+    
+    # Notlar
+    notlar = fields.Text(string='Notlar')
+    
+    # Hesaplanan Alanlar
+    yaka_tipi = fields.Selection([
+        ('anadolu', 'Anadolu Yakası'),
+        ('avrupa', 'Avrupa Yakası'),
+        ('belirsiz', 'Belirsiz')
+    ], string='Yaka Tipi', related='ilce_id.yaka_tipi', store=True, readonly=True)
+    
+    @api.model
+    def create(self, vals):
+        if vals.get('name', _('Yeni')) == _('Yeni'):
+            vals['name'] = self.env['ir.sequence'].next_by_code('teslimat.belgesi') or _('Yeni')
+        return super(TeslimatBelgesi, self).create(vals)
+    
+    @api.onchange('transfer_no')
+    def _onchange_transfer_no(self):
+        """Transfer no girildiğinde bilgileri otomatik doldur"""
+        if self.transfer_no:
+            picking = self.env['stock.picking'].search([
+                ('name', '=', self.transfer_no)
+            ], limit=1)
+            
+            if picking:
+                self.stock_picking_id = picking.id
+                self._onchange_stock_picking()
+    
+    @api.onchange('stock_picking_id')
+    def _onchange_stock_picking(self):
+        """Transfer belgesi seçildiğinde bilgileri otomatik doldur"""
+        if self.stock_picking_id:
+            picking = self.stock_picking_id
+            
+            # Müşteri bilgisi
+            if picking.partner_id:
+                self.musteri_id = picking.partner_id.id
+            
+            # Ürün ve miktar bilgileri
+            if picking.move_ids_without_package:
+                move = picking.move_ids_without_package[0]
+                self.urun_id = move.product_id.id
+                self.miktar = move.product_uom_qty
+            
+            # Teslimat no
+            if not self.name:
+                self.name = f"T-{picking.name}"
+    
+    @api.onchange('musteri_id')
+    def _onchange_musteri(self):
+        """Müşteri seçildiğinde ilçe bilgisini otomatik doldur"""
+        if self.musteri_id and self.musteri_id.state_id:
+            # Müşterinin bulunduğu ilçeyi bul
+            ilce = self.env['teslimat.ilce'].search([
+                ('name', 'ilike', self.musteri_id.state_id.name)
+            ], limit=1)
+            if ilce:
+                self.ilce_id = ilce.id
+    
+    def action_hazirla(self):
+        """Teslimatı hazır duruma getir"""
+        self.write({'durum': 'hazir'})
+    
+    def action_yola_cik(self):
+        """Teslimatı yolda durumuna getir"""
+        self.write({'durum': 'yolda'})
+    
+    def action_teslim_et(self):
+        """Teslimatı tamamla"""
+        self.write({
+            'durum': 'teslim_edildi',
+            'gercek_teslimat_saati': fields.Datetime.now()
+        })
+    
+    def action_iptal(self):
+        """Teslimatı iptal et"""
+        self.write({'durum': 'iptal'})
+    
+    @api.constrains('arac_id', 'teslimat_tarihi')
+    def _check_arac_kapasitesi(self):
+        """Araç kapasitesi kontrolü"""
+        for record in self:
+            if record.arac_id and record.teslimat_tarihi:
+                # Aynı gün aynı araç için teslimat sayısını kontrol et
+                gunluk_teslimat = self.search_count([
+                    ('arac_id', '=', record.arac_id.id),
+                    ('teslimat_tarihi', '=', record.teslimat_tarihi),
+                    ('durum', 'in', ['hazir', 'yolda']),
+                    ('id', '!=', record.id)
+                ])
+                
+                if gunluk_teslimat >= record.arac_id.gunluk_teslimat_limiti:
+                    raise ValidationError(_('Bu araç için günlük teslimat limiti aşıldı!'))
+    
+    @api.constrains('ilce_id', 'teslimat_tarihi')
+    def _check_ilce_gun_uygunlugu(self):
+        """İlçe-gün uygunluğu kontrolü"""
+        for record in self:
+            if record.ilce_id and record.teslimat_tarihi:
+                # İlçenin o gün teslimat yapılıp yapılamayacağını kontrol et
+                gun = self.env['teslimat.gun'].search([
+                    ('gun_kodu', '=', record.teslimat_tarihi.strftime('%A').lower())
+                ], limit=1)
+                
+                if gun:
+                    ilce_gun_eslesmesi = self.env['teslimat.gun.ilce'].search([
+                        ('gun_id', '=', gun.id),
+                        ('ilce_id', '=', record.ilce_id.id)
+                    ], limit=1)
+                    
+                    if not ilce_gun_eslesmesi:
+                        raise ValidationError(_('Bu ilçeye seçilen günde teslimat yapılamaz!'))

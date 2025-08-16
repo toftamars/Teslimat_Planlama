@@ -71,6 +71,9 @@ class TeslimatTransfer(models.Model):
     planlama_id = fields.Many2one('teslimat.planlama', string='Planlama', required=True)
     sira_no = fields.Integer(string='Sıra No', default=1)
     
+    # Araç Bilgisi
+    arac_id = fields.Many2one('teslimat.arac', string='Araç')
+    
     # Transfer belgesi entegrasyonu
     transfer_no = fields.Char(string='Transfer No', help='Transfer belgesi numarası')
     stock_picking_id = fields.Many2one('stock.picking', string='Transfer Belgesi', 

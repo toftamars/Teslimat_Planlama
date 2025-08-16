@@ -34,6 +34,9 @@ class TeslimatArac(models.Model):
     # Teslimat Geçmişi
     teslimat_ids = fields.One2many('teslimat.belgesi', 'arac_id', string='Teslimatlar')
     
+    # Transfer Geçmişi
+    transfer_ids = fields.One2many('teslimat.transfer', 'arac_id', string='Transferler')
+    
     @api.depends('teslimat_ids', 'teslimat_ids.durum')
     def _compute_mevcut_kapasite(self):
         for record in self:
