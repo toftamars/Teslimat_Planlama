@@ -61,7 +61,7 @@
                                             string="📝 Oluştur" 
                                             type="object" 
                                             class="btn-primary"
-                                            attrs="{'invisible': [('durum', '=', 'dolu'), ('kalan_kapasite', '=', 0)]}"/>
+                                            attrs="{'invisible': [('durum_text', '=', 'DOLU'), ('kalan_kapasite', '=', 0)]}"/>
                                 </tree>
                             </field>
                         </page>
