@@ -21,15 +21,7 @@ class TeslimatAnaSayfa(models.Model):
     kalan_kapasite = fields.Integer(string='Kalan Kapasite', compute='_compute_kapasite_bilgileri')
     teslimat_sayisi = fields.Integer(string='Teslimat Sayısı', compute='_compute_kapasite_bilgileri')
     
-    # Günlük Genel Kapasite
-    gunluk_toplam_kapasite = fields.Integer(string='Günlük Toplam Kapasite', compute='_compute_gunluk_kapasite')
-    gunluk_kullanilan_kapasite = fields.Integer(string='Günlük Kullanılan Kapasite', compute='_compute_gunluk_kapasite')
-    gunluk_kalan_kapasite = fields.Integer(string='Günlük Kalan Kapasite', compute='_compute_gunluk_kapasite')
-    gunluk_teslimat_sayisi = fields.Integer(string='Günlük Teslimat Sayısı', compute='_compute_gunluk_kapasite')
-    
-    # Yaka Bazlı Kapasite
-    anadolu_yaka_kapasite = fields.Integer(string='Anadolu Yakası Kapasite', compute='_compute_gunluk_kapasite')
-    avrupa_yaka_kapasite = fields.Integer(string='Avrupa Yakası Kapasite', compute='_compute_gunluk_kapasite')
+
     
     # İlçe-Gün Uygunluk Kontrolü
     ilce_uygun_mu = fields.Boolean(string='İlçe Uygun mu?', compute='_compute_ilce_uygunluk', store=True)
@@ -139,44 +131,7 @@ class TeslimatAnaSayfa(models.Model):
                 record.kalan_kapasite = 0
                 record.teslimat_sayisi = 0
 
-    @api.depends('arac_id')
-    def _compute_gunluk_kapasite(self):
-        """Seçilen araç için günlük kapasite bilgilerini hesapla"""
-        for record in self:
-            if record.arac_id:
-                # Bugün için tüm aktif araçların kapasitesi
-                aktif_araclar = self.env['teslimat.arac'].search([
-                    ('aktif', '=', True),
-                    ('gecici_kapatma', '=', False)
-                ])
-                
-                # Toplam günlük kapasite
-                record.gunluk_toplam_kapasite = sum(arac.gunluk_teslimat_limiti for arac in aktif_araclar)
-                
-                # Bugün için toplam teslimat sayısı
-                bugun = fields.Date.today()
-                record.gunluk_teslimat_sayisi = self.env['teslimat.belgesi'].search_count([
-                    ('teslimat_tarihi', '=', bugun),
-                    ('durum', 'in', ['hazir', 'yolda', 'teslim_edildi'])
-                ])
-                
-                record.gunluk_kullanilan_kapasite = record.gunluk_teslimat_sayisi
-                record.gunluk_kalan_kapasite = record.gunluk_toplam_kapasite - record.gunluk_teslimat_sayisi
-                
-                # Yaka bazlı kapasite hesaplama
-                anadolu_araclar = aktif_araclar.filtered(lambda a: a.arac_tipi == 'anadolu_yakasi')
-                avrupa_araclar = aktif_araclar.filtered(lambda a: a.arac_tipi == 'avrupa_yakasi')
-                
-                record.anadolu_yaka_kapasite = sum(arac.gunluk_teslimat_limiti for arac in anadolu_araclar)
-                record.avrupa_yaka_kapasite = sum(arac.gunluk_teslimat_limiti for arac in avrupa_araclar)
-                
-            else:
-                record.gunluk_toplam_kapasite = 0
-                record.gunluk_kullanilan_kapasite = 0
-                record.gunluk_kalan_kapasite = 0
-                record.gunluk_teslimat_sayisi = 0
-                record.anadolu_yaka_kapasite = 0
-                record.avrupa_yaka_kapasite = 0
+
 
     def action_sorgula(self):
         """Sorgula butonuna basıldığında çalışacak method"""
@@ -210,15 +165,6 @@ class TeslimatAnaSayfa(models.Model):
                     📦 Araç Kapasitesi: {self.toplam_kapasite}
                     ✅ Bugün Kullanılan: {self.kullanilan_kapasite}
                     🔄 Bugün Kalan: {self.kalan_kapasite}
-                    
-                    🌟 GÜNLÜK GENEL KAPASİTE:
-                    📦 Günlük Toplam: {self.gunluk_toplam_kapasite}
-                    ✅ Günlük Kullanılan: {self.gunluk_kullanilan_kapasite}
-                    🔄 Günlük Kalan: {self.gunluk_kalan_kapasite}
-                    
-                    🗺️ YAKA BAZLI KAPASİTE:
-                    🇹🇷 Anadolu Yakası: {self.anadolu_yaka_kapasite}
-                    🇪🇺 Avrupa Yakası: {self.avrupa_yaka_kapasite}
                     
                     {self.uygunluk_mesaji}
                 """,

@@ -54,28 +54,7 @@
                             <field name="uygun_arac_ids" readonly="1" widget="many2many_tags"/>
                         </page>
                         
-                        <page string="🌟 Günlük Genel Kapasite" attrs="{'invisible': [('gun_id', '=', False)]}">
-                            <group>
-                                <group>
-                                    <field name="gunluk_toplam_kapasite" readonly="1"/>
-                                    <field name="gunluk_kullanilan_kapasite" readonly="1"/>
-                                </group>
-                                <group>
-                                    <field name="gunluk_kalan_kapasite" readonly="1"/>
-                                    <field name="gunluk_teslimat_sayisi" readonly="1"/>
-                                </group>
-                            </group>
-                            
-                            <!-- Yaka Bazlı Kapasite -->
-                            <group string="🗺️ Yaka Bazlı Kapasite">
-                                <group>
-                                    <field name="anadolu_yaka_kapasite" readonly="1"/>
-                                </group>
-                                <group>
-                                    <field name="avrupa_yaka_kapasite" readonly="1"/>
-                                </group>
-                            </group>
-                        </page>
+
                         
                         <page string="ℹ️ Uygunluk Bilgisi">
                             <field name="uygunluk_mesaji" readonly="1" nolabel="1"/>
