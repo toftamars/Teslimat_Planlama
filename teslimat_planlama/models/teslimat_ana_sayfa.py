@@ -12,7 +12,7 @@ class TeslimatAnaSayfa(models.Model):
     ilce_id = fields.Many2one('teslimat.ilce', string='İlçe', required=True)
     
     # Sonuç Alanları (Hesaplanan)
-    gun_id = fields.Many2one('teslimat.gun', string='Teslimat Günü', compute='_compute_gun', store=True)
+    uarih_listesi = fields.One2many('teslimat.ana.sayfa.tarih', 'ana_sayfa_id', string='Uygun Tarihler', compute='_compute_tarih_listesi')
     uygun_arac_ids = fields.Many2many('teslimat.arac', string='Uygun Araçlar', compute='_compute_uygun_araclar')
     
     # İlçe Bazlı Kapasite
@@ -85,6 +85,76 @@ class TeslimatAnaSayfa(models.Model):
                 record.uygunluk_mesaji = "Lütfen araç ve ilçe seçin"
 
     @api.depends('ilce_id', 'arac_id')
+    def _compute_tarih_listesi(self):
+        """Seçilen ilçe ve araç için uygun tarihleri hesapla"""
+        for record in self:
+            if record.ilce_id and record.arac_id and record.ilce_uygun_mu:
+                # Sonraki 7 günü kontrol et
+                bugun = fields.Date.today()
+                tarihler = []
+                
+                for i in range(7):
+                    tarih = bugun + timedelta(days=i)
+                    gun_adi = tarih.strftime('%A')  # İngilizce gün adı
+                    
+                    # Türkçe gün adlarını eşleştir
+                    gun_eslesmesi = {
+                        'Monday': 'Pazartesi',
+                        'Tuesday': 'Salı', 
+                        'Wednesday': 'Çarşamba',
+                        'Thursday': 'Perşembe',
+                        'Friday': 'Cuma',
+                        'Saturday': 'Cumartesi',
+                        'Sunday': 'Pazar'
+                    }
+                    
+                    gun_adi_tr = gun_eslesmesi.get(gun_adi, gun_adi)
+                    
+                    # Bu tarih için teslimat sayısını hesapla
+                    teslimat_sayisi = self.env['teslimat.belgesi'].search_count([
+                        ('teslimat_tarihi', '=', tarih),
+                        ('arac_id', '=', record.arac_id.id),
+                        ('durum', 'in', ['hazir', 'yolda', 'teslim_edildi'])
+                    ])
+                    
+                    # Kapasite hesaplama
+                    toplam_kapasite = record.arac_id.gunluk_teslimat_limiti
+                    kalan_kapasite = toplam_kapasite - teslimat_sayisi
+                    doluluk_orani = (teslimat_sayisi / toplam_kapasite * 100) if toplam_kapasite > 0 else 0
+                    
+                    # Durum belirleme
+                    if kalan_kapasite <= 0:
+                        durum = 'dolu'
+                        durum_icon = '🔴'
+                        durum_text = 'DOLU'
+                    elif doluluk_orani >= 80:
+                        durum = 'dolu_yakin'
+                        durum_icon = '🟡'
+                        durum_text = 'DOLU YAKIN'
+                    else:
+                        durum = 'musait'
+                        durum_icon = '🟢'
+                        durum_text = 'MUSAİT'
+                    
+                    tarihler.append({
+                        'tarih': tarih,
+                        'gun_adi': gun_adi_tr,
+                        'teslimat_sayisi': teslimat_sayisi,
+                        'toplam_kapasite': toplam_kapasite,
+                        'kalan_kapasite': kalan_kapasite,
+                        'doluluk_orani': doluluk_orani,
+                        'durum': durum,
+                        'durum_icon': durum_icon,
+                        'durum_text': durum_text
+                    })
+                
+                record.uarikh_listesi = [(5, 0, 0)]  # Mevcut kayıtları temizle
+                for tarih_bilgi in tarihler:
+                    record.uarikh_listesi = [(0, 0, tarih_bilgi)]
+            else:
+                record.uarikh_listesi = [(5, 0, 0)]
+
+    @api.depends('ilce_id', 'arac_id')
     def _compute_uygun_araclar(self):
         """Seçilen ilçe ve araç için uygunluk kontrolü"""
         for record in self:
@@ -149,26 +219,24 @@ class TeslimatAnaSayfa(models.Model):
                 }
             }
         
-        # Kapasite bilgilerini yeniden hesapla
+        # Tarih listesini hesapla
+        self._compute_tarih_listesi()
         self._compute_kapasite_bilgileri()
         
         return {
             'type': 'ir.actions.client',
             'tag': 'display_notification',
             'params': {
-                'title': 'Kapasite Bilgileri',
+                'title': 'Kapasite Sorgulandı',
                 'message': f"""
-                    📊 {self.ilce_id.name} İlçesi - {self.arac_id.name}
+                    ✅ {self.ilce_id.name} İlçesi - {self.arac_id.name}
                     
-                    🚗 Seçilen Araç: {self.arac_id.name}
-                    🚗 Araç Tipi: {self.arac_id.arac_tipi.replace('_', ' ').title()}
-                    📦 Araç Kapasitesi: {self.toplam_kapasite}
-                    ✅ Bugün Kullanılan: {self.kullanilan_kapasite}
-                    🔄 Bugün Kalan: {self.kalan_kapasite}
+                    📅 Sonraki 7 gün için kapasite bilgileri hesaplandı
+                    📊 Tarih Bazlı Kapasite sekmesinde detayları görebilirsiniz
                     
                     {self.uygunluk_mesaji}
                 """,
                 'type': 'success',
-                'sticky': True,
+                'sticky': False,
             }
         }

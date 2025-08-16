@@ -38,6 +38,21 @@
                     
                     <!-- Sonuç Alanları -->
                     <notebook>
+                        <page string="📅 Tarih Bazlı Kapasite" attrs="{'invisible': [('ilce_uygun_mu', '=', False)]}">
+                            <field name="uarikh_listesi" readonly="1">
+                                <tree>
+                                    <field name="tarih"/>
+                                    <field name="gun_adi"/>
+                                    <field name="teslimat_sayisi"/>
+                                    <field name="toplam_kapasite"/>
+                                    <field name="kalan_kapasite"/>
+                                    <field name="doluluk_orani" widget="percentage"/>
+                                    <field name="durum_text"/>
+                                    <field name="doluluk_bar" widget="html"/>
+                                </tree>
+                            </field>
+                        </page>
+                        
                         <page string="📊 İlçe Kapasitesi" attrs="{'invisible': [('ilce_uygun_mu', '=', False)]}">
                             <group>
                                 <group>

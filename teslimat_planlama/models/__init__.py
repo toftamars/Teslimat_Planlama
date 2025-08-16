@@ -9,3 +9,4 @@ from . import teslimat_belgesi
 from . import teslimat_kapasite_onay
 from . import teslimat_planlama_akilli
 from . import teslimat_ana_sayfa
+from . import teslimat_ana_sayfa_tarih
