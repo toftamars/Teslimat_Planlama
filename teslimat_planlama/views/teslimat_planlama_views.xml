@@ -196,4 +196,112 @@
             </p>
         </field>
     </record>
+
+    <!-- Teslimat Belgesi Actions -->
+    <record id="action_teslimat_belgesi" model="ir.actions.act_window">
+        <field name="name">Teslimat Belgeleri</field>
+        <field name="res_model">teslimat.belgesi</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                İlk teslimat belgesini oluşturun!
+            </p>
+        </field>
+    </record>
+
+    <record id="action_teslimat_belgesi_olustur" model="ir.actions.act_window">
+        <field name="name">Teslimat Belgesi Oluştur</field>
+        <field name="res_model">teslimat.belgesi</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Yeni teslimat belgesi oluşturun!
+            </p>
+        </field>
+    </record>
+
+    <!-- Teslimat Araç Actions -->
+    <record id="action_teslimat_arac" model="ir.actions.act_window">
+        <field name="name">Teslimat Araçları</field>
+        <field name="res_model">teslimat.arac</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                İlk teslimat aracını oluşturun!
+            </p>
+        </field>
+    </record>
+
+    <!-- Teslimat Gün Actions -->
+    <record id="action_teslimat_gun" model="ir.actions.act_window">
+        <field name="name">Teslimat Günleri</field>
+        <field name="res_model">teslimat.gun</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                İlk teslimat gününü oluşturun!
+            </p>
+        </field>
+    </record>
+
+    <!-- Teslimat Program Kurulum Actions -->
+    <record id="action_teslimat_program_kurulum" model="ir.actions.act_window">
+        <field name="name">Teslimat Programı Kurulumu</field>
+        <field name="res_model">teslimat.program.kurulum</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Teslimat programını kurmak için yeni kayıt oluşturun!
+            </p>
+        </field>
+    </record>
+
+    <!-- Şehir Actions -->
+    <record id="action_teslimat_sehir" model="ir.actions.act_window">
+        <field name="name">Şehirler</field>
+        <field name="res_model">teslimat.sehir</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                İlk şehri oluşturun!
+            </p>
+        </field>
+    </record>
+
+    <!-- İlçe Actions -->
+    <record id="action_teslimat_ilce" model="ir.actions.act_window">
+        <field name="name">İlçeler</field>
+        <field name="res_model">teslimat.ilce</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                İlk ilçeyi oluşturun!
+            </p>
+        </field>
+    </record>
+
+    <!-- Akıllı Planlama Actions -->
+    <record id="action_teslimat_planlama_akilli" model="ir.actions.act_window">
+        <field name="name">Akıllı Planlama</field>
+        <field name="res_model">teslimat.planlama.akilli</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                İlk akıllı planlamayı oluşturun!
+            </p>
+        </field>
+    </record>
+
+    <!-- Kapasite Onay Actions -->
+    <record id="action_teslimat_kapasite_onay" model="ir.actions.act_window">
+        <field name="name">Kapasite Onayları</field>
+        <field name="res_model">teslimat.kapasite.onay</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Kapasite aşımı onay talepleri burada görünecek!
+            </p>
+        </field>
+    </record>
 </odoo>

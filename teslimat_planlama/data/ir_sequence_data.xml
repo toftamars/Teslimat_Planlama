@@ -18,5 +18,15 @@
             <field name="padding">6</field>
             <field name="number_increment">1</field>
         </record>
+        
+        <!-- Kapasite Onay Sequence -->
+        <record id="seq_teslimat_kapasite_onay" model="ir.sequence">
+            <field name="name">Kapasite Onay</field>
+            <field name="code">teslimat.kapasite.onay</field>
+            <field name="prefix">KO</field>
+            <field name="padding">5</field>
+            <field name="number_increment">1</field>
+            </field>
+        </record>
     </data>
 </odoo>

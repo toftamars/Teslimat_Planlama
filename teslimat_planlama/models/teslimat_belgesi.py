@@ -111,6 +111,63 @@ class TeslimatBelgesi(models.Model):
             if ilce:
                 self.ilce_id = ilce.id
     
+    @api.onchange('ilce_id')
+    def _onchange_ilce(self):
+        """İlçe seçildiğinde uygun günleri göster ve uyarı ver"""
+        if not self.ilce_id:
+            return
+        
+        # İlçe için uygun günleri bul
+        uygun_gunler = self.env['teslimat.gun'].get_uygun_gunler(self.ilce_id.id)
+        
+        if not uygun_gunler:
+            return {
+                'warning': {
+                    'title': 'İlçe Uyarısı',
+                    'message': f'{self.ilce_id.name} ilçesi için hiçbir günde teslimat yapılamaz!'
+                }
+            }
+        
+        # Uygun günleri listele
+        gun_isimleri = [gun.name for gun in uygun_gunler]
+        gun_listesi = ', '.join(gun_isimleri)
+        
+        # Uyarı mesajı göster
+        return {
+            'warning': {
+                'title': 'Teslimat Günleri',
+                'message': f'{self.ilce_id.name} ilçesi şu günlerde teslimat yapılır:\n{gun_listesi}\n\nSadece bu günlerde teslimat oluşturabilirsiniz.'
+            }
+        }
+    
+    @api.onchange('teslimat_tarihi')
+    def _onchange_teslimat_tarihi(self):
+        """Teslimat tarihi seçildiğinde ilçe-gün uygunluğunu kontrol et"""
+        if not self.teslimat_tarihi or not self.ilce_id:
+            return
+        
+        # Seçilen tarih için ilçe uygunluğunu kontrol et
+        availability = self.env['teslimat.gun'].check_availability(
+            self.teslimat_tarihi, 
+            self.ilce_id.id
+        )
+        
+        if not availability['available']:
+            return {
+                'warning': {
+                    'title': 'Tarih Uygun Değil',
+                    'message': f'{self.teslimat_tarihi.strftime("%d/%m/%Y")} tarihinde {self.ilce_id.name} ilçesine teslimat yapılamaz!\n\nSebep: {availability["reason"]}\n\nLütfen uygun bir tarih seçin.'
+                }
+            }
+        
+        # Uygun tarih seçildiğinde bilgi ver
+        return {
+            'warning': {
+                'title': 'Tarih Uygun',
+                'message': f'{self.teslimat_tarihi.strftime("%d/%m/%Y")} tarihinde {self.ilce_id.name} ilçesine teslimat yapılabilir.\n\nGün: {availability["day_name"]}\nKalan Kapasite: {availability["remaining_capacity"]}'
+            }
+        }
+    
     @api.onchange('arac_id', 'teslimat_tarihi')
     def _onchange_arac_date(self):
         """Araç ve tarih değiştiğinde otomatik kontroller"""

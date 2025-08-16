@@ -2,30 +2,128 @@
 <odoo>
     <!-- Ana Menu -->
     <menuitem id="menu_teslimat_planlama_root" 
-              name="Teslimat Planlama" 
+              name="📋 Teslimat" 
               sequence="50"/>
 
-    <!-- Alt Menüler -->
-    <menuitem id="menu_teslimat_planlama" 
-              name="Planlamalar" 
+    <!-- 📋 Teslimat Ana Menüleri -->
+    
+    <!-- 📄 Teslimat Belgeleri -->
+    <menuitem id="menu_teslimat_belgeleri" 
+              name="📄 Teslimat Belgeleri" 
               parent="menu_teslimat_planlama_root" 
               sequence="10"/>
-
-    <menuitem id="menu_teslimat_transfer" 
-              name="Transferler" 
-              parent="menu_teslimat_planlama_root" 
+    
+    <menuitem id="menu_action_teslimat_belgesi" 
+              name="📄 Teslimat Belgeleri" 
+              parent="menu_teslimat_belgeleri" 
+              action="action_teslimat_belgesi" 
+              sequence="10"/>
+    
+    <menuitem id="menu_action_teslimat_belgesi_olustur" 
+              name="➕ Teslimat Belgesi Oluştur" 
+              parent="menu_teslimat_belgeleri" 
+              action="action_teslimat_belgesi_olustur" 
               sequence="20"/>
 
-    <!-- Action Menüleri -->
+    <!-- 🚗 Teslimat Araçları -->
+    <menuitem id="menu_teslimat_araclar" 
+              name="🚗 Teslimat Araçları" 
+              parent="menu_teslimat_planlama_root" 
+              sequence="20"/>
+    
+    <menuitem id="menu_action_teslimat_arac" 
+              name="🚗 Teslimat Araçları" 
+              parent="menu_teslimat_araclar" 
+              action="action_teslimat_arac" 
+              sequence="10"/>
+
+    <!-- 📅 Teslimat Günleri -->
+    <menuitem id="menu_teslimat_gunler" 
+              name="📅 Teslimat Günleri" 
+              parent="menu_teslimat_planlama_root" 
+              sequence="30"/>
+    
+    <menuitem id="menu_action_teslimat_gun" 
+              name="📅 Teslimat Günleri" 
+              parent="menu_teslimat_gunler" 
+              action="action_teslimat_gun" 
+              sequence="10"/>
+
+    <!-- ⚙️ Teslimat Programı Kurulumu -->
+    <menuitem id="menu_teslimat_program_kurulum" 
+              name="⚙️ Teslimat Programı Kurulumu" 
+              parent="menu_teslimat_planlama_root" 
+              sequence="40"/>
+    
+    <menuitem id="menu_action_teslimat_program_kurulum" 
+              name="⚙️ Teslimat Programı Kurulumu" 
+              parent="menu_teslimat_program_kurulum" 
+              action="action_teslimat_program_kurulum" 
+              sequence="10"/>
+
+    <!-- 🔧 Konfigürasyon -->
+    <menuitem id="menu_teslimat_konfigurasyon" 
+              name="🔧 Konfigürasyon" 
+              parent="menu_teslimat_planlama_root" 
+              sequence="50"/>
+    
+    <!-- 🏙️ Şehirler -->
+    <menuitem id="menu_teslimat_sehirler" 
+              name="🏙️ Şehirler" 
+              parent="menu_teslimat_konfigurasyon" 
+              sequence="10"/>
+    
+    <menuitem id="menu_action_teslimat_sehir" 
+              name="🏙️ Şehirler" 
+              parent="menu_teslimat_sehirler" 
+              action="action_teslimat_sehir" 
+              sequence="10"/>
+    
+    <!-- 🏘️ İlçeler -->
+    <menuitem id="menu_teslimat_ilceler" 
+              name="🏘️ İlçeler" 
+              parent="menu_teslimat_konfigurasyon" 
+              sequence="20"/>
+    
+    <menuitem id="menu_action_teslimat_ilce" 
+              name="🏘️ İlçeler" 
+              parent="menu_teslimat_ilceler" 
+              action="action_teslimat_ilce" 
+              sequence="10"/>
+
+    <!-- 📊 Raporlama ve Analiz -->
+    <menuitem id="menu_teslimat_raporlama" 
+              name="📊 Raporlama" 
+              parent="menu_teslimat_planlama_root" 
+              sequence="60"/>
+    
+    <menuitem id="menu_action_teslimat_planlama_akilli" 
+              name="🧠 Akıllı Planlama" 
+              parent="menu_teslimat_raporlama" 
+              action="action_teslimat_planlama_akilli" 
+              sequence="10"/>
+    
+    <menuitem id="menu_action_teslimat_kapasite_onay" 
+              name="✅ Kapasite Onayları" 
+              parent="menu_teslimat_raporlama" 
+              action="action_teslimat_kapasite_onay" 
+              sequence="20"/>
+
+    <!-- 🔄 Eski Menüler (Geriye Uyumluluk) -->
+    <menuitem id="menu_teslimat_planlama" 
+              name="📋 Planlamalar" 
+              parent="menu_teslimat_planlama_root" 
+              sequence="70"/>
+    
     <menuitem id="menu_action_teslimat_planlama" 
-              name="Teslimat Planlamaları" 
+              name="📋 Teslimat Planlamaları" 
               parent="menu_teslimat_planlama" 
               action="action_teslimat_planlama" 
               sequence="10"/>
-
+    
     <menuitem id="menu_action_teslimat_transfer" 
-              name="Teslimat Transferler" 
-              parent="menu_teslimat_transfer" 
+              name="🔄 Teslimat Transferler" 
+              parent="menu_teslimat_planlama" 
               action="action_teslimat_transfer" 
-              sequence="10"/>
+              sequence="20"/>
 </odoo>
