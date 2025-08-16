@@ -89,11 +89,11 @@ class TeslimatAnaSayfa(models.Model):
         """Seçilen ilçe ve araç için uygun tarihleri hesapla"""
         for record in self:
             if record.ilce_id and record.arac_id and record.ilce_uygun_mu:
-                # Sonraki 7 günü kontrol et
+                # Sonraki 30 günü kontrol et
                 bugun = fields.Date.today()
                 tarihler = []
                 
-                for i in range(7):
+                for i in range(30):
                     tarih = bugun + timedelta(days=i)
                     gun_adi = tarih.strftime('%A')  # İngilizce gün adı
                     
@@ -110,49 +110,71 @@ class TeslimatAnaSayfa(models.Model):
                     
                     gun_adi_tr = gun_eslesmesi.get(gun_adi, gun_adi)
                     
-                    # Bu tarih için teslimat sayısını hesapla
-                    teslimat_sayisi = self.env['teslimat.belgesi'].search_count([
-                        ('teslimat_tarihi', '=', tarih),
-                        ('arac_id', '=', record.arac_id.id),
-                        ('durum', 'in', ['hazir', 'yolda', 'teslim_edildi'])
-                    ])
+                    # İlçe-gün uygunluğunu kontrol et
+                    ilce_uygun_mu = self._check_ilce_gun_uygunlugu(record.ilce_id, tarih)
                     
-                    # Kapasite hesaplama
-                    toplam_kapasite = record.arac_id.gunluk_teslimat_limiti
-                    kalan_kapasite = toplam_kapasite - teslimat_sayisi
-                    doluluk_orani = (teslimat_sayisi / toplam_kapasite * 100) if toplam_kapasite > 0 else 0
-                    
-                    # Durum belirleme
-                    if kalan_kapasite <= 0:
-                        durum = 'dolu'
-                        durum_icon = '🔴'
-                        durum_text = 'DOLU'
-                    elif doluluk_orani >= 80:
-                        durum = 'dolu_yakin'
-                        durum_icon = '🟡'
-                        durum_text = 'DOLU YAKIN'
-                    else:
-                        durum = 'musait'
-                        durum_icon = '🟢'
-                        durum_text = 'MUSAİT'
-                    
-                    tarihler.append({
-                        'tarih': tarih,
-                        'gun_adi': gun_adi_tr,
-                        'teslimat_sayisi': teslimat_sayisi,
-                        'toplam_kapasite': toplam_kapasite,
-                        'kalan_kapasite': kalan_kapasite,
-                        'doluluk_orani': doluluk_orani,
-                        'durum': durum,
-                        'durum_icon': durum_icon,
-                        'durum_text': durum_text
-                    })
+                    # Sadece uygun günleri ekle
+                    if ilce_uygun_mu:
+                        # Bu tarih için teslimat sayısını hesapla
+                        teslimat_sayisi = self.env['teslimat.belgesi'].search_count([
+                            ('teslimat_tarihi', '=', tarih),
+                            ('arac_id', '=', record.arac_id.id),
+                            ('durum', 'in', ['hazir', 'yolda', 'teslim_edildi'])
+                        ])
+                        
+                        # Kapasite hesaplama
+                        toplam_kapasite = record.arac_id.gunluk_teslimat_limiti
+                        kalan_kapasite = toplam_kapasite - teslimat_sayisi
+                        doluluk_orani = (teslimat_sayisi / toplam_kapasite * 100) if toplam_kapasite > 0 else 0
+                        
+                        # Durum belirleme
+                        if kalan_kapasite <= 0:
+                            durum = 'dolu'
+                            durum_icon = '🔴'
+                            durum_text = 'DOLU'
+                        elif doluluk_orani >= 80:
+                            durum = 'dolu_yakin'
+                            durum_icon = '🟡'
+                            durum_text = 'DOLU YAKIN'
+                        else:
+                            durum = 'musait'
+                            durum_icon = '🟢'
+                            durum_text = 'MUSAİT'
+                        
+                        tarihler.append({
+                            'tarih': tarih,
+                            'gun_adi': gun_adi_tr,
+                            'teslimat_sayisi': teslimat_sayisi,
+                            'toplam_kapasite': toplam_kapasite,
+                            'kalan_kapasite': kalan_kapasite,
+                            'doluluk_orani': doluluk_orani,
+                            'durum': durum,
+                            'durum_icon': durum_icon,
+                            'durum_text': durum_text
+                        })
                 
                 record.tarih_listesi = [(5, 0, 0)]  # Mevcut kayıtları temizle
                 for tarih_bilgi in tarihler:
                     record.tarih_listesi = [(0, 0, tarih_bilgi)]
             else:
                 record.tarih_listesi = [(5, 0, 0)]
+    
+    def _check_ilce_gun_uygunlugu(self, ilce, tarih):
+        """İlçe ve tarih uygunluğunu kontrol et"""
+        gun_adi = tarih.strftime('%A')
+        
+        # İlçe yaka tipine göre uygun günleri belirle
+        if ilce.yaka_tipi == 'anadolu':
+            # Anadolu Yakası ilçeleri için uygun günler
+            uygun_gunler = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']  # Pazartesi-Cuma
+        elif ilce.yaka_tipi == 'avrupa':
+            # Avrupa Yakası ilçeleri için uygun günler
+            uygun_gunler = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']  # Pazartesi-Cuma
+        else:
+            # Bilinmeyen yaka tipi için tüm günler
+            uygun_gunler = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+        
+        return gun_adi in uygun_gunler
 
     @api.depends('ilce_id', 'arac_id')
     def _compute_uygun_araclar(self):
@@ -231,7 +253,7 @@ class TeslimatAnaSayfa(models.Model):
                 'message': f"""
                     ✅ {self.ilce_id.name} İlçesi - {self.arac_id.name}
                     
-                    📅 Sonraki 7 gün için kapasite bilgileri hesaplandı
+                    📅 Sonraki 30 gün için uygun tarihler hesaplandı
                     📊 Tarih Bazlı Kapasite sekmesinde detayları görebilirsiniz
                     
                     {self.uygunluk_mesaji}
