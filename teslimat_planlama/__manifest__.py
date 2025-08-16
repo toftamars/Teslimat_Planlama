@@ -28,6 +28,7 @@
                'data/demo_data.xml',
                'views/teslimat_planlama_views.xml',
                'views/teslimat_ana_sayfa_views.xml',
+               'views/teslimat_olustur_wizard_views.xml', # Added
                'views/menu_views.xml',
            ],
     'demo': [],
