@@ -25,13 +25,13 @@
             <form string="Teslimat Planlaması">
                 <header>
                     <button name="action_onayla" string="Onayla" type="object" 
-                            class="oe_highlight" states="taslak"/>
+                            class="oe_highlight" attrs="{'invisible': [('durum', '!=', 'taslak')]}"/>
                     <button name="action_baslat" string="Başlat" type="object" 
-                            class="oe_highlight" states="onaylandi"/>
+                            class="oe_highlight" attrs="{'invisible': [('durum', '!=', 'onaylandi')]}"/>
                     <button name="action_tamamla" string="Tamamla" type="object" 
-                            class="oe_highlight" states="calisiyor"/>
+                            class="oe_highlight" attrs="{'invisible': [('durum', '!=', 'calisiyor')]}"/>
                     <button name="action_iptal" string="İptal" type="object" 
-                            states="taslak,onaylandi,calisiyor"/>
+                            attrs="{'invisible': [('durum', 'not in', ['taslak', 'onaylandi', 'calisiyor'])]}"/>
                     <field name="durum" widget="statusbar" 
                            statusbar_visible="taslak,onaylandi,calisiyor,tamamlandi"/>
                 </header>
@@ -134,7 +134,7 @@
                 <header>
                     <button name="action_transfer_belgesi_olustur" string="Teslimat Belgesi Oluştur" 
                             type="object" class="oe_highlight" 
-                            states="bekliyor,hazirlaniyor"/>
+                            attrs="{'invisible': [('durum', 'not in', ['bekliyor', 'hazirlaniyor'])]}"/>
                 </header>
                 <sheet>
                     <div class="oe_title">
