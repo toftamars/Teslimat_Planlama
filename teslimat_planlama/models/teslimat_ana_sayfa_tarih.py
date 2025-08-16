@@ -62,7 +62,7 @@ class TeslimatAnaSayfaTarih(models.Model):
                 record.doluluk_bar = f"""
                     <div style="text-align: center;">
                         <div style="font-size: 18px; margin-bottom: 5px; cursor: pointer;" 
-                             onclick="if(confirm('Yönetici: {record.durum_text} durumu için işlem yapmak istiyor musunuz?')) {{ console.log('Yönetici işlemi başlatıldı'); }}">{icon}</div>
+                             title="Tıklayarak teslimat belgesi oluştur">{icon}</div>
                         <div style="font-weight: bold; color: {color}; margin-bottom: 5px;">
                             {record.durum_text}
                         </div>
@@ -71,9 +71,6 @@ class TeslimatAnaSayfaTarih(models.Model):
                         </div>
                         <div style="font-size: 12px; color: #6c757d;">
                             {record.doluluk_orani:.1f}% Dolu
-                        </div>
-                        <div style="font-size: 10px; color: #007bff; margin-top: 5px;">
-                            👆 Yönetici: Tıklayabilir
                         </div>
                     </div>
                 """
