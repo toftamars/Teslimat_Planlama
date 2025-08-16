@@ -34,13 +34,7 @@
                                        class="btn-primary"
                                        attrs="{'invisible': [('arac_id', '=', False), ('ilce_id', '=', False)]}"/>
                                
-                               <!-- Yönetici Butonu -->
-                               <button name="action_manuel_duzenle" 
-                                       string="⚙️ Manuel Düzenle (Yönetici)" 
-                                       type="object" 
-                                       class="btn-warning"
-                                       attrs="{'invisible': [('ilce_uygun_mu', '=', False)]}"
-                                       groups="stock.group_stock_manager"/>
+
                            </group>
                     
                     <!-- Sonuç Alanları -->
