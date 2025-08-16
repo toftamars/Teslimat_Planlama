@@ -73,18 +73,17 @@ class TeslimatIlce(models.Model):
     def _compute_yaka_tipi(self):
         """İlçe adına göre yaka tipini otomatik belirle"""
         anadolu_ilceleri = [
-            'Kadıköy', 'Üsküdar', 'Ataşehir', 'Ümraniye', 'Maltepe', 'Kartal', 
-            'Pendik', 'Tuzla', 'Çekmeköy', 'Sancaktepe', 'Sultanbeyli', 'Şile',
-            'Beykoz', 'Çatalca', 'Silivri', 'Büyükçekmece', 'Küçükçekmece',
-            'Avcılar', 'Esenyurt', 'Başakşehir', 'Sultangazi', 'Eyüpsultan',
-            'Kağıthane', 'Şişli', 'Beşiktaş', 'Beyoğlu', 'Fatih', 'Üsküdar'
+            'Maltepe', 'Kartal', 'Pendik', 'Tuzla',
+            'Üsküdar', 'Kadıköy', 'Ataşehir', 'Ümraniye',
+            'Sancaktepe', 'Çekmeköy', 'Beykoz', 'Şile', 'Sultanbeyli'
         ]
         
         avrupa_ilceleri = [
+            'Beyoğlu', 'Şişli', 'Beşiktaş', 'Kağıthane', 'Sarıyer',
             'Bakırköy', 'Bahçelievler', 'Güngören', 'Esenler', 'Bağcılar',
-            'Sultangazi', 'Gaziosmanpaşa', 'Küçükçekmece', 'Avcılar', 'Esenyurt',
-            'Başakşehir', 'Arnavutköy', 'Sarıyer', 'Beşiktaş', 'Şişli',
-            'Kağıthane', 'Eyüpsultan', 'Fatih', 'Beyoğlu', 'Üsküdar'
+            'Eyüpsultan', 'Gaziosmanpaşa', 'Küçükçekmece', 'Avcılar',
+            'Başakşehir', 'Sultangazi', 'Arnavutköy', 'Fatih', 'Zeytinburnu',
+            'Bayrampaşa', 'Esenyurt', 'Beylikdüzü', 'Silivri', 'Çatalca'
         ]
         
         for record in self:
@@ -104,46 +103,46 @@ class TeslimatIlce(models.Model):
         istanbul = self.env['teslimat.sehir'].get_istanbul()
         
         ilce_listesi = [
-            # Anadolu Yakası
-            {'name': 'Kadıköy', 'yaka_tipi': 'anadolu'},
-            {'name': 'Üsküdar', 'yaka_tipi': 'anadolu'},
-            {'name': 'Ataşehir', 'yaka_tipi': 'anadolu'},
-            {'name': 'Ümraniye', 'yaka_tipi': 'anadolu'},
+            # Anadolu Yakası (13 ilçe)
             {'name': 'Maltepe', 'yaka_tipi': 'anadolu'},
             {'name': 'Kartal', 'yaka_tipi': 'anadolu'},
             {'name': 'Pendik', 'yaka_tipi': 'anadolu'},
             {'name': 'Tuzla', 'yaka_tipi': 'anadolu'},
-            {'name': 'Çekmeköy', 'yaka_tipi': 'anadolu'},
+            {'name': 'Üsküdar', 'yaka_tipi': 'anadolu'},
+            {'name': 'Kadıköy', 'yaka_tipi': 'anadolu'},
+            {'name': 'Ataşehir', 'yaka_tipi': 'anadolu'},
+            {'name': 'Ümraniye', 'yaka_tipi': 'anadolu'},
             {'name': 'Sancaktepe', 'yaka_tipi': 'anadolu'},
-            {'name': 'Sultanbeyli', 'yaka_tipi': 'anadolu'},
-            {'name': 'Şile', 'yaka_tipi': 'anadolu'},
+            {'name': 'Çekmeköy', 'yaka_tipi': 'anadolu'},
             {'name': 'Beykoz', 'yaka_tipi': 'anadolu'},
+            {'name': 'Şile', 'yaka_tipi': 'anadolu'},
+            {'name': 'Sultanbeyli', 'yaka_tipi': 'anadolu'},
             
-            # Avrupa Yakası
+            # Avrupa Yakası (23 ilçe)
+            {'name': 'Beyoğlu', 'yaka_tipi': 'avrupa'},
+            {'name': 'Şişli', 'yaka_tipi': 'avrupa'},
+            {'name': 'Beşiktaş', 'yaka_tipi': 'avrupa'},
+            {'name': 'Kağıthane', 'yaka_tipi': 'avrupa'},
+            {'name': 'Sarıyer', 'yaka_tipi': 'avrupa'},
             {'name': 'Bakırköy', 'yaka_tipi': 'avrupa'},
             {'name': 'Bahçelievler', 'yaka_tipi': 'avrupa'},
             {'name': 'Güngören', 'yaka_tipi': 'avrupa'},
             {'name': 'Esenler', 'yaka_tipi': 'avrupa'},
             {'name': 'Bağcılar', 'yaka_tipi': 'avrupa'},
-            {'name': 'Sultangazi', 'yaka_tipi': 'avrupa'},
+            {'name': 'Eyüpsultan', 'yaka_tipi': 'avrupa'},
             {'name': 'Gaziosmanpaşa', 'yaka_tipi': 'avrupa'},
             {'name': 'Küçükçekmece', 'yaka_tipi': 'avrupa'},
             {'name': 'Avcılar', 'yaka_tipi': 'avrupa'},
-            {'name': 'Esenyurt', 'yaka_tipi': 'avrupa'},
             {'name': 'Başakşehir', 'yaka_tipi': 'avrupa'},
+            {'name': 'Sultangazi', 'yaka_tipi': 'avrupa'},
             {'name': 'Arnavutköy', 'yaka_tipi': 'avrupa'},
-            {'name': 'Sarıyer', 'yaka_tipi': 'avrupa'},
-            {'name': 'Beşiktaş', 'yaka_tipi': 'avrupa'},
-            {'name': 'Şişli', 'yaka_tipi': 'avrupa'},
-            {'name': 'Kağıthane', 'yaka_tipi': 'avrupa'},
-            {'name': 'Eyüpsultan', 'yaka_tipi': 'avrupa'},
             {'name': 'Fatih', 'yaka_tipi': 'avrupa'},
-            {'name': 'Beyoğlu', 'yaka_tipi': 'avrupa'},
-            
-            # Çatalca ve Silivri
-            {'name': 'Çatalca', 'yaka_tipi': 'avrupa'},
+            {'name': 'Zeytinburnu', 'yaka_tipi': 'avrupa'},
+            {'name': 'Bayrampaşa', 'yaka_tipi': 'avrupa'},
+            {'name': 'Esenyurt', 'yaka_tipi': 'avrupa'},
+            {'name': 'Beylikdüzü', 'yaka_tipi': 'avrupa'},
             {'name': 'Silivri', 'yaka_tipi': 'avrupa'},
-            {'name': 'Büyükçekmece', 'yaka_tipi': 'avrupa'},
+            {'name': 'Çatalca', 'yaka_tipi': 'avrupa'},
         ]
         
         for ilce_data in ilce_listesi:
