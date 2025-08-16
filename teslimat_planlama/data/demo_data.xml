@@ -4,7 +4,7 @@
         <!-- İstanbul Şehri -->
         <record id="istanbul_sehir" model="teslimat.sehir">
             <field name="name">İstanbul</field>
-            <field name="ulke_kodu">TR</field>
+            <field name="ulke_id" ref="base.tr"/>
             <field name="aktif">True</field>
         </record>
         
