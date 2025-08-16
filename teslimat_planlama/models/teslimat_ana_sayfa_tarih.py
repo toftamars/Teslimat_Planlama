@@ -54,20 +54,49 @@ class TeslimatAnaSayfaTarih(models.Model):
                 color = '#28a745'  # Yeşil
                 icon = '🟢'
             
-            record.doluluk_bar = f"""
-                <div style="text-align: center;">
-                    <div style="font-size: 18px; margin-bottom: 5px;">{icon}</div>
-                    <div style="font-weight: bold; color: {color}; margin-bottom: 5px;">
-                        {record.durum_text}
+            # Yönetici kontrolü
+            is_manager = self.env.user.has_group('stock.group_stock_manager')
+            
+            if is_manager:
+                # Yönetici için tıklanabilir ikon
+                record.doluluk_bar = f"""
+                    <div style="text-align: center;">
+                        <div style="font-size: 18px; margin-bottom: 5px; cursor: pointer;" 
+                             onclick="if(confirm('Yönetici: {record.durum_text} durumu için işlem yapmak istiyor musunuz?')) {{ console.log('Yönetici işlemi başlatıldı'); }}">{icon}</div>
+                        <div style="font-weight: bold; color: {color}; margin-bottom: 5px;">
+                            {record.durum_text}
+                        </div>
+                        <div style="background: #f8f9fa; border-radius: 10px; height: 20px; margin: 5px 0;">
+                            <div style="background: {color}; height: 100%; border-radius: 10px; width: {min(record.doluluk_orani, 100)}%;"></div>
+                        </div>
+                        <div style="font-size: 12px; color: #6c757d;">
+                            {record.doluluk_orani:.1f}% Dolu
+                        </div>
+                        <div style="font-size: 10px; color: #007bff; margin-top: 5px;">
+                            👆 Yönetici: Tıklayabilir
+                        </div>
                     </div>
-                    <div style="background: #f8f9fa; border-radius: 10px; height: 20px; margin: 5px 0;">
-                        <div style="background: {color}; height: 100%; border-radius: 10px; width: {min(record.doluluk_orani, 100)}%;"></div>
+                """
+            else:
+                # Normal kullanıcı için tıklanamaz ikon
+                record.doluluk_bar = f"""
+                    <div style="text-align: center;">
+                        <div style="font-size: 18px; margin-bottom: 5px; cursor: not-allowed; opacity: 0.7; pointer-events: none; user-select: none;" 
+                             title="Bu işlem için yönetici yetkisi gereklidir">{icon}</div>
+                        <div style="font-weight: bold; color: {color}; margin-bottom: 5px;">
+                            {record.durum_text}
+                        </div>
+                        <div style="background: #f8f9fa; border-radius: 10px; height: 20px; margin: 5px 0;">
+                            <div style="background: {color}; height: 100%; border-radius: 10px; width: {min(record.doluluk_orani, 100)}%;"></div>
+                        </div>
+                        <div style="font-size: 12px; color: #6c757d;">
+                            {record.doluluk_orani:.1f}% Dolu
+                        </div>
+                        <div style="font-size: 10px; color: #6c757d; margin-top: 5px;">
+                            🔒 Sadece Görüntüleme
+                        </div>
                     </div>
-                    <div style="font-size: 12px; color: #6c757d;">
-                        {record.doluluk_orani:.1f}% Dolu
-                    </div>
-                </div>
-            """
+                """
     
     def write(self, vals):
         """Sadece yönetici düzenleyebilir"""
