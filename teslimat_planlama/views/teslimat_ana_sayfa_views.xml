@@ -26,14 +26,22 @@
                         </group>
                     </group>
                     
-                    <!-- Sorgula Butonu -->
-                    <group>
-                        <button name="action_sorgula" 
-                                string="🔍 Sorgula" 
-                                type="object" 
-                                class="btn-primary"
-                                attrs="{'invisible': [('arac_id', '=', False), ('ilce_id', '=', False)]}"/>
-                    </group>
+                                               <!-- Sorgula Butonu -->
+                           <group>
+                               <button name="action_sorgula" 
+                                       string="🔍 Sorgula" 
+                                       type="object" 
+                                       class="btn-primary"
+                                       attrs="{'invisible': [('arac_id', '=', False), ('ilce_id', '=', False)]}"/>
+                               
+                               <!-- Yönetici Butonu -->
+                               <button name="action_manuel_duzenle" 
+                                       string="⚙️ Manuel Düzenle (Yönetici)" 
+                                       type="object" 
+                                       class="btn-warning"
+                                       attrs="{'invisible': [('ilce_uygun_mu', '=', False)]}"
+                                       groups="stock.group_stock_manager"/>
+                           </group>
                     
                     <!-- Sonuç Alanları -->
                     <notebook>
@@ -47,6 +55,7 @@
                                     <field name="kalan_kapasite"/>
                                     <field name="doluluk_orani" widget="percentage"/>
                                     <field name="durum_text"/>
+                                    <field name="durum_icon" readonly="1"/>
                                     <field name="doluluk_bar" widget="html"/>
                                 </tree>
                             </field>

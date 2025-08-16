@@ -1,4 +1,5 @@
 from odoo import models, fields, api
+from odoo.exceptions import AccessError
 from datetime import datetime, timedelta
 
 
@@ -239,4 +240,21 @@ class TeslimatAnaSayfa(models.Model):
                 'type': 'success',
                 'sticky': False,
             }
+        }
+    
+    def action_manuel_duzenle(self):
+        """Sadece yönetici tarafından manuel düzenleme"""
+        self.ensure_one()
+        
+        # Yönetici kontrolü
+        if not self.env.user.has_group('stock.group_stock_manager'):
+            raise AccessError("Bu işlem için yönetici yetkisi gereklidir!")
+        
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'teslimat.ana.sayfa.tarih',
+            'view_mode': 'tree,form',
+            'domain': [('ana_sayfa_id', '=', self.id)],
+            'context': {'default_ana_sayfa_id': self.id},
+            'name': 'Tarih Kapasite Düzenleme (Yönetici)'
         }

@@ -1,4 +1,5 @@
 from odoo import models, fields, api
+from odoo.exceptions import AccessError
 
 class TeslimatAnaSayfaTarih(models.Model):
     _name = 'teslimat.ana.sayfa.tarih'
@@ -26,10 +27,17 @@ class TeslimatAnaSayfaTarih(models.Model):
     
     durum_icon = fields.Char(string='Durum İkonu', default='🟢')
     durum_text = fields.Char(string='Durum Metni', default='MUSAİT')
+    durum_gosterim = fields.Char(string='Durum Gösterimi', compute='_compute_durum_gosterim')
     
     # Hesaplanan Alanlar
     doluluk_bar = fields.Html(string='Doluluk Barı', compute='_compute_doluluk_bar')
     
+    @api.depends('durum_icon', 'durum_text')
+    def _compute_durum_gosterim(self):
+        """Durum gösterimi için ikon + metin"""
+        for record in self:
+            record.durum_gosterim = f"{record.durum_icon} {record.durum_text}"
+
     @api.depends('doluluk_orani', 'durum')
     def _compute_doluluk_bar(self):
         """Doluluk oranı için görsel bar oluştur"""
@@ -58,3 +66,19 @@ class TeslimatAnaSayfaTarih(models.Model):
                     </div>
                 </div>
             """
+    
+    def write(self, vals):
+        """Sadece yönetici düzenleyebilir"""
+        # Yönetici kontrolü
+        if not self.env.user.has_group('stock.group_stock_manager'):
+            raise AccessError("Bu kayıtları düzenlemek için yönetici yetkisi gereklidir!")
+        
+        return super().write(vals)
+    
+    def unlink(self):
+        """Sadece yönetici silebilir"""
+        # Yönetici kontrolü
+        if not self.env.user.has_group('stock.group_stock_manager'):
+            raise AccessError("Bu kayıtları silmek için yönetici yetkisi gereklidir!")
+        
+        return super().unlink()
