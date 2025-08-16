@@ -19,6 +19,13 @@ class TeslimatBelgesi(models.Model):
     arac_id = fields.Many2one('teslimat.arac', string='Araç', required=True)
     ilce_id = fields.Many2one('teslimat.ilce', string='İlçe', required=True)
     
+    # Planlama İlişkileri
+    planlama_akilli_id = fields.Many2one('teslimat.planlama.akilli', string='Akıllı Planlama')
+    
+    # Sıra ve Öncelik
+    sira_no = fields.Integer(string='Sıra No', default=1)
+    oncelik_puani = fields.Integer(string='Öncelik Puanı', default=0)
+    
     # Transfer Belgesi Entegrasyonu
     transfer_no = fields.Char(string='Transfer No', help='Transfer belgesi numarası')
     stock_picking_id = fields.Many2one('stock.picking', string='Transfer Belgesi')

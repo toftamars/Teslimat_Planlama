@@ -29,6 +29,9 @@ class TeslimatPlanlamaAkilli(models.Model):
     basarili_teslimat = fields.Integer(string='Başarılı Teslimat', compute='_compute_toplamlar', store=True)
     hatali_teslimat = fields.Integer(string='Hatalı Teslimat', compute='_compute_toplamlar', store=True)
     
+    # İlişkiler
+    teslimat_ids = fields.One2many('teslimat.belgesi', 'planlama_akilli_id', string='Teslimatlar')
+    
     # Notlar
     notlar = fields.Text(string='Planlama Notları')
     
