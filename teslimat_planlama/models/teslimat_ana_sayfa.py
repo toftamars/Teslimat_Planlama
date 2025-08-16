@@ -7,7 +7,8 @@ class TeslimatAnaSayfa(models.Model):
     _description = 'Teslimat Ana Sayfa - Kapasite Sorgulama'
 
     # Sorgulama Alanları
-    sorgu_tarihi = fields.Date(string='Tarih', required=True, default=fields.Date.today)
+    arac_id = fields.Many2one('teslimat.arac', string='Araç', required=True, 
+                              domain="[('aktif', '=', True), ('gecici_kapatma', '=', False)]")
     ilce_id = fields.Many2one('teslimat.ilce', string='İlçe', required=True)
     
     # Sonuç Alanları (Hesaplanan)
@@ -34,102 +35,103 @@ class TeslimatAnaSayfa(models.Model):
     ilce_uygun_mu = fields.Boolean(string='İlçe Uygun mu?', compute='_compute_ilce_uygunluk', store=True)
     uygunluk_mesaji = fields.Text(string='Uygunluk Mesajı', compute='_compute_ilce_uygunluk')
     
-    @api.depends('sorgu_tarihi')
+    @api.depends('arac_id')
     def _compute_gun(self):
-        """Seçilen tarihe göre teslimat gününü belirle"""
+        """Seçilen araç için uygun günleri belirle"""
         for record in self:
-            if record.sorgu_tarihi:
-                # Haftanın gününü bul (0=Pazartesi, 1=Salı, vs.)
-                gun_kodu = record.sorgu_tarihi.strftime('%A').lower()
-                gun_map = {
-                    'monday': 'pazartesi',
-                    'tuesday': 'sali',
-                    'wednesday': 'carsamba',
-                    'thursday': 'persembe',
-                    'friday': 'cuma',
-                    'saturday': 'cumartesi',
-                    'sunday': 'pazar'
-                }
-                gun_kodu_tr = gun_map.get(gun_kodu, 'pazartesi')
+            if record.arac_id:
+                # Araç tipine göre uygun günleri bul
+                arac_tipi = record.arac_id.arac_tipi
                 
-                # İlgili günü bul
-                gun = self.env['teslimat.gun'].search([('gun_kodu', '=', gun_kodu_tr)], limit=1)
-                record.gun_id = gun.id if gun else False
+                if arac_tipi in ['anadolu_yakasi', 'avrupa_yakasi']:
+                    # Yaka bazlı araçlar için tüm günler uygun
+                    gun = self.env['teslimat.gun'].search([('aktif', '=', True)], limit=1)
+                    record.gun_id = gun.id if gun else False
+                else:
+                    # Küçük araçlar ve ek araç için tüm günler uygun
+                    gun = self.env['teslimat.gun'].search([('aktif', '=', True)], limit=1)
+                    record.gun_id = gun.id if gun else False
             else:
                 record.gun_id = False
 
-    @api.depends('ilce_id', 'gun_id')
+    @api.depends('ilce_id', 'arac_id')
     def _compute_ilce_uygunluk(self):
-        """İlçe-gün uygunluğunu kontrol et"""
+        """İlçe-arac uygunluğunu kontrol et"""
         for record in self:
-            if record.ilce_id and record.gun_id:
-                # İlçe o gün için tanımlı mı?
-                ilce_gun_eslesme = self.env['teslimat.gun.ilce'].search([
-                    ('gun_id', '=', record.gun_id.id),
-                    ('ilce_id', '=', record.ilce_id.id)
-                ], limit=1)
-                
-                if ilce_gun_eslesme:
-                    record.ilce_uygun_mu = True
-                    record.uygunluk_mesaji = f"✅ {record.ilce_id.name} ilçesine {record.gun_id.name} günü teslimat yapılabilir"
-                else:
-                    record.ilce_uygun_mu = False
-                    record.uygunluk_mesaji = f"❌ {record.ilce_id.name} ilçesine {record.gun_id.name} günü teslimat yapılamaz"
-            else:
-                record.ilce_uygun_mu = False
-                record.uygunluk_mesaji = "Lütfen tarih ve ilçe seçin"
-
-    @api.depends('ilce_id', 'gun_id', 'sorgu_tarihi')
-    def _compute_uygun_araclar(self):
-        """Seçilen ilçe ve gün için uygun araçları bul"""
-        for record in self:
-            if record.ilce_uygun_mu and record.gun_id:
-                # İlçe tipine göre uygun araçları bul
+            if record.ilce_id and record.arac_id:
+                # Araç tipine göre ilçe uygunluğunu kontrol et
+                arac_tipi = record.arac_id.arac_tipi
                 ilce_yaka = record.ilce_id.yaka_tipi
                 
-                if ilce_yaka in ['anadolu', 'avrupa']:
-                    # Yaka bazlı araç seçimi
-                    arac_tipi_map = {
-                        'anadolu': 'anadolu_yakasi',
-                        'avrupa': 'avrupa_yakasi'
-                    }
-                    arac_tipi = arac_tipi_map.get(ilce_yaka)
-                    
-                    araclar = self.env['teslimat.arac'].search([
-                        ('arac_tipi', '=', arac_tipi),
-                        ('aktif', '=', True),
-                        ('gecici_kapatma', '=', False)
-                    ])
-                else:
-                    # Her iki yaka için de uygun araçlar
-                    araclar = self.env['teslimat.arac'].search([
-                        ('aktif', '=', True),
-                        ('gecici_kapatma', '=', False)
-                    ])
+                # Yaka bazlı araçlar için kısıtlama
+                if arac_tipi == 'anadolu_yakasi':
+                    if ilce_yaka == 'anadolu':
+                        record.ilce_uygun_mu = True
+                        record.uygunluk_mesaji = f"✅ {record.ilce_id.name} ilçesine {record.arac_id.name} ile teslimat yapılabilir (Anadolu Yakası)"
+                    else:
+                        record.ilce_uygun_mu = False
+                        record.uygunluk_mesaji = f"❌ {record.ilce_id.name} ilçesine {record.arac_id.name} ile teslimat yapılamaz (Anadolu Yakası araç sadece Anadolu Yakası ilçelerine gidebilir)"
                 
-                record.uygun_arac_ids = araclar.ids
+                elif arac_tipi == 'avrupa_yakasi':
+                    if ilce_yaka == 'avrupa':
+                        record.ilce_uygun_mu = True
+                        record.uygunluk_mesaji = f"✅ {record.ilce_id.name} ilçesine {record.arac_id.name} ile teslimat yapılabilir (Avrupa Yakası)"
+                    else:
+                        record.ilce_uygun_mu = False
+                        record.uygunluk_mesaji = f"❌ {record.ilce_id.name} ilçesine {record.arac_id.name} ile teslimat yapılamaz (Avrupa Yakası araç sadece Avrupa Yakası ilçelerine gidebilir)"
+                
+                # Küçük araçlar ve ek araç için kısıtlama yok
+                elif arac_tipi in ['kucuk_arac_1', 'kucuk_arac_2', 'ek_arac']:
+                    record.ilce_uygun_mu = True
+                    record.uygunluk_mesaji = f"✅ {record.ilce_id.name} ilçesine {record.arac_id.name} ile teslimat yapılabilir (Her iki yakaya da gidebilir)"
+                
+                else:
+                    record.ilce_uygun_mu = False
+                    record.uygunluk_mesaji = f"❌ Bilinmeyen araç tipi: {arac_tipi}"
+            else:
+                record.ilce_uygun_mu = False
+                record.uygunluk_mesaji = "Lütfen araç ve ilçe seçin"
+
+    @api.depends('ilce_id', 'arac_id')
+    def _compute_uygun_araclar(self):
+        """Seçilen ilçe ve araç için uygunluk kontrolü"""
+        for record in self:
+            if record.ilce_uygun_mu and record.arac_id:
+                # Seçilen araç uygun mu kontrol et
+                ilce_yaka = record.ilce_id.yaka_tipi
+                arac_tipi = record.arac_id.arac_tipi
+                
+                # Yaka uygunluğu kontrol et
+                if ilce_yaka == 'anadolu' and arac_tipi == 'anadolu_yakasi':
+                    record.uygun_arac_ids = [record.arac_id.id]
+                elif ilce_yaka == 'avrupa' and arac_tipi == 'avrupa_yakasi':
+                    record.uygun_arac_ids = [record.arac_id.id]
+                elif arac_tipi in ['kucuk_arac_1', 'kucuk_arac_2', 'ek_arac']:
+                    # Küçük araçlar her iki yakaya da gidebilir
+                    record.uygun_arac_ids = [record.arac_id.id]
+                else:
+                    record.uygun_arac_ids = []
             else:
                 record.uygun_arac_ids = []
 
-    @api.depends('ilce_id', 'gun_id', 'sorgu_tarihi', 'uygun_arac_ids')
+    @api.depends('ilce_id', 'arac_id', 'uygun_arac_ids')
     def _compute_kapasite_bilgileri(self):
         """Kapasite bilgilerini hesapla"""
         for record in self:
-            if record.ilce_uygun_mu and record.uygun_araclar:
-                # Toplam kapasite
-                toplam_kapasite = sum(arac.gunluk_teslimat_limiti for arac in record.uygun_araclar)
+            if record.ilce_uygun_mu and record.arac_id:
+                # Seçilen aracın kapasitesi
+                record.toplam_kapasite = record.arac_id.gunluk_teslimat_limiti
                 
-                # O gün için mevcut teslimat sayısı
+                # Bugün için mevcut teslimat sayısı
+                bugun = fields.Date.today()
                 teslimat_sayisi = self.env['teslimat.belgesi'].search_count([
-                    ('teslimat_tarihi', '=', record.sorgu_tarihi),
-                    ('ilce_id', '=', record.ilce_id.id),
-                    ('arac_id', 'in', record.uygun_araclar.ids),
+                    ('teslimat_tarihi', '=', bugun),
+                    ('arac_id', '=', record.arac_id.id),
                     ('durum', 'in', ['hazir', 'yolda', 'teslim_edildi'])
                 ])
                 
-                record.toplam_kapasite = toplam_kapasite
                 record.kullanilan_kapasite = teslimat_sayisi
-                record.kalan_kapasite = toplam_kapasite - teslimat_sayisi
+                record.kalan_kapasite = record.toplam_kapasite - teslimat_sayisi
                 record.teslimat_sayisi = teslimat_sayisi
             else:
                 record.toplam_kapasite = 0
@@ -137,12 +139,12 @@ class TeslimatAnaSayfa(models.Model):
                 record.kalan_kapasite = 0
                 record.teslimat_sayisi = 0
 
-    @api.depends('sorgu_tarihi')
+    @api.depends('arac_id')
     def _compute_gunluk_kapasite(self):
-        """Seçilen gün için genel kapasite bilgilerini hesapla"""
+        """Seçilen araç için günlük kapasite bilgilerini hesapla"""
         for record in self:
-            if record.sorgu_tarihi and record.gun_id:
-                # O gün için tüm aktif araçların kapasitesi
+            if record.arac_id:
+                # Bugün için tüm aktif araçların kapasitesi
                 aktif_araclar = self.env['teslimat.arac'].search([
                     ('aktif', '=', True),
                     ('gecici_kapatma', '=', False)
@@ -151,9 +153,10 @@ class TeslimatAnaSayfa(models.Model):
                 # Toplam günlük kapasite
                 record.gunluk_toplam_kapasite = sum(arac.gunluk_teslimat_limiti for arac in aktif_araclar)
                 
-                # O gün için toplam teslimat sayısı
+                # Bugün için toplam teslimat sayısı
+                bugun = fields.Date.today()
                 record.gunluk_teslimat_sayisi = self.env['teslimat.belgesi'].search_count([
-                    ('teslimat_tarihi', '=', record.sorgu_tarihi),
+                    ('teslimat_tarihi', '=', bugun),
                     ('durum', 'in', ['hazir', 'yolda', 'teslim_edildi'])
                 ])
                 
@@ -200,12 +203,13 @@ class TeslimatAnaSayfa(models.Model):
             'params': {
                 'title': 'Kapasite Bilgileri',
                 'message': f"""
-                    📊 {self.ilce_id.name} İlçesi - {self.gun_id.name}
+                    📊 {self.ilce_id.name} İlçesi - {self.arac_id.name}
                     
-                    🚗 Uygun Araç Sayısı: {len(self.uygun_arac_ids)}
-                    📦 İlçe Toplam Kapasite: {self.toplam_kapasite}
-                    ✅ İlçe Kullanılan: {self.kullanilan_kapasite}
-                    🔄 İlçe Kalan: {self.kalan_kapasite}
+                    🚗 Seçilen Araç: {self.arac_id.name}
+                    🚗 Araç Tipi: {self.arac_id.arac_tipi.replace('_', ' ').title()}
+                    📦 Araç Kapasitesi: {self.toplam_kapasite}
+                    ✅ Bugün Kullanılan: {self.kullanilan_kapasite}
+                    🔄 Bugün Kalan: {self.kalan_kapasite}
                     
                     🌟 GÜNLÜK GENEL KAPASİTE:
                     📦 Günlük Toplam: {self.gunluk_toplam_kapasite}

@@ -9,14 +9,15 @@
                 <sheet>
                     <div class="oe_title">
                         <h1>
-                            <span>📊 Teslimat Kapasite Sorgulama</span>
+                            <span>🚗 Araç-İlçe Kapasite Sorgulama</span>
                         </h1>
                     </div>
                     
                     <!-- Sorgulama Alanları -->
                     <group>
                         <group>
-                            <field name="sorgu_tarihi" widget="date"/>
+                            <field name="arac_id" domain="[('aktif', '=', True), ('gecici_kapatma', '=', False)]" 
+                                   options="{'no_create': True, 'no_edit': True}"/>
                             <field name="ilce_id" domain="[('aktif', '=', True), ('teslimat_aktif', '=', True)]" 
                                    options="{'no_create': True, 'no_edit': True}"/>
                         </group>
@@ -32,7 +33,7 @@
                                 string="🔍 Sorgula" 
                                 type="object" 
                                 class="btn-primary"
-                                attrs="{'invisible': [('ilce_id', '=', False)]}"/>
+                                attrs="{'invisible': [('arac_id', '=', False), ('ilce_id', '=', False)]}"/>
                     </group>
                     
                     <!-- Sonuç Alanları -->
@@ -96,7 +97,13 @@
                 📊 Teslimat kapasite sorgulama sayfasına hoş geldiniz!
             </p>
             <p>
-                Tarih ve ilçe seçerek kapasite bilgilerini sorgulayabilirsiniz.
+                Araç ve ilçe seçerek kapasite bilgilerini sorgulayabilirsiniz.
+            </p>
+            <p>
+                <strong>Kurallar:</strong><br/>
+                • Anadolu Yakası araç sadece Anadolu Yakası ilçelerine gidebilir<br/>
+                • Avrupa Yakası araç sadece Avrupa Yakası ilçelerine gidebilir<br/>
+                • Küçük Araç 1, Küçük Araç 2 ve Ek Araç her iki yakaya da gidebilir
             </p>
         </field>
     </record>
