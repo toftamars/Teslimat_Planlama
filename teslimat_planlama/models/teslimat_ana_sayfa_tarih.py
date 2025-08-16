@@ -31,7 +31,6 @@ class TeslimatAnaSayfaTarih(models.Model):
     
     # Hesaplanan Alanlar
     doluluk_bar = fields.Html(string='Doluluk Barı', compute='_compute_doluluk_bar')
-    olustur_butonu_goster = fields.Boolean(string='Oluştur Butonu Göster', compute='_compute_olustur_butonu_goster')
     
     @api.depends('durum_icon', 'durum_text')
     def _compute_durum_gosterim(self):
@@ -39,12 +38,7 @@ class TeslimatAnaSayfaTarih(models.Model):
         for record in self:
             record.durum_gosterim = f"{record.durum_icon} {record.durum_text}"
     
-    @api.depends('durum', 'kalan_kapasite')
-    def _compute_olustur_butonu_goster(self):
-        """Oluştur butonunun görünürlüğünü hesapla"""
-        for record in self:
-            # Dolu durumunda veya kapasite yoksa buton gizli
-            record.olustur_butonu_goster = record.durum != 'dolu' and record.kalan_kapasite > 0
+
 
     @api.depends('doluluk_orani', 'durum')
     def _compute_doluluk_bar(self):
