@@ -19,11 +19,11 @@ class TeslimatAnaSayfa(models.Model):
             rec.tarih_listesi = rec.tarih_listesi
     uygun_arac_ids = fields.Many2many('teslimat.arac', string='Uygun Araçlar', compute='_compute_uygun_araclar')
     
-    # İlçe Bazlı Kapasite
-    toplam_kapasite = fields.Integer(string='Toplam Kapasite', compute='_compute_kapasite_bilgileri')
-    kullanilan_kapasite = fields.Integer(string='Kullanılan Kapasite', compute='_compute_kapasite_bilgileri')
-    kalan_kapasite = fields.Integer(string='Kalan Kapasite', compute='_compute_kapasite_bilgileri')
-    teslimat_sayisi = fields.Integer(string='Teslimat Sayısı', compute='_compute_kapasite_bilgileri')
+    # İlçe Bazlı Kapasite (anlık doldurulur)
+    toplam_kapasite = fields.Integer(string='Toplam Kapasite', default=0)
+    kullanilan_kapasite = fields.Integer(string='Kullanılan Kapasite', default=0)
+    kalan_kapasite = fields.Integer(string='Kalan Kapasite', default=0)
+    teslimat_sayisi = fields.Integer(string='Teslimat Sayısı', default=0)
     
     # Sorgu kontrolü: sadece buton ile sonuç üret
     sorgulandi = fields.Boolean(string='Sorgulandı mı?', default=False)
@@ -208,30 +208,7 @@ class TeslimatAnaSayfa(models.Model):
             else:
                 record.uygun_arac_ids = []
 
-    @api.depends('ilce_id', 'arac_id', 'uygun_arac_ids', 'sorgulandi')
-    def _compute_kapasite_bilgileri(self):
-        """Kapasite bilgilerini hesapla"""
-        for record in self:
-            if record.sorgulandi and record.ilce_uygun_mu and record.arac_id:
-                # Seçilen aracın kapasitesi
-                record.toplam_kapasite = 7
-                
-                # Bugün için mevcut teslimat sayısı
-                bugun = fields.Date.today()
-                teslimat_sayisi = self.env['teslimat.belgesi'].search_count([
-                    ('teslimat_tarihi', '=', bugun),
-                    ('arac_id', '=', record.arac_id.id),
-                    ('durum', 'in', ['hazir', 'yolda', 'teslim_edildi'])
-                ])
-                
-                record.kullanilan_kapasite = teslimat_sayisi
-                record.kalan_kapasite = record.toplam_kapasite - teslimat_sayisi
-                record.teslimat_sayisi = teslimat_sayisi
-            else:
-                record.toplam_kapasite = 0
-                record.kullanilan_kapasite = 0
-                record.kalan_kapasite = 0
-                record.teslimat_sayisi = 0
+    # Not: kapasite alanları buton ile set edilecek
 
 
 
@@ -314,6 +291,18 @@ class TeslimatAnaSayfa(models.Model):
 
         # Mevcutları temizle ve yeni kayıtları ekle
         self.tarih_listesi = [(5, 0, 0)] + [(0, 0, t) for t in tarihler]
+
+        # Kapasite özetini anlık set et (reload olmadan görünür)
+        self.toplam_kapasite = 7
+        bugun = fields.Date.today()
+        bugun_sayisi = self.env['teslimat.belgesi'].search_count([
+            ('teslimat_tarihi', '=', bugun),
+            ('arac_id', '=', self.arac_id.id),
+            ('durum', 'in', ['hazir', 'yolda', 'teslim_edildi'])
+        ])
+        self.kullanilan_kapasite = bugun_sayisi
+        self.kalan_kapasite = max(self.toplam_kapasite - bugun_sayisi, 0)
+        self.teslimat_sayisi = bugun_sayisi
         
         # Sayfayı yenilemeden sonuçlar ekranda kalsın
         return {
