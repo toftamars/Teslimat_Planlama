@@ -174,7 +174,13 @@ class TeslimatAnaSayfa(models.Model):
         if not ilce:
             return False
         availability = self.env['teslimat.gun'].check_availability(tarih, district_id=ilce.id)
-        return bool(availability.get('available'))
+        if availability.get('available'):
+            return True
+        # Fallback: Program eşleşmesi bulunamazsa hafta içi (Pzt-Cuma) günleri için izin ver
+        # Böylece yapılandırma eksikse de kullanıcı boş liste görmez
+        gun_adi = tarih.strftime('%A')
+        hafta_ici = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
+        return gun_adi in hafta_ici
 
     @api.depends('ilce_id', 'arac_id', 'sorgulandi')
     def _compute_uygun_araclar(self):
