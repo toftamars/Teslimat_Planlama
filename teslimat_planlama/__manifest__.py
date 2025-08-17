@@ -23,6 +23,7 @@
         'sale',
     ],
                'data': [
+               'security/security.xml',
                'security/ir.model.access.csv',
                'data/ir_sequence_data.xml',
                'data/demo_data.xml',

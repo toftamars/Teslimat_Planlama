@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <!-- Teslimat modülü için kategori -->
+        <record id="module_category_teslimat" model="ir.module.category">
+            <field name="name">Teslimat</field>
+            <field name="sequence">75</field>
+        </record>
+
+        <!-- Teslimat Yöneticisi grubu -->
+        <record id="group_teslimat_manager" model="res.groups">
+            <field name="name">Teslimat Yöneticisi</field>
+            <field name="category_id" ref="teslimat_planlama.module_category_teslimat"/>
+        </record>
+
+        <!-- Teslimat Sürücüsü grubu -->
+        <record id="group_teslimat_driver" model="res.groups">
+            <field name="name">Teslimat Sürücüsü</field>
+            <field name="category_id" ref="teslimat_planlama.module_category_teslimat"/>
+        </record>
+    </data>
+</odoo>
+
+

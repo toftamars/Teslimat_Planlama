@@ -192,7 +192,7 @@
         <field name="name">Teslimat Planlamaları</field>
         <field name="res_model">teslimat.planlama</field>
         <field name="view_mode">tree,form</field>
-        <field name="groups_id" eval="[(6,0,[ref('stock.group_stock_manager')])]"/>
+        <field name="groups_id" eval="[(6,0,[ref('teslimat_planlama.group_teslimat_manager')])]"/>
         <field name="search_view_id" ref="view_teslimat_planlama_search"/>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
@@ -205,7 +205,7 @@
         <field name="name">Teslimat Transferler</field>
         <field name="res_model">teslimat.transfer</field>
         <field name="view_mode">tree,form</field>
-        <field name="groups_id" eval="[(6,0,[ref('stock.group_stock_manager')])]"/>
+        <field name="groups_id" eval="[(6,0,[ref('teslimat_planlama.group_teslimat_manager')])]"/>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 İlk teslimat transferini oluşturun!
@@ -320,7 +320,7 @@
         <field name="name">Teslimat Araçları</field>
         <field name="res_model">teslimat.arac</field>
         <field name="view_mode">tree,form</field>
-        <field name="groups_id" eval="[(6,0,[ref('stock.group_stock_manager')])]"/>
+        <field name="groups_id" eval="[(6,0,[ref('teslimat_planlama.group_teslimat_manager')])]"/>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 İlk teslimat aracını oluşturun!
@@ -333,7 +333,7 @@
         <field name="name">Teslimat Günleri</field>
         <field name="res_model">teslimat.gun</field>
         <field name="view_mode">tree,form</field>
-        <field name="groups_id" eval="[(6,0,[ref('stock.group_stock_manager')])]"/>
+        <field name="groups_id" eval="[(6,0,[ref('teslimat_planlama.group_teslimat_manager')])]"/>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 İlk teslimat gününü oluşturun!
@@ -371,7 +371,7 @@
         <field name="name">Teslimat Programı Kurulumu</field>
         <field name="res_model">teslimat.program.kurulum</field>
         <field name="view_mode">tree,form</field>
-        <field name="groups_id" eval="[(6,0,[ref('stock.group_stock_manager')])]"/>
+        <field name="groups_id" eval="[(6,0,[ref('teslimat_planlama.group_teslimat_manager')])]"/>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 Teslimat programını kurmak için yeni kayıt oluşturun!
@@ -384,7 +384,7 @@
         <field name="name">Şehirler</field>
         <field name="res_model">teslimat.sehir</field>
         <field name="view_mode">tree,form</field>
-        <field name="groups_id" eval="[(6,0,[ref('stock.group_stock_manager')])]"/>
+        <field name="groups_id" eval="[(6,0,[ref('teslimat_planlama.group_teslimat_manager')])]"/>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 İlk şehri oluşturun!
@@ -397,7 +397,7 @@
         <field name="name">İlçeler</field>
         <field name="res_model">teslimat.ilce</field>
         <field name="view_mode">tree,form</field>
-        <field name="groups_id" eval="[(6,0,[ref('stock.group_stock_manager')])]"/>
+        <field name="groups_id" eval="[(6,0,[ref('teslimat_planlama.group_teslimat_manager')])]"/>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 İlk ilçeyi oluşturun!
@@ -410,7 +410,7 @@
         <field name="name">Akıllı Planlama</field>
         <field name="res_model">teslimat.planlama.akilli</field>
         <field name="view_mode">tree,form</field>
-        <field name="groups_id" eval="[(6,0,[ref('stock.group_stock_manager')])]"/>
+        <field name="groups_id" eval="[(6,0,[ref('teslimat_planlama.group_teslimat_manager')])]"/>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 İlk akıllı planlamayı oluşturun!
@@ -423,7 +423,7 @@
         <field name="name">Kapasite Onayları</field>
         <field name="res_model">teslimat.kapasite.onay</field>
         <field name="view_mode">tree,form</field>
-        <field name="groups_id" eval="[(6,0,[ref('stock.group_stock_manager')])]"/>
+        <field name="groups_id" eval="[(6,0,[ref('teslimat_planlama.group_teslimat_manager')])]"/>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 Kapasite aşımı onay talepleri burada görünecek!
