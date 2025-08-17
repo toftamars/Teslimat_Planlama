@@ -7,6 +7,13 @@
 
     <!-- 📋 Teslimat Ana Menüleri -->
     
+    <!-- 🏠 Ana Sayfa -->
+    <menuitem id="menu_teslimat_ana_sayfa" 
+              name="🏠 Ana Sayfa" 
+              parent="menu_teslimat_planlama_root" 
+              action="action_teslimat_ana_sayfa" 
+              sequence="5"/>
+    
     <!-- 📄 Teslimat Belgeleri -->
     <menuitem id="menu_teslimat_belgeleri" 
               name="📄 Teslimat Belgeleri" 
@@ -18,8 +25,6 @@
               parent="menu_teslimat_belgeleri" 
               action="action_teslimat_belgesi" 
               sequence="10"/>
-    
-    <!-- Teslimat Belgesi Oluştur menüsü kaldırıldı -->
 
     <!-- 🚗 Teslimat Araçları -->
     <menuitem id="menu_teslimat_araclar" 
