@@ -121,7 +121,7 @@ class TeslimatAnaSayfa(models.Model):
                     # İlçe-gün uygunluğunu kontrol et
                     ilce_uygun_mu = self._check_ilce_gun_uygunlugu(record.ilce_id, tarih)
                     
-                    # Sadece uygun günleri ekle
+                    # Sadece uygun ve kapasitesi olan günleri ekle
                     if ilce_uygun_mu:
                         # Bu tarih için teslimat sayısını hesapla
                         teslimat_sayisi = self.env['teslimat.belgesi'].search_count([
@@ -134,6 +134,9 @@ class TeslimatAnaSayfa(models.Model):
                         toplam_kapasite = record.arac_id.gunluk_teslimat_limiti
                         kalan_kapasite = toplam_kapasite - teslimat_sayisi
                         doluluk_orani = (teslimat_sayisi / toplam_kapasite * 100) if toplam_kapasite > 0 else 0
+                        # Kapasitesi dolu günleri listelemeyelim
+                        if kalan_kapasite <= 0:
+                            continue
                         
                         # Durum belirleme
                         if kalan_kapasite <= 0:
@@ -289,8 +292,9 @@ class TeslimatAnaSayfa(models.Model):
                 }
                 gun_adi_tr = gun_eslesmesi.get(tarih.strftime('%A'), tarih.strftime('%A'))
 
+                # Kapasitesi dolu günleri listelemeyelim
                 if kalan_kapasite <= 0:
-                    durum_icon, durum_text = '🔴', 'DOLU'
+                    continue
                 elif doluluk_orani >= 80:
                     durum_icon, durum_text = '🟡', 'DOLU YAKIN'
                 else:
