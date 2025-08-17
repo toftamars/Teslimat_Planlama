@@ -30,8 +30,8 @@
                     <!-- Transfer Bilgileri -->
                     <group string="Transfer Bilgileri">
                         <group>
+                            <field name="transfer_no" options="{'no_create': True}" placeholder="AKS/OUT/12345 yazarak arayın"/>
                             <field name="transfer_id" options="{'no_create': True}"/>
-                            <field name="transfer_no" placeholder="Örnek: AKS/OUT/12345"/>
                         </group>
                     </group>
                     

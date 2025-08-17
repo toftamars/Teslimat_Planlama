@@ -18,9 +18,18 @@ class TeslimatBelgesiWizard(models.TransientModel):
     kalan_kapasite = fields.Integer(string='Kalan Kapasite', compute='_compute_kalan_kapasite')
     
     # Transfer Bilgileri
-    transfer_id = fields.Many2one('stock.picking', string='Transfer Belgesi', 
-                                domain="[('state','in',['waiting','confirmed','assigned','done'])]")
-    transfer_no = fields.Char(string='Transfer No', help='Örnek: AKS/OUT/12345')
+    transfer_id = fields.Many2one(
+        'stock.picking',
+        string='Transfer Belgesi',
+        domain="[('state','in',['waiting','confirmed','assigned','done'])]",
+        help='Tüm transferler (stock.picking) arasından seçin'
+    )
+    transfer_no = fields.Many2one(
+        'stock.picking',
+        string='Transfer No',
+        domain="[('state','in',['waiting','confirmed','assigned','done'])]",
+        help='Transfer numarasına göre arayın (name)'
+    )
     
     # Müşteri ve Ürün Bilgileri
     musteri_id = fields.Many2one('res.partner', string='Müşteri', required=True)
@@ -49,30 +58,19 @@ class TeslimatBelgesiWizard(models.TransientModel):
         for wizard in self:
             wizard.kalan_kapasite = wizard.gunluk_limit - wizard.mevcut_teslimat
     
-    @api.onchange('transfer_id')
+    @api.onchange('transfer_id', 'transfer_no')
     def _onchange_transfer_id(self):
-        if self.transfer_id:
-            self.transfer_no = self.transfer_id.name
-            if self.transfer_id.partner_id:
-                self.musteri_id = self.transfer_id.partner_id.id
-            
-            # İlk ürün hareketini al
-            if self.transfer_id.move_ids_without_package:
-                move = self.transfer_id.move_ids_without_package[0]
+        picking = self.transfer_id or self.transfer_no
+        if picking:
+            self.transfer_id = picking.id
+            if picking.partner_id:
+                self.musteri_id = picking.partner_id.id
+            if picking.move_ids_without_package:
+                move = picking.move_ids_without_package[0]
                 self.urun_id = move.product_id.id
                 self.miktar = move.product_uom_qty
     
-    @api.onchange('transfer_no')
-    def _onchange_transfer_no(self):
-        if self.transfer_no and len(self.transfer_no) > 5:
-            transfer = self.env['stock.picking'].search([
-                ('name', '=', self.transfer_no),
-                ('state', 'in', ['waiting', 'confirmed', 'assigned', 'done'])
-            ], limit=1)
-            
-            if transfer:
-                self.transfer_id = transfer.id
-                self._onchange_transfer_id()
+    # transfer_no artık Many2one olduğu için ekstra arama mantığına gerek yok
     
     def action_teslimat_olustur(self):
         self.ensure_one()

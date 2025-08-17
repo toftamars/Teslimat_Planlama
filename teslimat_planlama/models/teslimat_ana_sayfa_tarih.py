@@ -134,4 +134,7 @@ class TeslimatAnaSayfaTarih(models.Model):
             }
         }
 
-    # Satıra tıklayınca herhangi bir form/wizard açılmasın (override kaldırıldı)
+    def get_formview_action(self, access_uid=None):
+        """Satıra tıklanınca doğrudan Teslimat Belgesi wizard'ını aç."""
+        self.ensure_one()
+        return self.action_teslimat_olustur()
