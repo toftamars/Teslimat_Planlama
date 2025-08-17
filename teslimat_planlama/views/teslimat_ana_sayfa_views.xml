@@ -24,6 +24,7 @@
                         </group>
                         <group>
                             <field name="ilce_uygun_mu" readonly="1"/>
+                            <field name="arac_kucuk_mu" invisible="1"/>
                         </group>
                     </group>
                     
