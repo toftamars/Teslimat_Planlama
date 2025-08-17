@@ -134,8 +134,8 @@ class TeslimatAnaSayfa(models.Model):
                         toplam_kapasite = record.arac_id.gunluk_teslimat_limiti
                         kalan_kapasite = toplam_kapasite - teslimat_sayisi
                         doluluk_orani = (teslimat_sayisi / toplam_kapasite * 100) if toplam_kapasite > 0 else 0
-                        # Kapasitesi dolu günleri listelemeyelim
-                        if kalan_kapasite <= 0:
+                        # Kapasitesi dolu günleri listelemeyelim (yalnız toplam_kapasite > 0 ise)
+                        if toplam_kapasite > 0 and kalan_kapasite <= 0:
                             continue
                         
                         # Durum belirleme
@@ -282,8 +282,8 @@ class TeslimatAnaSayfa(models.Model):
                 }
                 gun_adi_tr = gun_eslesmesi.get(tarih.strftime('%A'), tarih.strftime('%A'))
 
-                # Kapasitesi dolu günleri listelemeyelim
-                if kalan_kapasite <= 0:
+                # Kapasitesi dolu günleri listelemeyelim (yalnız toplam_kapasite > 0 ise)
+                if toplam_kapasite > 0 and kalan_kapasite <= 0:
                     continue
                 elif doluluk_orani >= 80:
                     durum_icon, durum_text = '🟡', 'DOLU YAKIN'
@@ -305,10 +305,16 @@ class TeslimatAnaSayfa(models.Model):
         # Mevcutları temizle ve yeni kayıtları ekle
         self.tarih_listesi = [(5, 0, 0)] + [(0, 0, t) for t in tarihler]
         
-        # Görünümü yenileyerek O2M listeyi anında göster
+        # Sayfayı yenilemeden sonuçlar ekranda kalsın
         return {
             'type': 'ir.actions.client',
-            'tag': 'reload',
+            'tag': 'display_notification',
+            'params': {
+                'title': 'Sorgu Tamamlandı',
+                'message': 'Uygun tarihler listelendi.',
+                'type': 'success',
+                'sticky': False,
+            }
         }
     
 
