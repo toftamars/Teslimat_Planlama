@@ -11,8 +11,8 @@ class TeslimatAnaSayfa(models.Model):
                               domain="[('aktif', '=', True), ('gecici_kapatma', '=', False)]")
     ilce_id = fields.Many2one('teslimat.ilce', string='İlçe', required=False)
     
-    # Sonuç Alanları (Hesaplanan)
-    tarih_listesi = fields.One2many('teslimat.ana.sayfa.tarih', 'ana_sayfa_id', string='Uygun Tarihler', compute='_compute_tarih_listesi')
+    # Sonuç Alanları (buton ile doldurulur)
+    tarih_listesi = fields.One2many('teslimat.ana.sayfa.tarih', 'ana_sayfa_id', string='Uygun Tarihler')
     uygun_arac_ids = fields.Many2many('teslimat.arac', string='Uygun Araçlar', compute='_compute_uygun_araclar')
     
     # İlçe Bazlı Kapasite
