@@ -134,7 +134,4 @@ class TeslimatAnaSayfaTarih(models.Model):
             }
         }
 
-    def get_formview_action(self, access_uid=None):
-        """Satıra tıklanınca kayıt formu yerine doğrudan yeni sihirbazı aç."""
-        self.ensure_one()
-        return self.action_teslimat_olustur()
+    # Satıra tıklayınca herhangi bir form/wizard açılmasın (override kaldırıldı)

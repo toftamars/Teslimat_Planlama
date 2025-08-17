@@ -42,7 +42,7 @@
                                 <strong>💡 Kullanım:</strong> Uygun tarihlere tıklayarak Transfer Belgesi Entegrasyonu wizard'ını açabilir ve Stock Picking'lerden otomatik teslimat oluşturabilirsiniz.
                             </div>
                             <field name="tarih_listesi">
-                                <tree editable="false" create="false" edit="false" delete="false">
+                                <tree editable="false" create="false" edit="false" delete="false" open_form="0">
                                     <field name="tarih" readonly="1"/>
                                     <field name="gun_adi" readonly="1"/>
                                     <field name="teslimat_sayisi" readonly="1"/>
