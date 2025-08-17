@@ -260,10 +260,56 @@ class TeslimatAnaSayfa(models.Model):
                 }
             }
         
-        # Sadece buton ile sorgulama yap: bayrağı aç ve hesaplat
+        # Sadece buton ile sorgulama yap: bayrağı aç
         self.sorgulandi = True
-        self._compute_tarih_listesi()
-        self._compute_kapasite_bilgileri()
+
+        # Uygun tarihleri hesapla ve O2M'ye tek seferde yaz
+        bugun = fields.Date.today()
+        tarihler = []
+        if self.ilce_uygun_mu:
+            for i in range(30):
+                tarih = bugun + timedelta(days=i)
+                if not self._check_ilce_gun_uygunlugu(self.ilce_id, tarih):
+                    continue
+
+                # Bu tarih için mevcut teslimat sayısı
+                teslimat_sayisi = self.env['teslimat.belgesi'].search_count([
+                    ('teslimat_tarihi', '=', tarih),
+                    ('arac_id', '=', self.arac_id.id),
+                    ('durum', 'in', ['hazir', 'yolda', 'teslim_edildi'])
+                ])
+
+                toplam_kapasite = self.arac_id.gunluk_teslimat_limiti
+                kalan_kapasite = max((toplam_kapasite - teslimat_sayisi), 0)
+                doluluk_orani = (teslimat_sayisi / toplam_kapasite * 100) if toplam_kapasite > 0 else 0
+
+                gun_eslesmesi = {
+                    'Monday': 'Pazartesi', 'Tuesday': 'Salı', 'Wednesday': 'Çarşamba',
+                    'Thursday': 'Perşembe', 'Friday': 'Cuma', 'Saturday': 'Cumartesi', 'Sunday': 'Pazar'
+                }
+                gun_adi_tr = gun_eslesmesi.get(tarih.strftime('%A'), tarih.strftime('%A'))
+
+                if kalan_kapasite <= 0:
+                    durum_icon, durum_text = '🔴', 'DOLU'
+                elif doluluk_orani >= 80:
+                    durum_icon, durum_text = '🟡', 'DOLU YAKIN'
+                else:
+                    durum_icon, durum_text = '🟢', 'MUSAİT'
+
+                tarihler.append({
+                    'tarih': tarih,
+                    'gun_adi': gun_adi_tr,
+                    'teslimat_sayisi': teslimat_sayisi,
+                    'toplam_kapasite': toplam_kapasite,
+                    'kalan_kapasite': kalan_kapasite,
+                    'doluluk_orani': doluluk_orani,
+                    'durum': 'musait' if durum_text == 'MUSAİT' else ('dolu' if durum_text == 'DOLU' else 'dolu_yakin'),
+                    'durum_icon': durum_icon,
+                    'durum_text': durum_text,
+                })
+
+        # Mevcutları temizle ve yeni kayıtları ekle
+        self.tarih_listesi = [(5, 0, 0)] + [(0, 0, t) for t in tarihler]
         
         # Notebook'ta Tarih Bazlı Kapasite sekmesini öne getir
         return {
