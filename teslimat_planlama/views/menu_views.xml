@@ -19,11 +19,7 @@
               action="action_teslimat_belgesi" 
               sequence="10"/>
     
-    <menuitem id="menu_action_teslimat_belgesi_olustur" 
-              name="➕ Teslimat Belgesi Oluştur" 
-              parent="menu_teslimat_belgeleri" 
-              action="action_teslimat_belgesi_olustur" 
-              sequence="20"/>
+    <!-- Teslimat Belgesi Oluştur menüsü kaldırıldı -->
 
     <!-- 🚗 Teslimat Araçları -->
     <menuitem id="menu_teslimat_araclar" 

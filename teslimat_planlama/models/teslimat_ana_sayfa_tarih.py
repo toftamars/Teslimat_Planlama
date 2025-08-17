@@ -111,27 +111,4 @@ class TeslimatAnaSayfaTarih(models.Model):
         
         return super().unlink()
     
-    def action_teslimat_olustur(self):
-        """Seçilen tarih için Transfer Belgesi Entegrasyonu wizard'ını aç"""
-        self.ensure_one()
-        
-        # Ana sayfa bilgilerini al
-        ana_sayfa = self.ana_sayfa_id
-        if not ana_sayfa or not ana_sayfa.arac_id or not ana_sayfa.ilce_id:
-            raise AccessError("Gerekli bilgiler eksik!")
-        
-        # Transfer Belgesi Entegrasyonu Wizard'ını aç
-        return {
-            'type': 'ir.actions.act_window',
-            'res_model': 'teslimat.olustur.wizard',
-            'view_mode': 'form',
-            'target': 'new',
-            'name': f'Transfer Belgesi Entegrasyonu - {self.tarih} ({self.gun_adi})',
-            'context': {
-                'default_ana_sayfa_id': ana_sayfa.id,
-                'default_teslimat_tarihi': self.tarih,
-                'default_arac_id': ana_sayfa.arac_id.id,
-                'default_ilce_id': ana_sayfa.ilce_id.id,
-                'teslimat_tarihi': self.tarih
-            }
-        }
+    # Wizard action kaldırıldı

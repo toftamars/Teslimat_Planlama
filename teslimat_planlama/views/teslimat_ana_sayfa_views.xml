@@ -56,11 +56,7 @@
                                     <field name="durum_text" readonly="1"/>
                                     <field name="durum_icon" readonly="1"/>
                                     <field name="doluluk_bar" widget="html" readonly="1"/>
-                                    <button name="action_teslimat_olustur" 
-                                            string="🔄 Transfer Entegrasyonu" 
-                                            type="object" 
-                                            class="btn-primary"
-                                            attrs="{'invisible': [('durum_text', '=', 'DOLU'), ('kalan_kapasite', '=', 0)]}"/>
+                                    <!-- Wizard butonu kaldırıldı -->
                                 </tree>
                             </field>
                         </page>
