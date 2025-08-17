@@ -18,6 +18,7 @@ class TeslimatBelgesi(models.Model):
     # Araç ve İlçe Bilgileri
     arac_id = fields.Many2one('teslimat.arac', string='Araç', required=True)
     ilce_id = fields.Many2one('teslimat.ilce', string='İlçe', required=True)
+    surucu_id = fields.Many2one('res.partner', string='Sürücü', domain="[('is_driver','=',True)]")
     
     # Planlama İlişkileri
     planlama_akilli_id = fields.Many2one('teslimat.planlama.akilli', string='Akıllı Planlama')

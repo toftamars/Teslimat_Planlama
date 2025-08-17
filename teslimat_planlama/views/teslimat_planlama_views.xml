@@ -209,6 +209,84 @@
         </field>
     </record>
 
+    <!-- Teslimat Belgesi Tree View -->
+    <record id="view_teslimat_belgesi_tree" model="ir.ui.view">
+        <field name="name">teslimat.belgesi.tree</field>
+        <field name="model">teslimat.belgesi</field>
+        <field name="arch" type="xml">
+            <tree string="Teslimat Belgeleri">
+                <field name="name"/>
+                <field name="teslimat_tarihi"/>
+                <field name="musteri_id"/>
+                <field name="arac_id"/>
+                <field name="ilce_id"/>
+                <field name="surucu_id"/>
+                <field name="transfer_no"/>
+                <field name="durum"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Teslimat Belgesi Form View -->
+    <record id="view_teslimat_belgesi_form" model="ir.ui.view">
+        <field name="name">teslimat.belgesi.form</field>
+        <field name="model">teslimat.belgesi</field>
+        <field name="arch" type="xml">
+            <form string="Teslimat Belgesi">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Teslimat No"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="teslimat_tarihi"/>
+                            <field name="durum"/>
+                            <field name="planlanan_teslimat_saati"/>
+                        </group>
+                        <group>
+                            <field name="musteri_id"/>
+                            <field name="ilce_id"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group>
+                            <field name="arac_id"/>
+                            <field name="surucu_id"/>
+                        </group>
+                        <group>
+                            <field name="transfer_no"/>
+                            <field name="stock_picking_id"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group>
+                            <field name="urun_id"/>
+                            <field name="miktar"/>
+                            <field name="birim"/>
+                        </group>
+                    </group>
+                    <field name="notlar" placeholder="Notlar"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Partner Form Inherit: Sürücü işareti -->
+    <record id="view_partner_form_inherit_is_driver" model="ir.ui.view">
+        <field name="name">res.partner.form.inherit.is_driver</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet/notebook" position="before">
+                <group string="Teslimat">
+                    <field name="is_driver"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
     <record id="action_teslimat_belgesi_olustur" model="ir.actions.act_window">
         <field name="name">Teslimat Belgesi Oluştur</field>
         <field name="res_model">teslimat.belgesi</field>
