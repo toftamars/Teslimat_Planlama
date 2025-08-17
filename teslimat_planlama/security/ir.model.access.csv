@@ -5,7 +5,7 @@ access_teslimat_transfer_user,teslimat.transfer.user,model_teslimat_transfer,bas
 access_teslimat_transfer_manager,teslimat.transfer.manager,model_teslimat_transfer,stock.group_stock_manager,1,1,1,1
 access_teslimat_ana_sayfa_user,teslimat.ana.sayfa.user,model_teslimat_ana_sayfa,base.group_user,1,1,1,0
 access_teslimat_ana_sayfa_manager,teslimat.ana.sayfa.manager,model_teslimat_ana_sayfa,stock.group_stock_manager,1,1,1,1
-access_teslimat_ana_sayfa_tarih_user,teslimat.ana.sayfa.tarih.user,model_teslimat_ana_sayfa_tarih,base.group_user,1,0,0,0
+access_teslimat_ana_sayfa_tarih_user,teslimat.ana.sayfa.tarih.user,model_teslimat_ana_sayfa_tarih,base.group_user,1,0,1,0
 access_teslimat_ana_sayfa_tarih_manager,teslimat.ana.sayfa.tarih.manager,model_teslimat_ana_sayfa_tarih,stock.group_stock_manager,1,1,1,1
 
 access_teslimat_arac_user,teslimat.arac.user,model_teslimat_arac,base.group_user,1,1,1,0
