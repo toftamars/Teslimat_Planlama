@@ -173,6 +173,20 @@
         </field>
     </record>
 
+    <!-- Stock Picking: Teslimatlar smart buton (inherit) -->
+    <record id="view_picking_form_inherit_teslimatlar" model="ir.ui.view">
+        <field name="name">stock.picking.form.inherit.teslimatlar</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="action_view_teslimat_belgeleri" type="object" class="oe_stat_button" icon="fa-truck">
+                    <field name="teslimat_belgesi_count" widget="statinfo" string="Teslimatlar"/>
+                </button>
+            </xpath>
+        </field>
+    </record>
+
     <!-- Actions -->
     <record id="action_teslimat_planlama" model="ir.actions.act_window">
         <field name="name">Teslimat Planlamaları</field>

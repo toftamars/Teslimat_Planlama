@@ -29,6 +29,25 @@ class StockPicking(models.Model):
     
     # Notlar
     teslimat_notlari = fields.Text(string='Teslimat Notları')
+
+    # Teslimat Belgeleri (uyarlama)
+    teslimat_belgesi_ids = fields.One2many('teslimat.belgesi', 'stock_picking_id', string='Teslimat Belgeleri')
+    teslimat_belgesi_count = fields.Integer(string='Teslimat Sayısı', compute='_compute_teslimat_belgesi_count')
+
+    def _compute_teslimat_belgesi_count(self):
+        for picking in self:
+            picking.teslimat_belgesi_count = len(picking.teslimat_belgesi_ids)
+
+    def action_view_teslimat_belgeleri(self):
+        self.ensure_one()
+        return {
+            'name': 'Teslimat Belgeleri',
+            'type': 'ir.actions.act_window',
+            'res_model': 'teslimat.belgesi',
+            'view_mode': 'tree,form',
+            'domain': [('stock_picking_id', '=', self.id)],
+            'context': {'default_stock_picking_id': self.id, 'default_musteri_id': self.partner_id.id},
+        }
     
     @api.onchange('teslimat_transfer_id')
     def _onchange_teslimat_transfer(self):
