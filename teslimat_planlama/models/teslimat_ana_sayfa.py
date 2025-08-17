@@ -257,22 +257,10 @@ class TeslimatAnaSayfa(models.Model):
         self._compute_tarih_listesi()
         self._compute_kapasite_bilgileri()
         
+        # Notebook'ta Tarih Bazlı Kapasite sekmesini öne getir
         return {
             'type': 'ir.actions.client',
-            'tag': 'display_notification',
-            'params': {
-                'title': 'Kapasite Sorgulandı',
-                'message': f"""
-                    ✅ {self.ilce_id.name} İlçesi - {self.arac_id.name}
-                    
-                    📅 Sonraki 30 gün için uygun tarihler hesaplandı
-                    📊 Tarih Bazlı Kapasite sekmesinde detayları görebilirsiniz
-                    
-                    {self.uygunluk_mesaji}
-                """,
-                'type': 'success',
-                'sticky': False,
-            }
+            'tag': 'reload',
         }
     
 

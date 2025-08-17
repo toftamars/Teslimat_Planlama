@@ -83,7 +83,7 @@
                         
 
                         
-                        <page string="ℹ️ Uygunluk Bilgisi">
+                        <page string="ℹ️ Uygunluk Bilgisi" attrs="{'invisible': [('ilce_uygun_mu', '=', True)]}">
                             <field name="uygunluk_mesaji" readonly="1" nolabel="1"/>
                         </page>
                     </notebook>
