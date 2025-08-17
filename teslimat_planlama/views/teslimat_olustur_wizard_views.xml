@@ -5,23 +5,41 @@
         <field name="name">teslimat.olustur.wizard.form</field>
         <field name="model">teslimat.olustur.wizard</field>
         <field name="arch" type="xml">
-            <form string="Teslimat Belgesi Oluştur">
+            <form string="Transfer Belgesi Entegrasyonu">
                 <sheet>
                     <div class="oe_title">
                         <h1>
-                            <span>📝 Teslimat Belgesi Oluştur</span>
+                            <span>🔄 Transfer Belgesi Entegrasyonu</span>
                         </h1>
+                        <p class="text-muted">Stock Picking'lerden otomatik teslimat oluşturma</p>
                     </div>
+                    
+                    <!-- Ana Sayfa Bilgileri -->
+                    <group>
+                        <group>
+                            <field name="teslimat_tarihi" readonly="1"/>
+                            <field name="arac_id" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="ilce_id" readonly="1"/>
+                            <field name="ana_sayfa_id" invisible="1"/>
+                        </group>
+                    </group>
                     
                     <!-- Oluşturma Tipi Seçimi -->
                     <group>
                         <field name="olusturma_tipi" widget="radio"/>
                     </group>
                     
-                    <!-- Transfer No ile Oluşturma -->
+                    <!-- Transfer Belgesi Entegrasyonu -->
                     <group attrs="{'invisible': [('olusturma_tipi', '!=', 'transfer_no')]}">
+                        <div class="alert alert-info" role="alert">
+                            <strong>🔄 Transfer Belgesi Entegrasyonu:</strong> Stock Picking'lerden otomatik teslimat oluşturma
+                        </div>
+                        
                         <group>
-                            <field name="transfer_no" placeholder="Örnek: AKS/POS/72133"/>
+                            <field name="transfer_id" options="{'no_create': True}" domain="[('state','in',['confirmed','assigned','waiting'])]"/>
+                            <field name="transfer_no" placeholder="Örnek: AKS/POS/72133, AKSY/OUT/19574"/>
                         </group>
                         <group>
                             <field name="bulunan_transfer" readonly="1"/>
@@ -30,7 +48,7 @@
                     
                     <!-- Transfer Bilgileri -->
                     <group attrs="{'invisible': [('olusturma_tipi', '!=', 'transfer_no')]}">
-                        <field name="transfer_bilgileri" readonly="1" nolabel="1"/>
+                        <field name="transfer_bilgileri" readonly="1" nolabel="1" widget="html"/>
                     </group>
                     
                     <!-- Manuel Teslimat Alanları -->
@@ -52,7 +70,7 @@
                     <!-- Butonlar -->
                     <footer>
                         <button name="action_teslimat_olustur" 
-                                string="✅ Teslimat Belgesi Oluştur" 
+                                string="🔄 Transfer Entegrasyonu ile Oluştur" 
                                 type="object" 
                                 class="btn-primary"/>
                         <button string="❌ İptal" 
@@ -66,7 +84,7 @@
     
     <!-- Wizard Action -->
     <record id="action_teslimat_olustur_wizard" model="ir.actions.act_window">
-        <field name="name">Teslimat Belgesi Oluştur</field>
+        <field name="name">Transfer Belgesi Entegrasyonu</field>
         <field name="res_model">teslimat.olustur.wizard</field>
         <field name="view_mode">form</field>
         <field name="target">new</field>

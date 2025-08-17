@@ -40,6 +40,9 @@
                     <!-- Sonuç Alanları -->
                     <notebook>
                         <page string="📅 Tarih Bazlı Kapasite" attrs="{'invisible': [('ilce_uygun_mu', '=', False)]}">
+                            <div class="alert alert-info" role="alert">
+                                <strong>💡 Kullanım:</strong> Uygun tarihlere tıklayarak Transfer Belgesi Entegrasyonu wizard'ını açabilir ve Stock Picking'lerden otomatik teslimat oluşturabilirsiniz.
+                            </div>
                             <field name="tarih_listesi">
                                 <tree>
                                     <field name="tarih" readonly="1"/>
@@ -52,7 +55,7 @@
                                     <field name="durum_icon" readonly="1"/>
                                     <field name="doluluk_bar" widget="html" readonly="1"/>
                                     <button name="action_teslimat_olustur" 
-                                            string="📝 Oluştur" 
+                                            string="🔄 Transfer Entegrasyonu" 
                                             type="object" 
                                             class="btn-primary"
                                             attrs="{'invisible': [('durum_text', '=', 'DOLU'), ('kalan_kapasite', '=', 0)]}"/>
