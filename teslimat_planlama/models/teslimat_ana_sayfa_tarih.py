@@ -120,11 +120,14 @@ class TeslimatAnaSayfaTarih(models.Model):
         if not ana_sayfa or not ana_sayfa.arac_id or not ana_sayfa.ilce_id:
             raise AccessError("Gerekli bilgiler eksik!")
         
-        # Teslimat Belgesi Wizard'ını aç
+        # Teslimat Belgesi Wizard'ını aç (view_id açıkça belirtilir)
+        view = self.env.ref('teslimat_planlama.view_teslimat_belgesi_wizard_form')
         return {
             'type': 'ir.actions.act_window',
             'res_model': 'teslimat.belgesi.wizard',
             'view_mode': 'form',
+            'views': [(view.id, 'form')],
+            'view_id': view.id,
             'target': 'new',
             'name': f'Teslimat Belgesi Oluştur - {self.tarih} ({self.gun_adi})',
             'context': {
