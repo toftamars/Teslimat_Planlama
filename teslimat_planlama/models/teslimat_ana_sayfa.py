@@ -161,30 +161,67 @@ class TeslimatAnaSayfa(models.Model):
                 record.tarih_listesi = [(5, 0, 0)]
     
     def _check_ilce_gun_uygunlugu(self, ilce, tarih):
-        """İlçe ve tarih uygunluğunu kontrol et (ilçe-gün eşleşmelerine göre)"""
+        """İlçe ve tarih uygunluğunu kontrol et.
+        Öncelik: 1) Statik ilçe-gün haritası 2) Model eşleşmeleri 3) Varsayılan hafta içi
+        """
         if not ilce or not tarih:
             return False
+        # 0=Mon ... 6=Sun -> day_code
+        day_mapping = {0: 'pazartesi', 1: 'sali', 2: 'carsamba', 3: 'persembe', 4: 'cuma', 5: 'cumartesi', 6: 'pazar'}
+        day_code = day_mapping.get(tarih.weekday())
+
+        # 1) Statik harita (kullanıcının verdiği liste)
+        static_map = {
+            # Anadolu
+            'maltepe': {'pazartesi', 'cuma'},
+            'kartal': {'pazartesi', 'cuma'},
+            'pendik': {'pazartesi', 'cuma'},
+            'tuzla': {'pazartesi'},
+            'uskudar': {'sali', 'carsamba', 'persembe'}, 'üsküdar': {'sali', 'carsamba', 'persembe'},
+            'kadikoy': {'sali', 'carsamba', 'persembe'}, 'kadıköy': {'sali', 'carsamba', 'persembe'},
+            'atasehir': {'sali', 'carsamba', 'persembe'}, 'ataşehir': {'sali', 'carsamba', 'persembe'},
+            'umraniye': {'sali', 'carsamba', 'persembe'}, 'ümraniye': {'sali', 'carsamba', 'persembe'},
+            'sancaktepe': {'cumartesi'}, 'cekmekoy': {'cumartesi'}, 'çekmeköy': {'cumartesi'},
+            'beykoz': {'cumartesi'}, 'sile': {'cumartesi'}, 'şile': {'cumartesi'}, 'sultanbeyli': {'cumartesi'},
+            # Avrupa
+            'beyoglu': {'pazartesi', 'carsamba'}, 'beyoğlu': {'pazartesi', 'carsamba'},
+            'sisli': {'pazartesi', 'carsamba'}, 'şişli': {'pazartesi', 'carsamba'},
+            'besiktas': {'pazartesi', 'carsamba'}, 'beşiktaş': {'pazartesi', 'carsamba'},
+            'kagithane': {'pazartesi', 'carsamba'}, 'kağıthane': {'pazartesi', 'carsamba'},
+            'sariyer': {'sali'}, 'sarıyer': {'sali'},
+            'bakirkoy': {'sali'}, 'bakırköy': {'sali'},
+            'bahcelievler': {'sali'}, 'bahçelievler': {'sali'},
+            'gungoren': {'sali'}, 'güngören': {'sali'},
+            'esenler': {'sali'},
+            'bagcilar': {'sali'}, 'bağcılar': {'sali'},
+            'eyupsultan': {'persembe'}, 'eyüpsultan': {'persembe'},
+            'gaziosmanpasa': {'persembe'}, 'gaziosmanpaşa': {'persembe'},
+            'kucukcekmece': {'persembe'}, 'küçükçekmece': {'persembe'},
+            'avcilar': {'persembe'}, 'avcılar': {'persembe'},
+            'basaksehir': {'persembe'}, 'başakşehir': {'persembe'},
+            'sultangazi': {'persembe'}, 'arnavutkoy': {'persembe'}, 'arnavutköy': {'persembe'},
+            'fatih': {'cuma'}, 'zeytinburnu': {'cuma'}, 'bayrampasa': {'cuma'}, 'bayrampaşa': {'cuma'},
+            'esenyurt': {'cumartesi'}, 'beylikduzu': {'cumartesi'}, 'beylikdüzü': {'cumartesi'},
+            'silivri': {'cumartesi'}, 'catalca': {'cumartesi'}, 'çatalca': {'cumartesi'},
+        }
+        key = (ilce.name or '').strip().lower()
+        if key in static_map:
+            return day_code in static_map[key]
+
+        # 2) Model eşleşmeleri (varsa)
         Gun = self.env['teslimat.gun']
         IlceGun = self.env['teslimat.gun.ilce']
-        # Haftanın günü için day kaydını bul
-        day_mapping = {
-            0: 'pazartesi', 1: 'sali', 2: 'carsamba', 3: 'persembe',
-            4: 'cuma', 5: 'cumartesi', 6: 'pazar'
-        }
-        day_code = day_mapping.get(tarih.weekday())
         day = Gun.search([('gun_kodu', '=', day_code), ('aktif', '=', True), ('gecici_kapatma', '=', False)], limit=1)
         if not day:
             return False
-        # İlçe-gün eşleşmesi var mı?
         has_any_mapping_for_ilce = bool(IlceGun.search_count([('ilce_id', '=', ilce.id)]))
         has_mapping_for_day = bool(IlceGun.search_count([('ilce_id', '=', ilce.id), ('gun_id', '=', day.id)]))
         if has_any_mapping_for_ilce:
-            # İlçe için tanım yapılmışsa sadece tanımlı günlere izin ver
             return has_mapping_for_day
-        # Tanım yoksa kontrollü bir geri dönüş: yaka bazlı hafta içi
+
+        # 3) Varsayılan olarak hafta içi
         if ilce.yaka_tipi in ('anadolu', 'avrupa'):
             return day_code in {'pazartesi', 'sali', 'carsamba', 'persembe', 'cuma'}
-        # Belirsiz ise şimdilik kapalı kabul et
         return False
 
     @api.depends('ilce_id', 'arac_id')
