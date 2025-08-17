@@ -315,16 +315,10 @@ class TeslimatAnaSayfa(models.Model):
         # Mevcutları temizle ve yeni kayıtları ekle
         self.tarih_listesi = [(5, 0, 0)] + [(0, 0, t) for t in tarihler]
         
-        # Sessizce ekranda liste güncellensin (tam sayfa yenileme yok)
+        # Görünümü yenileyerek O2M listeyi anında göster
         return {
             'type': 'ir.actions.client',
-            'tag': 'display_notification',
-            'params': {
-                'title': 'Sorgu Tamamlandı',
-                'message': 'Uygun tarihler güncellendi.',
-                'type': 'success',
-                'sticky': False,
-            }
+            'tag': 'reload',
         }
     
 
