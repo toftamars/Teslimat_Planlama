@@ -199,37 +199,37 @@ class TeslimatProgramKurulum(models.Model):
             {
                 'name': 'Anadolu Yakası Araç 1',
                 'arac_tipi': 'anadolu_yakasi',
-                'gunluk_teslimat_limiti': 25
+                'gunluk_teslimat_limiti': 7
             },
             {
                 'name': 'Anadolu Yakası Araç 2',
                 'arac_tipi': 'anadolu_yakasi',
-                'gunluk_teslimat_limiti': 25
+                'gunluk_teslimat_limiti': 7
             },
             {
                 'name': 'Avrupa Yakası Araç 1',
                 'arac_tipi': 'avrupa_yakasi',
-                'gunluk_teslimat_limiti': 25
+                'gunluk_teslimat_limiti': 7
             },
             {
                 'name': 'Avrupa Yakası Araç 2',
                 'arac_tipi': 'avrupa_yakasi',
-                'gunluk_teslimat_limiti': 25
+                'gunluk_teslimat_limiti': 7
             },
             {
                 'name': 'Küçük Araç 1',
                 'arac_tipi': 'kucuk_arac_1',
-                'gunluk_teslimat_limiti': 15
+                'gunluk_teslimat_limiti': 7
             },
             {
                 'name': 'Küçük Araç 2',
                 'arac_tipi': 'kucuk_arac_2',
-                'gunluk_teslimat_limiti': 15
+                'gunluk_teslimat_limiti': 7
             },
             {
                 'name': 'Ek Araç',
                 'arac_tipi': 'ek_arac',
-                'gunluk_teslimat_limiti': 20
+                'gunluk_teslimat_limiti': 7
             }
         ]
         

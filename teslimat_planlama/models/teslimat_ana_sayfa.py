@@ -131,7 +131,7 @@ class TeslimatAnaSayfa(models.Model):
                         ])
                         
                         # Kapasite hesaplama
-                        toplam_kapasite = record.arac_id.gunluk_teslimat_limiti
+                        toplam_kapasite = 7
                         kalan_kapasite = toplam_kapasite - teslimat_sayisi
                         doluluk_orani = (teslimat_sayisi / toplam_kapasite * 100) if toplam_kapasite > 0 else 0
                         # Kapasitesi dolu günleri listelemeyelim (yalnız toplam_kapasite > 0 ise)
@@ -210,7 +210,7 @@ class TeslimatAnaSayfa(models.Model):
         for record in self:
             if record.sorgulandi and record.ilce_uygun_mu and record.arac_id:
                 # Seçilen aracın kapasitesi
-                record.toplam_kapasite = record.arac_id.gunluk_teslimat_limiti
+                record.toplam_kapasite = 7
                 
                 # Bugün için mevcut teslimat sayısı
                 bugun = fields.Date.today()
@@ -278,7 +278,7 @@ class TeslimatAnaSayfa(models.Model):
                     ('durum', 'in', ['hazir', 'yolda', 'teslim_edildi'])
                 ])
 
-                toplam_kapasite = self.arac_id.gunluk_teslimat_limiti
+                toplam_kapasite = 7
                 kalan_kapasite = max((toplam_kapasite - teslimat_sayisi), 0)
                 doluluk_orani = (teslimat_sayisi / toplam_kapasite * 100) if toplam_kapasite > 0 else 0
 
