@@ -21,6 +21,14 @@ class TeslimatAnaSayfa(models.Model):
     kalan_kapasite = fields.Integer(string='Kalan Kapasite', compute='_compute_kapasite_bilgileri')
     teslimat_sayisi = fields.Integer(string='Teslimat Sayısı', compute='_compute_kapasite_bilgileri')
     
+    # Sorgu kontrolü: sadece buton ile sonuç üret
+    sorgulandi = fields.Boolean(string='Sorgulandı mı?', default=False)
+
+    @api.onchange('arac_id', 'ilce_id')
+    def _onchange_reset_sorgu(self):
+        for record in self:
+            record.sorgulandi = False
+
 
     
     # İlçe-Gün Uygunluk Kontrolü
@@ -84,11 +92,11 @@ class TeslimatAnaSayfa(models.Model):
                 record.ilce_uygun_mu = False
                 record.uygunluk_mesaji = "Lütfen araç ve ilçe seçin"
 
-    @api.depends('ilce_id', 'arac_id')
+    @api.depends('ilce_id', 'arac_id', 'sorgulandi')
     def _compute_tarih_listesi(self):
         """Seçilen ilçe ve araç için uygun tarihleri hesapla"""
         for record in self:
-            if record.ilce_id and record.arac_id and record.ilce_uygun_mu:
+            if record.sorgulandi and record.ilce_id and record.arac_id and record.ilce_uygun_mu:
                 # Sonraki 30 günü kontrol et
                 bugun = fields.Date.today()
                 tarihler = []
@@ -176,11 +184,11 @@ class TeslimatAnaSayfa(models.Model):
         
         return gun_adi in uygun_gunler
 
-    @api.depends('ilce_id', 'arac_id')
+    @api.depends('ilce_id', 'arac_id', 'sorgulandi')
     def _compute_uygun_araclar(self):
         """Seçilen ilçe ve araç için uygunluk kontrolü"""
         for record in self:
-            if record.ilce_uygun_mu and record.arac_id:
+            if record.sorgulandi and record.ilce_uygun_mu and record.arac_id:
                 # Seçilen araç uygun mu kontrol et
                 ilce_yaka = record.ilce_id.yaka_tipi
                 arac_tipi = record.arac_id.arac_tipi
@@ -198,11 +206,11 @@ class TeslimatAnaSayfa(models.Model):
             else:
                 record.uygun_arac_ids = []
 
-    @api.depends('ilce_id', 'arac_id', 'uygun_arac_ids')
+    @api.depends('ilce_id', 'arac_id', 'uygun_arac_ids', 'sorgulandi')
     def _compute_kapasite_bilgileri(self):
         """Kapasite bilgilerini hesapla"""
         for record in self:
-            if record.ilce_uygun_mu and record.arac_id:
+            if record.sorgulandi and record.ilce_uygun_mu and record.arac_id:
                 # Seçilen aracın kapasitesi
                 record.toplam_kapasite = record.arac_id.gunluk_teslimat_limiti
                 
@@ -253,7 +261,8 @@ class TeslimatAnaSayfa(models.Model):
                 }
             }
         
-        # Tarih listesini hesapla
+        # Sadece buton ile sorgulama yap: bayrağı aç ve hesaplat
+        self.sorgulandi = True
         self._compute_tarih_listesi()
         self._compute_kapasite_bilgileri()
         
