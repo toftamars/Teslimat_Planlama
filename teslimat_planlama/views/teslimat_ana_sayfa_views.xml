@@ -20,7 +20,7 @@
                                    options="{'no_create': True, 'no_edit': True}"/>
                             <field name="ilce_id" domain="[('aktif', '=', True), ('teslimat_aktif', '=', True)]" 
                                    options="{'no_create': True, 'no_edit': True}"
-                                   attrs="{'required': ['&amp;', ('arac_id','!=', False), ('arac_id.arac_tipi','not in', ['kucuk_arac_1','kucuk_arac_2','ek_arac'])]}"/>
+                                   attrs="{'required': ['&amp;', ('arac_id','!=', False), ('arac_kucuk_mu','=', False)]}"/>
                         </group>
                         <group>
                             <field name="ilce_uygun_mu" readonly="1"/>

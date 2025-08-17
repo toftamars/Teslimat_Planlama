@@ -14,6 +14,7 @@ class TeslimatAnaSayfa(models.Model):
     # Sonuç Alanları (Hesaplanan)
     tarih_listesi = fields.One2many('teslimat.ana.sayfa.tarih', 'ana_sayfa_id', string='Uygun Tarihler', compute='_compute_tarih_listesi')
     uygun_arac_ids = fields.Many2many('teslimat.arac', string='Uygun Araçlar', compute='_compute_uygun_araclar')
+    arac_kucuk_mu = fields.Boolean(string='Küçük Araç mı?', compute='_compute_arac_kucuk_mu')
     
     # İlçe Bazlı Kapasite
     toplam_kapasite = fields.Integer(string='Toplam Kapasite', compute='_compute_kapasite_bilgileri')
@@ -45,6 +46,11 @@ class TeslimatAnaSayfa(models.Model):
                     record.gun_id = gun.id if gun else False
             else:
                 record.gun_id = False
+
+    @api.depends('arac_id')
+    def _compute_arac_kucuk_mu(self):
+        for record in self:
+            record.arac_kucuk_mu = bool(record.arac_id and record.arac_id.arac_tipi in ['kucuk_arac_1', 'kucuk_arac_2', 'ek_arac'])
 
     @api.depends('ilce_id', 'arac_id')
     def _compute_ilce_uygunluk(self):
