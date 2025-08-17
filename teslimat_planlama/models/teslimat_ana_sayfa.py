@@ -164,8 +164,28 @@ class TeslimatAnaSayfa(models.Model):
         """İlçe ve tarih uygunluğunu kontrol et (ilçe-gün eşleşmelerine göre)"""
         if not ilce or not tarih:
             return False
-        availability = self.env['teslimat.gun'].check_availability(tarih, district_id=ilce.id)
-        return bool(availability.get('available'))
+        Gun = self.env['teslimat.gun']
+        IlceGun = self.env['teslimat.gun.ilce']
+        # Haftanın günü için day kaydını bul
+        day_mapping = {
+            0: 'pazartesi', 1: 'sali', 2: 'carsamba', 3: 'persembe',
+            4: 'cuma', 5: 'cumartesi', 6: 'pazar'
+        }
+        day_code = day_mapping.get(tarih.weekday())
+        day = Gun.search([('gun_kodu', '=', day_code), ('aktif', '=', True), ('gecici_kapatma', '=', False)], limit=1)
+        if not day:
+            return False
+        # İlçe-gün eşleşmesi var mı?
+        has_any_mapping_for_ilce = bool(IlceGun.search_count([('ilce_id', '=', ilce.id)]))
+        has_mapping_for_day = bool(IlceGun.search_count([('ilce_id', '=', ilce.id), ('gun_id', '=', day.id)]))
+        if has_any_mapping_for_ilce:
+            # İlçe için tanım yapılmışsa sadece tanımlı günlere izin ver
+            return has_mapping_for_day
+        # Tanım yoksa kontrollü bir geri dönüş: yaka bazlı hafta içi
+        if ilce.yaka_tipi in ('anadolu', 'avrupa'):
+            return day_code in {'pazartesi', 'sali', 'carsamba', 'persembe', 'cuma'}
+        # Belirsiz ise şimdilik kapalı kabul et
+        return False
 
     @api.depends('ilce_id', 'arac_id')
     def _compute_uygun_araclar(self):
