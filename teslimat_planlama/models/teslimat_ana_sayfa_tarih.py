@@ -133,3 +133,8 @@ class TeslimatAnaSayfaTarih(models.Model):
                 'default_ilce_id': ana_sayfa.ilce_id.id,
             }
         }
+
+    def get_formview_action(self, access_uid=None):
+        """Satıra tıklanınca kayıt formu yerine doğrudan yeni sihirbazı aç."""
+        self.ensure_one()
+        return self.action_teslimat_olustur()
