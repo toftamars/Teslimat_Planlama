@@ -120,10 +120,10 @@ class TeslimatAnaSayfaTarih(models.Model):
         if not ana_sayfa or not ana_sayfa.arac_id or not ana_sayfa.ilce_id:
             raise AccessError("Gerekli bilgiler eksik!")
         
-        # Yeni Transfer Wizard'ını aç
+        # Teslimat Belgesi Wizard'ını aç
         return {
             'type': 'ir.actions.act_window',
-            'res_model': 'teslimat.transfer.wizard',
+            'res_model': 'teslimat.belgesi.wizard',
             'view_mode': 'form',
             'target': 'new',
             'name': f'Teslimat Belgesi Oluştur - {self.tarih} ({self.gun_adi})',

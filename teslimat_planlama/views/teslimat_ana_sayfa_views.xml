@@ -7,7 +7,6 @@
         <field name="arch" type="xml">
             <form string="Teslimat Ana Sayfa - Kapasite Sorgulama">
                 <sheet>
-                    <field name="sorgulandi" invisible="1"/>
                     <div class="oe_title">
                         <h1>
                             <span>🚗 Araç-İlçe Kapasite Sorgulama</span>
@@ -38,11 +37,11 @@
                     
                     <!-- Sonuç Alanları -->
                     <notebook>
-                        <page string="📅 Tarih Bazlı Kapasite">
+                        <page string="📅 Tarih Bazlı Kapasite" attrs="{'invisible': [('ilce_uygun_mu', '=', False)]}">
                             <div class="alert alert-info" role="alert">
                                 <strong>💡 Kullanım:</strong> Uygun tarihlere tıklayarak Transfer Belgesi Entegrasyonu wizard'ını açabilir ve Stock Picking'lerden otomatik teslimat oluşturabilirsiniz.
                             </div>
-                            <field name="tarih_listesi" options="{'no_open': True}">
+                            <field name="tarih_listesi" readonly="1" options="{'no_open': True}">
                                 <tree editable="false" create="false" edit="false" delete="false" open_form="0">
                                     <field name="tarih" readonly="1"/>
                                     <field name="gun_adi" readonly="1"/>
@@ -57,7 +56,7 @@
                             </field>
                         </page>
                         
-                        <page string="📊 İlçe Kapasitesi">
+                        <page string="📊 İlçe Kapasitesi" attrs="{'invisible': [('ilce_uygun_mu', '=', False)]}">
                             <group>
                                 <group>
                                     <field name="toplam_kapasite" readonly="1"/>
@@ -75,7 +74,7 @@
                         
 
                         
-                        <page string="ℹ️ Uygunluk Bilgisi">
+                        <page string="ℹ️ Uygunluk Bilgisi" attrs="{'invisible': [('ilce_uygun_mu', '=', True)]}">
                             <field name="uygunluk_mesaji" readonly="1" nolabel="1"/>
                         </page>
                     </notebook>

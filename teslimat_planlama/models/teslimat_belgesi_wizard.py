@@ -13,10 +13,7 @@ class TeslimatBelgesiWizard(models.TransientModel):
     ilce_id = fields.Many2one('teslimat.ilce', string='İlçe', required=True, readonly=True)
     
     # Kapasite Bilgileri
-    gunluk_limit = fields.Integer(string='Günlük Limit', compute='_compute_gunluk_limit', readonly=True, store=False)
-    def _compute_gunluk_limit(self):
-        for w in self:
-            w.gunluk_limit = 7
+    gunluk_limit = fields.Integer(string='Günlük Limit', related='arac_id.gunluk_teslimat_limiti', readonly=True)
     mevcut_teslimat = fields.Integer(string='Mevcut Teslimat Sayısı', compute='_compute_mevcut_teslimat')
     kalan_kapasite = fields.Integer(string='Kalan Kapasite', compute='_compute_kalan_kapasite')
     
