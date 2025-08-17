@@ -97,7 +97,7 @@ class TeslimatAnaSayfa(models.Model):
     def _compute_tarih_listesi(self):
         """Seçilen ilçe ve araç için uygun tarihleri hesapla"""
         for record in self:
-            small_vehicle = record.arac_id and record.arac_tipi in ['kucuk_arac_1', 'kucuk_arac_2', 'ek_arac'] if record.arac_id else False
+            small_vehicle = bool(record.arac_id and record.arac_id.arac_tipi in ['kucuk_arac_1', 'kucuk_arac_2', 'ek_arac'])
             if record.arac_id and (small_vehicle or (record.ilce_id and record.ilce_uygun_mu)):
                 # Sonraki 30 günü kontrol et
                 bugun = fields.Date.today()
