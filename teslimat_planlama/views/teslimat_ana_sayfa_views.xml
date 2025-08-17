@@ -29,7 +29,7 @@
                                                <!-- Sorgula Butonu -->
                            <group>
                                <button name="action_sorgula" 
-                                       string="🔍 Sorgula" 
+                                       string="🔄 Yenile" 
                                        type="object" 
                                        class="btn-primary"
                                        attrs="{'invisible': ['|', ('arac_id', '=', False), ('ilce_id', '=', False)]}"/>
