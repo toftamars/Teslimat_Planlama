@@ -105,10 +105,5 @@
         </field>
     </record>
 
-    <!-- Ana Sayfa Menu -->
-    <menuitem id="menu_teslimat_ana_sayfa"
-              name="🏠 Ana Sayfa"
-              parent="menu_teslimat_planlama_root"
-              action="action_teslimat_ana_sayfa"
-              sequence="1"/>
+    <!-- Menü tanımı menu_views.xml'de yönetilmektedir -->
 </odoo>
