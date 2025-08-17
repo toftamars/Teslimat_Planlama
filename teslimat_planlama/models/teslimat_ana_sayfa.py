@@ -311,10 +311,16 @@ class TeslimatAnaSayfa(models.Model):
         # Mevcutları temizle ve yeni kayıtları ekle
         self.tarih_listesi = [(5, 0, 0)] + [(0, 0, t) for t in tarihler]
         
-        # Notebook'ta Tarih Bazlı Kapasite sekmesini öne getir
+        # Sessizce ekranda liste güncellensin (tam sayfa yenileme yok)
         return {
             'type': 'ir.actions.client',
-            'tag': 'reload',
+            'tag': 'display_notification',
+            'params': {
+                'title': 'Sorgu Tamamlandı',
+                'message': 'Uygun tarihler güncellendi.',
+                'type': 'success',
+                'sticky': False,
+            }
         }
     
 
