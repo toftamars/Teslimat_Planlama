@@ -7,9 +7,9 @@ class TeslimatAnaSayfa(models.Model):
     _description = 'Teslimat Ana Sayfa - Kapasite Sorgulama'
 
     # Sorgulama Alanları
-    arac_id = fields.Many2one('teslimat.arac', string='Araç', required=True, 
+    arac_id = fields.Many2one('teslimat.arac', string='Araç', required=False, 
                               domain="[('aktif', '=', True), ('gecici_kapatma', '=', False)]")
-    ilce_id = fields.Many2one('teslimat.ilce', string='İlçe', required=True)
+    ilce_id = fields.Many2one('teslimat.ilce', string='İlçe', required=False)
     
     # Sonuç Alanları (Hesaplanan)
     tarih_listesi = fields.One2many('teslimat.ana.sayfa.tarih', 'ana_sayfa_id', string='Uygun Tarihler', compute='_compute_tarih_listesi')
@@ -229,6 +229,18 @@ class TeslimatAnaSayfa(models.Model):
         """Sorgula butonuna basıldığında çalışacak method"""
         self.ensure_one()
         
+        if not self.arac_id or not self.ilce_id:
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': 'Uyarı',
+                    'message': 'Lütfen önce araç ve ilçe seçin.',
+                    'type': 'warning',
+                    'sticky': False,
+                }
+            }
+
         if not self.ilce_uygun_mu:
             return {
                 'type': 'ir.actions.client',

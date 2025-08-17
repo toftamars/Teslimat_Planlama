@@ -32,9 +32,11 @@
                                        string="🔍 Sorgula" 
                                        type="object" 
                                        class="btn-primary"
-                                       attrs="{'invisible': [('arac_id', '=', False), ('ilce_id', '=', False)]}"/>
-                               
-
+                                       attrs="{'invisible': ['|', ('arac_id', '=', False), ('ilce_id', '=', False)]}"/>
+                               <button type="action"
+                                       name="%(action_teslimat_ana_sayfa)d"
+                                       string="❌ Vazgeç"
+                                       class="btn-secondary"/>
                            </group>
                     
                     <!-- Sonuç Alanları -->
