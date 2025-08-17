@@ -38,7 +38,7 @@
                     
                     <!-- Sonuç Alanları -->
                     <notebook>
-                        <page string="📅 Tarih Bazlı Kapasite" attrs="{'invisible': [('ilce_uygun_mu', '=', False)]}">
+                        <page string="📅 Tarih Bazlı Kapasite">
                             <div class="alert alert-info" role="alert">
                                 <strong>💡 Kullanım:</strong> Uygun tarihlere tıklayarak Transfer Belgesi Entegrasyonu wizard'ını açabilir ve Stock Picking'lerden otomatik teslimat oluşturabilirsiniz.
                             </div>
@@ -57,7 +57,7 @@
                             </field>
                         </page>
                         
-                        <page string="📊 İlçe Kapasitesi" attrs="{'invisible': [('ilce_uygun_mu', '=', False)]}">
+                        <page string="📊 İlçe Kapasitesi">
                             <group>
                                 <group>
                                     <field name="toplam_kapasite" readonly="1"/>
@@ -75,7 +75,7 @@
                         
 
                         
-                        <page string="ℹ️ Uygunluk Bilgisi" attrs="{'invisible': [('ilce_uygun_mu', '=', True)]}">
+                        <page string="ℹ️ Uygunluk Bilgisi">
                             <field name="uygunluk_mesaji" readonly="1" nolabel="1"/>
                         </page>
                     </notebook>
