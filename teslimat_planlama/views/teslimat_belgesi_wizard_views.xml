@@ -20,36 +20,19 @@
                             <field name="arac_id" readonly="1"/>
                             <field name="ilce_id" readonly="1"/>
                         </group>
-                        <group>
-                            <field name="gunluk_limit" readonly="1"/>
-                            <field name="mevcut_teslimat" readonly="1"/>
-                            <field name="kalan_kapasite" readonly="1"/>
-                        </group>
                     </group>
                     
-                    <!-- Transfer Bilgileri -->
-                    <group string="Transfer Bilgileri">
-                        <group>
-                            <field name="transfer_no" options="{'no_create': True}" placeholder="AKS/OUT/12345 yazarak arayın"/>
-                            <field name="transfer_id" options="{'no_create': True}"/>
-                        </group>
+                    <!-- Transfer No -->
+                    <group>
+                        <field name="transfer_id" options="{'no_create': True}" placeholder="AKS/OUT/12345 yazarak arayın"/>
                     </group>
                     
-                    <!-- Müşteri ve Ürün Bilgileri -->
-                    <group string="Müşteri ve Ürün Bilgileri">
+                    <!-- Müşteri ve Adres (otomatik) -->
+                    <group>
                         <group>
-                            <field name="musteri_id" required="1" options="{'no_create': True}"/>
-                            <field name="urun_id" required="1" options="{'no_create': True}"/>
+                            <field name="musteri_id" readonly="1"/>
+                            <field name="adres" readonly="1"/>
                         </group>
-                        <group>
-                            <field name="miktar" required="1"/>
-                            <field name="birim" readonly="1"/>
-                        </group>
-                    </group>
-                    
-                    <!-- Notlar -->
-                    <group string="Notlar">
-                        <field name="notlar" nolabel="1" placeholder="Teslimat ile ilgili notlar..."/>
                     </group>
                 </sheet>
                 

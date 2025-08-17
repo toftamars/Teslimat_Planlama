@@ -7,80 +7,39 @@ class TeslimatBelgesiWizard(models.TransientModel):
     _name = 'teslimat.belgesi.wizard'
     _description = 'Teslimat Belgesi Oluşturma Sihirbazı'
 
-    # Tarih ve Araç Bilgileri
+    # Temel bilgiler (context ile otomatik dolu gelir)
     teslimat_tarihi = fields.Date(string='Teslimat Tarihi', required=True, readonly=True)
     arac_id = fields.Many2one('teslimat.arac', string='Araç', required=True, readonly=True)
     ilce_id = fields.Many2one('teslimat.ilce', string='İlçe', required=True, readonly=True)
-    
-    # Kapasite Bilgileri
-    gunluk_limit = fields.Integer(string='Günlük Limit', related='arac_id.gunluk_teslimat_limiti', readonly=True)
-    mevcut_teslimat = fields.Integer(string='Mevcut Teslimat Sayısı', compute='_compute_mevcut_teslimat')
-    kalan_kapasite = fields.Integer(string='Kalan Kapasite', compute='_compute_kalan_kapasite')
-    
-    # Transfer Bilgileri
+
+    # Transfer No (stock.picking)
     transfer_id = fields.Many2one(
-        'stock.picking',
-        string='Transfer Belgesi',
-        domain="[('state','in',['waiting','confirmed','assigned','done'])]",
-        help='Tüm transferler (stock.picking) arasından seçin'
-    )
-    transfer_no = fields.Many2one(
         'stock.picking',
         string='Transfer No',
         domain="[('state','in',['waiting','confirmed','assigned','done'])]",
         help='Transfer numarasına göre arayın (name)'
     )
-    
-    # Müşteri ve Ürün Bilgileri
-    musteri_id = fields.Many2one('res.partner', string='Müşteri', required=True)
-    urun_id = fields.Many2one('product.product', string='Ürün', required=True)
-    miktar = fields.Float(string='Miktar', default=1.0, required=True)
-    birim = fields.Many2one('uom.uom', string='Birim', related='urun_id.uom_id', readonly=True)
-    
-    # Notlar
-    notlar = fields.Text(string='Notlar')
-    
-    @api.depends('arac_id', 'teslimat_tarihi')
-    def _compute_mevcut_teslimat(self):
-        for wizard in self:
-            if wizard.arac_id and wizard.teslimat_tarihi:
-                teslimat_sayisi = self.env['teslimat.belgesi'].search_count([
-                    ('arac_id', '=', wizard.arac_id.id),
-                    ('teslimat_tarihi', '=', wizard.teslimat_tarihi),
-                    ('durum', 'in', ['hazir', 'yolda'])
-                ])
-                wizard.mevcut_teslimat = teslimat_sayisi
-            else:
-                wizard.mevcut_teslimat = 0
-    
-    @api.depends('gunluk_limit', 'mevcut_teslimat')
-    def _compute_kalan_kapasite(self):
-        for wizard in self:
-            wizard.kalan_kapasite = wizard.gunluk_limit - wizard.mevcut_teslimat
-    
-    @api.onchange('transfer_id', 'transfer_no')
+
+    # Müşteri ve Adres (otomatik dolar)
+    musteri_id = fields.Many2one('res.partner', string='Müşteri', readonly=True)
+    adres = fields.Char(string='Adres', readonly=True)
+
+    @api.onchange('transfer_id')
     def _onchange_transfer_id(self):
-        picking = self.transfer_id or self.transfer_no
+        picking = self.transfer_id
         if picking:
-            self.transfer_id = picking.id
             if picking.partner_id:
                 self.musteri_id = picking.partner_id.id
-            if picking.move_ids_without_package:
-                move = picking.move_ids_without_package[0]
-                self.urun_id = move.product_id.id
-                self.miktar = move.product_uom_qty
-    
-    # transfer_no artık Many2one olduğu için ekstra arama mantığına gerek yok
-    
+                # Adres metni
+                try:
+                    self.adres = picking.partner_id._display_address()
+                except Exception:
+                    parts = [picking.partner_id.street or '', picking.partner_id.city or '', picking.partner_id.zip or '']
+                    self.adres = ', '.join([p for p in parts if p])
+
     def action_teslimat_olustur(self):
         self.ensure_one()
-        
-        # Kapasite kontrolü
-        if self.kalan_kapasite <= 0:
-            is_manager = self.env.user.has_group('stock.group_stock_manager')
-            if not is_manager:
-                raise UserError(_(f"Araç günlük kapasitesi dolu! (Limit: {self.gunluk_limit})"))
-        
+
         # Mükerrer transfer kontrolü
         if self.transfer_id:
             existing = self.env['teslimat.belgesi'].search([
@@ -88,28 +47,22 @@ class TeslimatBelgesiWizard(models.TransientModel):
             ], limit=1)
             if existing:
                 raise UserError(_(f"Bu transfer için zaten bir teslimat belgesi mevcut: {existing.name}"))
-        
-        # Teslimat belgesi oluştur
+
         vals = {
             'teslimat_tarihi': self.teslimat_tarihi,
             'arac_id': self.arac_id.id,
             'ilce_id': self.ilce_id.id,
             'musteri_id': self.musteri_id.id,
-            'urun_id': self.urun_id.id,
-            'miktar': self.miktar,
             'durum': 'hazir',
-            'notlar': self.notlar,
         }
-        
         if self.transfer_id:
             vals.update({
                 'stock_picking_id': self.transfer_id.id,
-                'transfer_no': self.transfer_no,
+                'transfer_no': self.transfer_id.name,
             })
-        
+
         teslimat = self.env['teslimat.belgesi'].create(vals)
-        
-        # Oluşturulan teslimat belgesini aç
+
         return {
             'type': 'ir.actions.act_window',
             'res_model': 'teslimat.belgesi',
