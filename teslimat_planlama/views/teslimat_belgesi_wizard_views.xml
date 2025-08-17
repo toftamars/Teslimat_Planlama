@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Teslimat Belgesi Wizard Form View -->
+    <record id="view_teslimat_belgesi_wizard_form" model="ir.ui.view">
+        <field name="name">teslimat.belgesi.wizard.form</field>
+        <field name="model">teslimat.belgesi.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Teslimat Belgesi Oluştur">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <span>📋 Teslimat Belgesi Oluştur</span>
+                        </h1>
+                    </div>
+                    
+                    <!-- Temel Bilgiler -->
+                    <group>
+                        <group>
+                            <field name="teslimat_tarihi" readonly="1"/>
+                            <field name="arac_id" readonly="1"/>
+                            <field name="ilce_id" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="gunluk_limit" readonly="1"/>
+                            <field name="mevcut_teslimat" readonly="1"/>
+                            <field name="kalan_kapasite" readonly="1"/>
+                        </group>
+                    </group>
+                    
+                    <!-- Transfer Bilgileri -->
+                    <group string="Transfer Bilgileri">
+                        <group>
+                            <field name="transfer_id" options="{'no_create': True}"/>
+                            <field name="transfer_no" placeholder="Örnek: AKS/OUT/12345"/>
+                        </group>
+                    </group>
+                    
+                    <!-- Müşteri ve Ürün Bilgileri -->
+                    <group string="Müşteri ve Ürün Bilgileri">
+                        <group>
+                            <field name="musteri_id" required="1" options="{'no_create': True}"/>
+                            <field name="urun_id" required="1" options="{'no_create': True}"/>
+                        </group>
+                        <group>
+                            <field name="miktar" required="1"/>
+                            <field name="birim" readonly="1"/>
+                        </group>
+                    </group>
+                    
+                    <!-- Notlar -->
+                    <group string="Notlar">
+                        <field name="notlar" nolabel="1" placeholder="Teslimat ile ilgili notlar..."/>
+                    </group>
+                </sheet>
+                
+                <footer>
+                    <button name="action_teslimat_olustur" 
+                            string="✅ Teslimat Belgesi Oluştur" 
+                            type="object" 
+                            class="btn-primary"/>
+                    <button string="❌ İptal" 
+                            class="btn-secondary" 
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+    
+    <!-- Teslimat Belgesi Wizard Action -->
+    <record id="action_teslimat_belgesi_wizard" model="ir.actions.act_window">
+        <field name="name">Teslimat Belgesi Oluştur</field>
+        <field name="res_model">teslimat.belgesi.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

@@ -24,3 +24,7 @@ access_teslimat_kapasite_onay_user,teslimat.kapasite.onay.user,model_teslimat_ka
 access_teslimat_kapasite_onay_manager,teslimat.kapasite.onay.manager,model_teslimat_kapasite_onay,stock.group_stock_manager,1,1,1,1
 access_teslimat_planlama_akilli_user,teslimat.planlama.akilli.user,model_teslimat_planlama_akilli,base.group_user,1,1,1,0
 access_teslimat_planlama_akilli_manager,teslimat.planlama.akilli.manager,model_teslimat_planlama_akilli,stock.group_stock_manager,1,1,1,1
+access_teslimat_gun_kapatma_wizard_user,teslimat.gun.kapatma.wizard.user,model_teslimat_gun_kapatma_wizard,base.group_user,1,1,1,0
+access_teslimat_gun_kapatma_wizard_manager,teslimat.gun.kapatma.wizard.manager,model_teslimat_gun_kapatma_wizard,stock.group_stock_manager,1,1,1,1
+access_teslimat_belgesi_wizard_user,teslimat.belgesi.wizard.user,model_teslimat_belgesi_wizard,base.group_user,1,1,1,0
+access_teslimat_belgesi_wizard_manager,teslimat.belgesi.wizard.manager,model_teslimat_belgesi_wizard,stock.group_stock_manager,1,1,1,1
