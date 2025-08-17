@@ -36,7 +36,8 @@
               name="🚗 Teslimat Araçları" 
               parent="menu_teslimat_araclar" 
               action="action_teslimat_arac" 
-              sequence="10"/>
+              sequence="10"
+              groups="stock.group_stock_manager"/>
 
     <!-- 📅 Teslimat Günleri -->
     <menuitem id="menu_teslimat_gunler" 
@@ -49,7 +50,8 @@
               name="📅 Teslimat Günleri" 
               parent="menu_teslimat_gunler" 
               action="action_teslimat_gun" 
-              sequence="10"/>
+              sequence="10"
+              groups="stock.group_stock_manager"/>
 
     <!-- ⚙️ Teslimat Programı Kurulumu -->
     <menuitem id="menu_teslimat_program_kurulum" 
@@ -62,7 +64,8 @@
               name="⚙️ Teslimat Programı Kurulumu" 
               parent="menu_teslimat_program_kurulum" 
               action="action_teslimat_program_kurulum" 
-              sequence="10"/>
+              sequence="10"
+              groups="stock.group_stock_manager"/>
 
     <!-- 🔧 Konfigürasyon -->
     <menuitem id="menu_teslimat_konfigurasyon" 
@@ -75,25 +78,29 @@
     <menuitem id="menu_teslimat_sehirler" 
               name="🏙️ Şehirler" 
               parent="menu_teslimat_konfigurasyon" 
-              sequence="10"/>
+              sequence="10"
+              groups="stock.group_stock_manager"/>
     
     <menuitem id="menu_action_teslimat_sehir" 
               name="🏙️ Şehirler" 
               parent="menu_teslimat_sehirler" 
               action="action_teslimat_sehir" 
-              sequence="10"/>
+              sequence="10"
+              groups="stock.group_stock_manager"/>
     
     <!-- 🏘️ İlçeler -->
     <menuitem id="menu_teslimat_ilceler" 
               name="🏘️ İlçeler" 
               parent="menu_teslimat_konfigurasyon" 
-              sequence="20"/>
+              sequence="20"
+              groups="stock.group_stock_manager"/>
     
     <menuitem id="menu_action_teslimat_ilce" 
               name="🏘️ İlçeler" 
               parent="menu_teslimat_ilceler" 
               action="action_teslimat_ilce" 
-              sequence="10"/>
+              sequence="10"
+              groups="stock.group_stock_manager"/>
 
     <!-- 📊 Raporlama ve Analiz -->
     <menuitem id="menu_teslimat_raporlama" 
@@ -106,13 +113,15 @@
               name="🧠 Akıllı Planlama" 
               parent="menu_teslimat_raporlama" 
               action="action_teslimat_planlama_akilli" 
-              sequence="10"/>
+              sequence="10"
+              groups="stock.group_stock_manager"/>
     
     <menuitem id="menu_action_teslimat_kapasite_onay" 
               name="✅ Kapasite Onayları" 
               parent="menu_teslimat_raporlama" 
               action="action_teslimat_kapasite_onay" 
-              sequence="20"/>
+              sequence="20"
+              groups="stock.group_stock_manager"/>
 
     <!-- 🔄 Eski Menüler (Geriye Uyumluluk) -->
     <menuitem id="menu_teslimat_planlama" 
