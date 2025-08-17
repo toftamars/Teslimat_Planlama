@@ -161,9 +161,8 @@ class TeslimatAnaSayfa(models.Model):
                             'durum_text': durum_text
                         })
                 
-                record.tarih_listesi = [(5, 0, 0)]  # Mevcut kayıtları temizle
-                for tarih_bilgi in tarihler:
-                    record.tarih_listesi = [(0, 0, tarih_bilgi)]
+                # Mevcut kayıtları temizle ve tüm satırları tek seferde ekle
+                record.tarih_listesi = [(5, 0, 0)] + [(0, 0, t) for t in tarihler]
             else:
                 record.tarih_listesi = [(5, 0, 0)]
     
