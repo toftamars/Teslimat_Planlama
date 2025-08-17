@@ -7,7 +7,7 @@ access_teslimat_ana_sayfa_user,teslimat.ana.sayfa.user,model_teslimat_ana_sayfa,
 access_teslimat_ana_sayfa_manager,teslimat.ana.sayfa.manager,model_teslimat_ana_sayfa,stock.group_stock_manager,1,1,1,1
 access_teslimat_ana_sayfa_tarih_user,teslimat.ana.sayfa.tarih.user,model_teslimat_ana_sayfa_tarih,base.group_user,1,0,0,0
 access_teslimat_ana_sayfa_tarih_manager,teslimat.ana.sayfa.tarih.manager,model_teslimat_ana_sayfa_tarih,stock.group_stock_manager,1,1,1,1
-access_teslimat_olustur_wizard_user,teslimat.olustur.wizard.user,model_teslimat_olustur_wizard,base.group_user,1,1,1,0
+
 access_teslimat_arac_user,teslimat.arac.user,model_teslimat_arac,base.group_user,1,1,1,0
 access_teslimat_arac_manager,teslimat.arac.manager,model_teslimat_arac,stock.group_stock_manager,1,1,1,1
 access_teslimat_gun_user,teslimat.gun.user,model_teslimat_gun,base.group_user,1,1,1,0
