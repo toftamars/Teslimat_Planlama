@@ -127,17 +127,20 @@
     <menuitem id="menu_teslimat_planlama" 
               name="📋 Planlamalar" 
               parent="menu_teslimat_planlama_root" 
-              sequence="70"/>
+              sequence="70"
+              groups="stock.group_stock_manager"/>
     
     <menuitem id="menu_action_teslimat_planlama" 
               name="📋 Teslimat Planlamaları" 
               parent="menu_teslimat_planlama" 
               action="action_teslimat_planlama" 
-              sequence="10"/>
+              sequence="10"
+              groups="stock.group_stock_manager"/>
     
     <menuitem id="menu_action_teslimat_transfer" 
               name="🔄 Teslimat Transferler" 
               parent="menu_teslimat_planlama" 
               action="action_teslimat_transfer" 
-              sequence="20"/>
+              sequence="20"
+              groups="stock.group_stock_manager"/>
 </odoo>
