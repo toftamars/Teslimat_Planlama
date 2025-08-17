@@ -50,7 +50,10 @@ class TeslimatAnaSayfa(models.Model):
     def _compute_ilce_uygunluk(self):
         """İlçe-arac uygunluğunu kontrol et"""
         for record in self:
-            if record.ilce_id and record.arac_id:
+            if record.arac_id and record.arac_id.arac_tipi in ['kucuk_arac_1', 'kucuk_arac_2', 'ek_arac']:
+                record.ilce_uygun_mu = True
+                record.uygunluk_mesaji = "✅ Küçük araç ile tüm ilçelere gün kısıtı olmadan teslimat yapılabilir"
+            elif record.ilce_id and record.arac_id:
                 # Araç tipine göre ilçe uygunluğunu kontrol et
                 arac_tipi = record.arac_id.arac_tipi
                 ilce_yaka = record.ilce_id.yaka_tipi
@@ -88,7 +91,8 @@ class TeslimatAnaSayfa(models.Model):
     def _compute_tarih_listesi(self):
         """Seçilen ilçe ve araç için uygun tarihleri hesapla"""
         for record in self:
-            if record.ilce_id and record.arac_id and record.ilce_uygun_mu:
+            small_vehicle = record.arac_id and record.arac_tipi in ['kucuk_arac_1', 'kucuk_arac_2', 'ek_arac'] if record.arac_id else False
+            if record.arac_id and (small_vehicle or (record.ilce_id and record.ilce_uygun_mu)):
                 # Sonraki 30 günü kontrol et
                 bugun = fields.Date.today()
                 tarihler = []
@@ -110,8 +114,8 @@ class TeslimatAnaSayfa(models.Model):
                     
                     gun_adi_tr = gun_eslesmesi.get(gun_adi, gun_adi)
                     
-                    # İlçe-gün uygunluğunu kontrol et
-                    ilce_uygun_mu = self._check_ilce_gun_uygunlugu(record.ilce_id, tarih)
+                    # İlçe-gün uygunluğunu kontrol et (küçük araçlar için kısıt yok)
+                    ilce_uygun_mu = True if small_vehicle else self._check_ilce_gun_uygunlugu(record.ilce_id, tarih)
                     
                     # Sadece uygun günleri ekle
                     if ilce_uygun_mu:
