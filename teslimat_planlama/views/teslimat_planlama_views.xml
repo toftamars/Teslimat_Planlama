@@ -337,6 +337,31 @@
         </field>
     </record>
 
+    <!-- Teslimat Gün Kapatma Wizard View -->
+    <record id="view_teslimat_gun_kapatma_wizard_form" model="ir.ui.view">
+        <field name="name">teslimat.gun.kapatma.wizard.form</field>
+        <field name="model">teslimat.gun.kapatma.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Teslimat Gününü Geçici Kapat">
+                <group>
+                    <field name="gun_id" readonly="1"/>
+                    <field name="sure_siz"/>
+                </group>
+                <group>
+                    <field name="kapatma_baslangic" attrs="{'invisible':[('sure_siz','=',True)]}"/>
+                    <field name="kapatma_bitis" attrs="{'invisible':[('sure_siz','=',True)]}"/>
+                </group>
+                <group>
+                    <field name="kapatma_sebebi"/>
+                </group>
+                <footer>
+                    <button name="action_onayla" string="Onayla" type="object" class="btn-primary"/>
+                    <button string="İptal" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
     <!-- Teslimat Program Kurulum Actions -->
     <record id="action_teslimat_program_kurulum" model="ir.actions.act_window">
         <field name="name">Teslimat Programı Kurulumu</field>
