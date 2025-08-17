@@ -37,6 +37,14 @@ Bu dosya, projede yapılan tüm işleri ve kararları kaydeder. Yeni bir görev 
 - Detay: Oluşturma anında `stock.picking` ilk hareketten `urun_id` ve `miktar` otomatik alınıyor; `transfer_bilgileri` alanı Html oldu; oluşturma sonrası doğrudan kayda yönlendiriliyor.
 - Etki: “Accept all” akışı pratik olarak sağlandı; ek onay adımı yok.
 
+### 2025-08-17 — Transfer Sihirbazında Ek Güvenlik ve Uygunluk Kontrolleri
+- Değişen: `teslimat_planlama/models/teslimat_olustur_wizard.py`, `teslimat_planlama/views/teslimat_olustur_wizard_views.xml`
+- Detay:
+  - `transfer_id` domain: waiting, confirmed, assigned, done durumlarını kapsar.
+  - Transfer no aramada da durum filtresi eklendi.
+  - Oluşturma öncesi kontroller: transfer state uygunluğu, mükerrer teslimat engeli, araç günlük kapasite kontrolü (yönetici override).
+- Etki: Hataların önüne geçildi; operasyon güvenliği arttı.
+
 ### 2025-08-17 — Ana Sayfa UX İyileştirmeleri
 - Değişen: `teslimat_planlama/views/teslimat_ana_sayfa_views.xml`
 - Detay: Tarih listesi üstüne kullanım bilgisi eklendi; satırdaki buton “Transfer Entegrasyonu” olarak güncellendi.

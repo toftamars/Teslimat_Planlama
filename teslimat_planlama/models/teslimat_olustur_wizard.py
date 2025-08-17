@@ -23,7 +23,7 @@ class TeslimatOlusturWizard(models.TransientModel):
     
     # Transfer Seçimi Alanı
     transfer_id = fields.Many2one('stock.picking', string='Transfer Belgesi Seç',
-                                  domain="[('state', 'in', ['confirmed', 'assigned', 'waiting'])]",
+                                  domain="[('state', 'in', ['waiting', 'confirmed', 'assigned', 'done'])]",
                                   help='Mevcut transfer belgelerinden seçim yapın')
     
     # Manuel Teslimat Alanları
@@ -41,9 +41,11 @@ class TeslimatOlusturWizard(models.TransientModel):
     def _onchange_transfer_no(self):
         """Transfer no girildiğinde transfer bilgilerini ara"""
         if self.transfer_no and len(self.transfer_no) > 5:
-            # Transfer no'yu ara
+            # Transfer no'yu ara (durum filtresi ile)
+            allowed_states = ['waiting', 'confirmed', 'assigned', 'done']
             transfer = self.env['stock.picking'].search([
-                ('name', '=', self.transfer_no)
+                ('name', '=', self.transfer_no),
+                ('state', 'in', allowed_states)
             ], limit=1)
             
             if transfer:
@@ -132,6 +134,33 @@ class TeslimatOlusturWizard(models.TransientModel):
             if not self.bulunan_transfer:
                 raise ValidationError("Lütfen geçerli bir transfer no girin!")
             
+            # 1) Transfer durumu kontrolü
+            allowed_states = ['waiting', 'confirmed', 'assigned', 'done']
+            if self.bulunan_transfer.state not in allowed_states:
+                raise ValidationError("Transfer belgesi uygun durumda değil (waiting/confirmed/assigned/done).")
+            
+            # 2) Mükerrer kontrolü (aynı transfer için daha önce teslimat oluşturulmuş mu?)
+            existing_delivery = self.env['teslimat.belgesi'].search([
+                ('stock_picking_id', '=', self.bulunan_transfer.id)
+            ], limit=1)
+            if existing_delivery:
+                raise ValidationError(f"Bu transfer zaten '{existing_delivery.name}' teslimat belgesine atanmış.")
+            
+            # 3) Araç günlük kapasite kontrolü (yönetici esnekliği)
+            hedef_tarih = self.teslimat_tarihi or self.env.context.get('teslimat_tarihi')
+            if not hedef_tarih:
+                raise ValidationError("Teslimat tarihi belirlenemedi!")
+            gunluk_teslimat = self.env['teslimat.belgesi'].search_count([
+                ('arac_id', '=', ana_sayfa.arac_id.id),
+                ('teslimat_tarihi', '=', hedef_tarih),
+                ('durum', 'in', ['hazir', 'yolda'])
+            ])
+            limit = ana_sayfa.arac_id.gunluk_teslimat_limiti or 0
+            if limit and gunluk_teslimat >= limit:
+                is_manager = self.env.user.has_group('stock.group_stock_manager')
+                if not is_manager:
+                    raise ValidationError(f"Araç günlük limiti dolu! (Limit: {limit}, Mevcut: {gunluk_teslimat})")
+            
             # Transferden ürün/miktar bilgisini çek
             move = False
             if self.bulunan_transfer.move_ids_without_package:
@@ -142,7 +171,7 @@ class TeslimatOlusturWizard(models.TransientModel):
             teslimat_belgesi = self.env['teslimat.belgesi'].create({
                 'arac_id': ana_sayfa.arac_id.id,
                 'ilce_id': ana_sayfa.ilce_id.id,
-                'teslimat_tarihi': self.teslimat_tarihi or self.env.context.get('teslimat_tarihi'),
+                'teslimat_tarihi': hedef_tarih,
                 'durum': 'hazir',
                 'transfer_no': self.transfer_no,
                 'stock_picking_id': self.bulunan_transfer.id,

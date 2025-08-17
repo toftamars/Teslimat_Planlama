@@ -38,7 +38,7 @@
                         </div>
                         
                         <group>
-                            <field name="transfer_id" options="{'no_create': True}" domain="[('state','in',['confirmed','assigned','waiting'])]"/>
+                            <field name="transfer_id" options="{'no_create': True}" domain="[('state','in',['waiting','confirmed','assigned','done'])]"/>
                             <field name="transfer_no" placeholder="Örnek: AKS/POS/72133, AKSY/OUT/19574"/>
                         </group>
                         <group>
