@@ -170,21 +170,11 @@ class TeslimatAnaSayfa(models.Model):
                 record.tarih_listesi = [(5, 0, 0)]
     
     def _check_ilce_gun_uygunlugu(self, ilce, tarih):
-        """İlçe ve tarih uygunluğunu kontrol et"""
-        gun_adi = tarih.strftime('%A')
-        
-        # İlçe yaka tipine göre uygun günleri belirle
-        if ilce.yaka_tipi == 'anadolu':
-            # Anadolu Yakası ilçeleri için uygun günler
-            uygun_gunler = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']  # Pazartesi-Cuma
-        elif ilce.yaka_tipi == 'avrupa':
-            # Avrupa Yakası ilçeleri için uygun günler
-            uygun_gunler = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']  # Pazartesi-Cuma
-        else:
-            # Bilinmeyen yaka tipi için tüm günler
-            uygun_gunler = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-        
-        return gun_adi in uygun_gunler
+        """İlçe ve tarih uygunluğunu program eşleşmelerine göre kontrol et"""
+        if not ilce:
+            return False
+        availability = self.env['teslimat.gun'].check_availability(tarih, district_id=ilce.id)
+        return bool(availability.get('available'))
 
     @api.depends('ilce_id', 'arac_id', 'sorgulandi')
     def _compute_uygun_araclar(self):
