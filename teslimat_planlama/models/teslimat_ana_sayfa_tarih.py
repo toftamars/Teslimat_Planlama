@@ -163,21 +163,26 @@ class TeslimatAnaSayfaTarih(models.Model):
 
     def get_formview_action(self, access_uid=None):
         self.ensure_one()
-        # Satıra tıklanınca wizard aç
-        view = self.env.ref('teslimat_planlama.view_teslimat_belgesi_wizard_form')
+        # Satıra tıklanınca wizard aç (fallback: liste açılır)
+        view = self.env.ref('teslimat_planlama.view_teslimat_belgesi_wizard_form', raise_if_not_found=False)
         ctx = {
             'default_teslimat_tarihi': self.tarih,
             'default_arac_id': self.ana_sayfa_id.arac_id.id if self.ana_sayfa_id and self.ana_sayfa_id.arac_id else False,
         }
         if self.ana_sayfa_id and self.ana_sayfa_id.ilce_id:
             ctx['default_ilce_id'] = self.ana_sayfa_id.ilce_id.id
-        return {
-            'type': 'ir.actions.act_window',
-            'res_model': 'teslimat.belgesi.wizard',
-            'view_mode': 'form',
-            'views': [(view.id, 'form')],
-            'view_id': view.id,
-            'target': 'new',
-            'context': ctx,
-            'name': 'Teslimat Belgesi Oluştur',
-        }
+        if view:
+            return {
+                'type': 'ir.actions.act_window',
+                'res_model': 'teslimat.belgesi.wizard',
+                'view_mode': 'form',
+                'views': [(view.id, 'form')],
+                'view_id': view.id,
+                'target': 'new',
+                'context': ctx,
+                'name': 'Teslimat Belgesi Oluştur',
+            }
+        # Fallback: Teslimat Belgeleri listesine git (kullanıcı buradan Oluştur der)
+        action = self.env.ref('teslimat_planlama.action_teslimat_belgesi').read()[0]
+        action['context'] = ctx
+        return action
