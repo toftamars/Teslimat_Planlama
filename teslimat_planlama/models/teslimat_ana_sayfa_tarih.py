@@ -137,14 +137,18 @@ class TeslimatAnaSayfaTarih(models.Model):
     def action_teslimat_olustur(self):
         """Seçilen tarih için doğrudan Teslimat Belgesi formunu (create) aç."""
         self.ensure_one()
-        ana_sayfa = self.ana_sayfa_id
+        
+        # Context'ten ana sayfa bilgilerini al
+        ana_sayfa_id = self.env.context.get('active_id')
+        if ana_sayfa_id:
+            ana_sayfa = self.env['teslimat.ana.sayfa'].browse(ana_sayfa_id)
+        else:
+            ana_sayfa = self.ana_sayfa_id
+            
         if not ana_sayfa or not ana_sayfa.arac_id:
-            raise AccessError("Gerekli bilgiler eksik!")
-        arac_tipi = ana_sayfa.arac_id.arac_tipi or ''
-        is_small = arac_tipi in ['kucuk_arac_1', 'kucuk_arac_2', 'ek_arac']
-        if not is_small and not ana_sayfa.ilce_id:
-            raise AccessError("İlçe seçimi zorunludur!")
-        form_view = self.env.ref('teslimat_planlama.view_teslimat_belgesi_form')
+            # Fallback: Menüdeki action'ı çağır
+            return self.env.ref('teslimat_planlama.action_teslimat_belgesi_olustur').read()[0]
+            
         ctx = {
             'default_teslimat_tarihi': self.tarih,
             'default_arac_id': ana_sayfa.arac_id.id,
@@ -152,12 +156,11 @@ class TeslimatAnaSayfaTarih(models.Model):
         }
         if ana_sayfa.ilce_id:
             ctx['default_ilce_id'] = ana_sayfa.ilce_id.id
+            
         return {
             'type': 'ir.actions.act_window',
             'res_model': 'teslimat.belgesi',
             'view_mode': 'form',
-            'views': [(form_view.id, 'form')],
-            'view_id': form_view.id,
             'target': 'current',
             'context': ctx,
             'name': f'Teslimat Belgesi Oluştur - {self.tarih} ({self.gun_adi})',

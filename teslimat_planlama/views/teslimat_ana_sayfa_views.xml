@@ -54,9 +54,9 @@
                                     <field name="durum_text" readonly="1"/>
                                     <field name="durum_icon" readonly="1"/>
                                     <field name="doluluk_bar" widget="html" readonly="1"/>
-                                    <button name="%(teslimat_planlama.action_teslimat_belgesi_olustur)d"
+                                    <button name="action_teslimat_olustur"
                                             string="📋 Teslimat Oluştur"
-                                            type="action"
+                                            type="object"
                                             class="btn-primary"/>
                                 </tree>
                             </field>
