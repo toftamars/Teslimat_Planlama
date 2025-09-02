@@ -55,26 +55,27 @@ class TeslimatAnaSayfaTarih(models.Model):
             record.doluluk_bar = f"""
                 <div style="text-align: center; padding: 20px; background-color: #f0f0f0; border: 2px solid #007bff;">
                     <h3 style="color: #007bff; margin-bottom: 15px;">📋 TESLİMAT OLUŞTUR</h3>
-                    <button type="button" 
-                            style="padding: 15px 30px; font-size: 16px; background-color: #007bff; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;"
-                            onclick="
-                                var action = {{
-                                    'type': 'ir.actions.act_window',
-                                    'name': 'Teslimat Belgesi Oluştur',
-                                    'res_model': 'teslimat.belgesi',
-                                    'view_mode': 'form',
-                                    'target': 'current',
-                                    'context': {{
-                                        'default_teslimat_tarihi': '{record.tarih}',
-                                        'default_arac_id': {record.ana_sayfa_id.arac_id.id if record.ana_sayfa_id and record.ana_sayfa_id.arac_id else 'false'},
-                                        'default_ilce_id': {record.ana_sayfa_id.ilce_id.id if record.ana_sayfa_id and record.ana_sayfa_id.ilce_id else 'false'},
-                                        'form_view_initial_mode': 'edit'
-                                    }}
-                                }};
-                                require('web.action_manager').do_action(action);
-                            ">
+                    <a href="#" 
+                       style="display: inline-block; padding: 15px 30px; font-size: 16px; background-color: #007bff; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;"
+                       onclick="
+                           var action = {{
+                               'type': 'ir.actions.act_window',
+                               'name': 'Teslimat Belgesi Oluştur',
+                               'res_model': 'teslimat.belgesi',
+                               'view_mode': 'form',
+                               'target': 'current',
+                               'context': {{
+                                   'default_teslimat_tarihi': '{record.tarih}',
+                                   'default_arac_id': {record.ana_sayfa_id.arac_id.id if record.ana_sayfa_id and record.ana_sayfa_id.arac_id else 'false'},
+                                   'default_ilce_id': {record.ana_sayfa_id.ilce_id.id if record.ana_sayfa_id and record.ana_sayfa_id.ilce_id else 'false'},
+                                   'form_view_initial_mode': 'edit'
+                               }}
+                           }};
+                           window.location.href = '/web#action=' + encodeURIComponent(JSON.stringify(action));
+                           return false;
+                       ">
                         🚀 TESLİMAT BELGESİ OLUŞTUR
-                    </button>
+                    </a>
                     <p style="margin-top: 10px; font-size: 12px; color: #666;">
                         Tarih: {record.tarih} | Durum: {record.durum_text}
                     </p>
