@@ -81,10 +81,23 @@ class TeslimatGun(models.Model):
     @api.model
     def get_uygun_gunler(self, ilce_id, tarih=None):
         """Belirli ilçe için uygun günleri getir"""
+        # Önce ilçe-gün eşleşmelerini bul
+        ilce_gun_eslesmeleri = self.env['teslimat.gun.ilce'].search([
+            ('ilce_id', '=', ilce_id),
+            ('ozel_durum', '!=', 'kapali')
+        ])
+        
+        if not ilce_gun_eslesmeleri:
+            return self.env['teslimat.gun']
+        
+        # Eşleşmelerden gün ID'lerini al
+        gun_ids = ilce_gun_eslesmeleri.mapped('gun_id.id')
+        
+        # Günleri getir
         domain = [
+            ('id', 'in', gun_ids),
             ('aktif', '=', True),
-            ('gecici_kapatma', '=', False),
-            ('ilce_ids.ilce_id', '=', ilce_id)
+            ('gecici_kapatma', '=', False)
         ]
         
         if tarih:
