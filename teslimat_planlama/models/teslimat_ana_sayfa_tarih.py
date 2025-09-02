@@ -163,26 +163,20 @@ class TeslimatAnaSayfaTarih(models.Model):
 
     def get_formview_action(self, access_uid=None):
         self.ensure_one()
-        # Satıra tıklanınca wizard aç (fallback: liste açılır)
-        view = self.env.ref('teslimat_planlama.view_teslimat_belgesi_wizard_form', raise_if_not_found=False)
+        # Satıra tıklanınca direkt teslimat belgesi create formunu aç
         ctx = {
             'default_teslimat_tarihi': self.tarih,
             'default_arac_id': self.ana_sayfa_id.arac_id.id if self.ana_sayfa_id and self.ana_sayfa_id.arac_id else False,
+            'form_view_initial_mode': 'edit',
         }
         if self.ana_sayfa_id and self.ana_sayfa_id.ilce_id:
             ctx['default_ilce_id'] = self.ana_sayfa_id.ilce_id.id
-        if view:
-            return {
-                'type': 'ir.actions.act_window',
-                'res_model': 'teslimat.belgesi.wizard',
-                'view_mode': 'form',
-                'views': [(view.id, 'form')],
-                'view_id': view.id,
-                'target': 'new',
-                'context': ctx,
-                'name': 'Teslimat Belgesi Oluştur',
-            }
-        # Fallback: Teslimat Belgeleri listesine git (kullanıcı buradan Oluştur der)
-        action = self.env.ref('teslimat_planlama.action_teslimat_belgesi').read()[0]
-        action['context'] = ctx
-        return action
+        
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Yeni Teslimat Belgesi',
+            'res_model': 'teslimat.belgesi',
+            'view_mode': 'form',
+            'target': 'current',
+            'context': ctx,
+        }
