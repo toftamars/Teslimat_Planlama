@@ -318,38 +318,7 @@ class TeslimatBelgesi(models.Model):
                 if gunluk_teslimat >= record.arac_id.gunluk_teslimat_limiti:
                     raise ValidationError(_('Bu araç için günlük teslimat limiti aşıldı!'))
     
-    @api.constrains('ilce_id', 'teslimat_tarihi')
-    def _check_ilce_gun_uygunlugu(self):
-        """İlçe-gün uygunluğu kontrolü"""
-        for record in self:
-            if record.ilce_id and record.teslimat_tarihi:
-                # Gün kodunu Türkçe'ye çevir
-                gun_cevirme = {
-                    'monday': 'pazartesi',
-                    'tuesday': 'sali', 
-                    'wednesday': 'carsamba',
-                    'thursday': 'persembe',
-                    'friday': 'cuma',
-                    'saturday': 'cumartesi',
-                    'sunday': 'pazar'
-                }
-                
-                ingilizce_gun = record.teslimat_tarihi.strftime('%A').lower()
-                turkce_gun = gun_cevirme.get(ingilizce_gun, ingilizce_gun)
-                
-                # İlçenin o gün teslimat yapılıp yapılamayacağını kontrol et
-                gun = self.env['teslimat.gun'].search([
-                    ('gun_kodu', '=', turkce_gun)
-                ], limit=1)
-                
-                if gun:
-                    ilce_gun_eslesmesi = self.env['teslimat.gun.ilce'].search([
-                        ('gun_id', '=', gun.id),
-                        ('ilce_id', '=', record.ilce_id.id)
-                    ], limit=1)
-                    
-                    if not ilce_gun_eslesmesi:
-                        raise ValidationError(_('Bu ilçeye seçilen günde teslimat yapılamaz!'))
+
     
     @api.model
     def default_get(self, fields_list):
