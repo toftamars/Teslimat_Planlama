@@ -38,7 +38,7 @@ class TeslimatAnaSayfaTarih(models.Model):
         for record in self:
             record.durum_gosterim = f"{record.durum_icon} {record.durum_text}"
 
-    @api.depends('doluluk_orani', 'durum', 'tarih')
+    @api.depends('doluluk_orani', 'durum', 'tarih', 'ana_sayfa_id')
     def _compute_doluluk_bar(self):
         for record in self:
             if record.durum == 'dolu':
@@ -51,20 +51,28 @@ class TeslimatAnaSayfaTarih(models.Model):
                 color = '#28a745'
                 icon = '🟢'
         
-            # Teslimat Belgesi Oluştur butonu HTML - Herkes için görünür
-            create_button_html = f"""
-                <div style="margin-top: 10px;">
+            # Basit buton HTML
+            record.doluluk_bar = f"""
+                <div style="text-align: center; padding: 10px;">
+                    <div style="font-size: 18px; margin-bottom: 5px;">{icon}</div>
+                    <div style="font-weight: bold; color: {color}; margin-bottom: 5px;">
+                        {record.durum_text}
+                    </div>
+                    <div style="background: #f8f9fa; border-radius: 10px; height: 20px; margin: 5px 0;">
+                        <div style="background: {color}; height: 100%; border-radius: 10px; width: {min(record.doluluk_orani, 100)}%;"></div>
+                    </div>
+                    <div style="font-size: 12px; color: #6c757d; margin-bottom: 10px;">
+                        {record.doluluk_orani:.1f}% Dolu
+                    </div>
                     <button type="button" 
                             class="btn btn-primary" 
                             style="padding: 8px 15px; font-size: 14px; cursor: pointer; background-color: #007bff; color: white; border: none; border-radius: 4px; font-weight: bold;"
                             onclick="
-                                var self = this;
                                 var action = {{
                                     'type': 'ir.actions.act_window',
                                     'name': 'Teslimat Belgesi Oluştur',
                                     'res_model': 'teslimat.belgesi',
                                     'view_mode': 'form',
-                                    'view_type': 'form',
                                     'target': 'current',
                                     'context': {{
                                         'default_teslimat_tarihi': '{record.tarih}',
@@ -73,31 +81,13 @@ class TeslimatAnaSayfaTarih(models.Model):
                                         'form_view_initial_mode': 'edit'
                                     }}
                                 }};
-                                self.dispatchEvent(new CustomEvent('odoo-action', {{
-                                    bubbles: true,
-                                    detail: {{ action: action }}
-                                }}));
+                                odoo.define('teslimat_action', function (require) {{
+                                    var ActionManager = require('web.ActionManager');
+                                    ActionManager.do_action(action);
+                                }});
                             ">
                         📋 Teslimat Oluştur
                     </button>
-                </div>
-            """
-            
-            # Herkes için tıklanabilir ikon ve buton
-            record.doluluk_bar = f"""
-                <div style="text-align: center;">
-                    <div style="font-size: 18px; margin-bottom: 5px; cursor: pointer;" 
-                         title="Tıklayarak teslimat belgesi oluştur">{icon}</div>
-                    <div style="font-weight: bold; color: {color}; margin-bottom: 5px;">
-                        {record.durum_text}
-                    </div>
-                    <div style="background: #f8f9fa; border-radius: 10px; height: 20px; margin: 5px 0;">
-                        <div style="background: {color}; height: 100%; border-radius: 10px; width: {min(record.doluluk_orani, 100)}%;"></div>
-                    </div>
-                    <div style="font-size: 12px; color: #6c757d;">
-                        {record.doluluk_orani:.1f}% Dolu
-                    </div>
-                    {create_button_html}
                 </div>
             """
 
