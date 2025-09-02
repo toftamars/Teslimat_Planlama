@@ -357,12 +357,16 @@ class TeslimatBelgesi(models.Model):
         defaults = super().default_get(fields_list)
         
         # Context'ten gelen değerleri al
-        if 'default_teslimat_tarihi' in self.env.context:
-            defaults['teslimat_tarihi'] = self.env.context['default_teslimat_tarihi']
-        if 'default_arac_id' in self.env.context:
-            defaults['arac_id'] = self.env.context['default_arac_id']
-        if 'default_ilce_id' in self.env.context:
-            defaults['ilce_id'] = self.env.context['default_ilce_id']
+        context = self.env.context
+        
+        if 'default_teslimat_tarihi' in context and context['default_teslimat_tarihi']:
+            defaults['teslimat_tarihi'] = context['default_teslimat_tarihi']
+            
+        if 'default_arac_id' in context and context['default_arac_id']:
+            defaults['arac_id'] = context['default_arac_id']
+            
+        if 'default_ilce_id' in context and context['default_ilce_id']:
+            defaults['ilce_id'] = context['default_ilce_id']
             
         return defaults
 
