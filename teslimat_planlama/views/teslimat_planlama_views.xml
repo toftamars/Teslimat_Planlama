@@ -262,7 +262,6 @@
                         </group>
                         <group>
                             <field name="teslimat_tarihi"/>
-                            <field name="planlanan_teslimat_saati"/>
                         </group>
                     </group>
                     <group>
