@@ -121,7 +121,7 @@ class TeslimatBelgesi(models.Model):
     
     @api.onchange('ilce_id')
     def _onchange_ilce(self):
-        """İlçe seçildiğinde uygun günleri göster ve uyarı ver"""
+        """İlçe seçildiğinde uygun günleri kontrol et"""
         if not self.ilce_id:
             return
         
@@ -136,17 +136,23 @@ class TeslimatBelgesi(models.Model):
                 }
             }
         
-        # Uygun günleri listele
-        gun_isimleri = [gun.name for gun in uygun_gunler]
-        gun_listesi = ', '.join(gun_isimleri)
+        # Eğer tarih seçilmişse, uyumluluğu kontrol et
+        if self.teslimat_tarihi:
+            availability = self.env['teslimat.gun'].check_availability(
+                self.teslimat_tarihi, 
+                self.ilce_id.id
+            )
+            
+            if not availability['available']:
+                return {
+                    'warning': {
+                        'title': 'Uyumsuzluk Uyarısı',
+                        'message': f'{self.teslimat_tarihi.strftime("%d/%m/%Y")} tarihinde {self.ilce_id.name} ilçesine teslimat yapılamaz!\n\nSebep: {availability["reason"]}\n\nLütfen uygun bir tarih seçin.'
+                    }
+                }
         
-        # Uyarı mesajı göster
-        return {
-            'warning': {
-                'title': 'Teslimat Günleri',
-                'message': f'{self.ilce_id.name} ilçesi şu günlerde teslimat yapılır:\n{gun_listesi}\n\nSadece bu günlerde teslimat oluşturabilirsiniz.'
-            }
-        }
+        # Her şey uyumluysa uyarı verme
+        return {}
     
     @api.onchange('teslimat_tarihi')
     def _onchange_teslimat_tarihi(self):
@@ -163,19 +169,48 @@ class TeslimatBelgesi(models.Model):
         if not availability['available']:
             return {
                 'warning': {
-                    'title': 'Tarih Uygun Değil',
+                    'title': 'Uyumsuzluk Uyarısı',
                     'message': f'{self.teslimat_tarihi.strftime("%d/%m/%Y")} tarihinde {self.ilce_id.name} ilçesine teslimat yapılamaz!\n\nSebep: {availability["reason"]}\n\nLütfen uygun bir tarih seçin.'
                 }
             }
         
-        # Uygun tarih seçildiğinde bilgi ver
-        return {
-            'warning': {
-                'title': 'Tarih Uygun',
-                'message': f'{self.teslimat_tarihi.strftime("%d/%m/%Y")} tarihinde {self.ilce_id.name} ilçesine teslimat yapılabilir.\n\nGün: {availability["day_name"]}\nKalan Kapasite: {availability["remaining_capacity"]}'
-            }
-        }
+        # Her şey uyumluysa uyarı verme
+        return {}
     
+    @api.onchange('arac_id')
+    def _onchange_arac(self):
+        """Araç seçildiğinde ilçe uyumluluğunu kontrol et"""
+        if not self.arac_id or not self.ilce_id:
+            return
+        
+        # Araç ve ilçe uyumluluğunu kontrol et
+        arac_tipi = self.arac_id.arac_tipi
+        ilce_yaka = self.ilce_id.yaka_tipi
+        
+        # Küçük araçlar ve ek araç için kısıtlama yok
+        if arac_tipi in ['kucuk_arac_1', 'kucuk_arac_2', 'ek_arac']:
+            return {}
+        
+        # Yaka bazlı araçlar için kısıtlama
+        if arac_tipi == 'anadolu_yakasi' and ilce_yaka != 'anadolu':
+            return {
+                'warning': {
+                    'title': 'Uyumsuzluk Uyarısı',
+                    'message': f'{self.arac_id.name} aracı sadece Anadolu Yakası ilçelerine gidebilir!\n\n{self.ilce_id.name} ilçesi {ilce_yaka} yakasında.\n\nLütfen uygun bir araç veya ilçe seçin.'
+                }
+            }
+        
+        if arac_tipi == 'avrupa_yakasi' and ilce_yaka != 'avrupa':
+            return {
+                'warning': {
+                    'title': 'Uyumsuzluk Uyarısı',
+                    'message': f'{self.arac_id.name} aracı sadece Avrupa Yakası ilçelerine gidebilir!\n\n{self.ilce_id.name} ilçesi {ilce_yaka} yakasında.\n\nLütfen uygun bir araç veya ilçe seçin.'
+                }
+            }
+        
+        # Her şey uyumluysa uyarı verme
+        return {}
+
     @api.onchange('arac_id', 'teslimat_tarihi')
     def _onchange_arac_date(self):
         """Araç ve tarih değiştiğinde otomatik kontroller"""
