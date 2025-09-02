@@ -352,6 +352,21 @@ class TeslimatBelgesi(models.Model):
                         raise ValidationError(_('Bu ilçeye seçilen günde teslimat yapılamaz!'))
     
     @api.model
+    def default_get(self, fields_list):
+        """Context'ten varsayılan değerleri al"""
+        defaults = super().default_get(fields_list)
+        
+        # Context'ten gelen değerleri al
+        if 'default_teslimat_tarihi' in self.env.context:
+            defaults['teslimat_tarihi'] = self.env.context['default_teslimat_tarihi']
+        if 'default_arac_id' in self.env.context:
+            defaults['arac_id'] = self.env.context['default_arac_id']
+        if 'default_ilce_id' in self.env.context:
+            defaults['ilce_id'] = self.env.context['default_ilce_id']
+            
+        return defaults
+
+    @api.model
     def create(self, vals):
         """Teslimat belgesi oluşturulduktan sonra teslimat belgeleri listesine yönlendir"""
         result = super().create(vals)
