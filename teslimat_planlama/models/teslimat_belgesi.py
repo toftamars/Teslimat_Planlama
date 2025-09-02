@@ -193,12 +193,17 @@ class TeslimatBelgesi(models.Model):
         # 1. Araç kapasite kontrolü
         if self.arac_id:
             # Aynı gün aynı araç için mevcut teslimat sayısını hesapla
-            gunluk_teslimat = self.env['teslimat.belgesi'].search_count([
+            domain = [
                 ('arac_id', '=', self.arac_id.id),
                 ('teslimat_tarihi', '=', self.teslimat_tarihi),
-                ('durum', 'in', ['hazir', 'yolda']),
-                ('id', '!=', self.id)
-            ])
+                ('durum', 'in', ['hazir', 'yolda'])
+            ]
+            # Yeni kayıt (NewId) için id != koşulu eklenmez
+            exclude_id = getattr(self._origin, 'id', False) or False
+            if exclude_id:
+                domain.append(('id', '!=', exclude_id))
+
+            gunluk_teslimat = self.env['teslimat.belgesi'].search_count(domain)
             
             kalan_kapasite = self.arac_id.gunluk_teslimat_limiti - gunluk_teslimat
             
