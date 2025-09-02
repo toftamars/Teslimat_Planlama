@@ -135,36 +135,29 @@ class TeslimatAnaSayfaTarih(models.Model):
         return super().unlink()
 
     def action_teslimat_olustur(self):
-        """Seçilen tarih için doğrudan Teslimat Belgesi formunu (create) aç."""
+        """Teslimat Belgeleri menüsündeki Oluştur'a yönlendir"""
         self.ensure_one()
         
-        # Context'ten ana sayfa bilgilerini al
-        ana_sayfa_id = self.env.context.get('active_id')
-        if ana_sayfa_id:
-            ana_sayfa = self.env['teslimat.ana.sayfa'].browse(ana_sayfa_id)
-        else:
-            ana_sayfa = self.ana_sayfa_id
+        # Önce Teslimat Belgeleri listesini aç
+        action = self.env.ref('teslimat_planlama.action_teslimat_belgesi').read()[0]
+        
+        # Context ile varsayılan değerleri aktar
+        ctx = action.get('context', {})
+        if isinstance(ctx, str):
+            ctx = {}
             
-        if not ana_sayfa or not ana_sayfa.arac_id:
-            # Fallback: Menüdeki action'ı çağır
-            return self.env.ref('teslimat_planlama.action_teslimat_belgesi_olustur').read()[0]
-            
-        ctx = {
-            'default_teslimat_tarihi': self.tarih,
-            'default_arac_id': ana_sayfa.arac_id.id,
-            'form_view_initial_mode': 'edit',
-        }
-        if ana_sayfa.ilce_id:
-            ctx['default_ilce_id'] = ana_sayfa.ilce_id.id
-            
-        return {
-            'type': 'ir.actions.act_window',
-            'res_model': 'teslimat.belgesi',
-            'view_mode': 'form',
-            'target': 'current',
-            'context': ctx,
-            'name': f'Teslimat Belgesi Oluştur - {self.tarih} ({self.gun_adi})',
-        }
+        # Ana sayfa bilgilerini al
+        ana_sayfa = self.ana_sayfa_id
+        if ana_sayfa and ana_sayfa.arac_id:
+            ctx.update({
+                'default_teslimat_tarihi': self.tarih,
+                'default_arac_id': ana_sayfa.arac_id.id,
+            })
+            if ana_sayfa.ilce_id:
+                ctx['default_ilce_id'] = ana_sayfa.ilce_id.id
+        
+        action['context'] = ctx
+        return action
 
     def get_formview_action(self, access_uid=None):
         self.ensure_one()
