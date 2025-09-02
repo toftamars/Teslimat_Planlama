@@ -363,7 +363,10 @@ class TeslimatBelgesi(models.Model):
 
     @api.model
     def create(self, vals):
-        """Teslimat belgesi oluşturulduktan sonra teslimat belgeleri listesine yönlendir"""
+        """Teslimat belgesi oluşturulduktan sonra durumu hazır yap ve teslimat belgeleri listesine yönlendir"""
+        # Durumu hazır olarak ayarla
+        vals['durum'] = 'hazir'
+        
         result = super().create(vals)
         
         # Kaydet butonuna basıldığında teslimat belgeleri listesine yönlendir
