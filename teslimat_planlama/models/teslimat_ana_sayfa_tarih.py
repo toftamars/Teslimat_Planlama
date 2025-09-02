@@ -135,29 +135,31 @@ class TeslimatAnaSayfaTarih(models.Model):
         return super().unlink()
 
     def action_teslimat_olustur(self):
-        """Teslimat Belgeleri menüsündeki Oluştur'a yönlendir"""
+        """Direkt Teslimat Belgesi create formunu aç (kısa yol)"""
         self.ensure_one()
         
-        # Önce Teslimat Belgeleri listesini aç
-        action = self.env.ref('teslimat_planlama.action_teslimat_belgesi').read()[0]
+        # Context ile varsayılan değerleri hazırla
+        ctx = {
+            'default_teslimat_tarihi': self.tarih,
+            'form_view_initial_mode': 'edit',
+        }
         
-        # Context ile varsayılan değerleri aktar
-        ctx = action.get('context', {})
-        if isinstance(ctx, str):
-            ctx = {}
-            
         # Ana sayfa bilgilerini al
         ana_sayfa = self.ana_sayfa_id
         if ana_sayfa and ana_sayfa.arac_id:
-            ctx.update({
-                'default_teslimat_tarihi': self.tarih,
-                'default_arac_id': ana_sayfa.arac_id.id,
-            })
+            ctx['default_arac_id'] = ana_sayfa.arac_id.id
             if ana_sayfa.ilce_id:
                 ctx['default_ilce_id'] = ana_sayfa.ilce_id.id
         
-        action['context'] = ctx
-        return action
+        # Direkt form create modunda aç
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Yeni Teslimat Belgesi',
+            'res_model': 'teslimat.belgesi',
+            'view_mode': 'form',
+            'target': 'current',
+            'context': ctx,
+        }
 
     def get_formview_action(self, access_uid=None):
         self.ensure_one()
