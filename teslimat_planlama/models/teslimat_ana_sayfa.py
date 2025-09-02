@@ -293,39 +293,51 @@ class TeslimatAnaSayfa(models.Model):
     def action_sorgula(self):
         """Sorgula butonuna basıldığında çalışacak method"""
         self.ensure_one()
-        
-        if not self.arac_id or not self.ilce_id:
+
+        # Kayıt henüz persist edilmemişse, önce kalıcı bir kayıt oluştur ve ona yönlendir
+        if not self.id:
+            new_rec = self.create({
+                'arac_id': self.arac_id.id if self.arac_id else False,
+                'ilce_id': self.ilce_id.id if self.ilce_id else False,
+            })
+
+            # Yeni kayıtta hesaplamaları çalıştır
+            new_rec._compute_tarih_listesi()
+            new_rec._compute_kapasite_bilgileri()
+
+            return {
+                'type': 'ir.actions.act_window',
+                'res_model': 'teslimat.ana.sayfa',
+                'res_id': new_rec.id,
+                'view_mode': 'form',
+                'target': 'current',
+                'name': 'Ana Sayfa',
+            }
+
+        # Geçerlilik kontrolleri
+        if not self.arac_id or not (self.ilce_uygun_mu or self.arac_kucuk_mu):
             return {
                 'type': 'ir.actions.client',
                 'tag': 'display_notification',
                 'params': {
                     'title': 'Uyarı',
-                    'message': 'Lütfen önce araç ve ilçe seçin.',
+                    'message': self.uygunluk_mesaji or 'Lütfen önce araç ve ilçe seçin.',
                     'type': 'warning',
                     'sticky': False,
                 }
             }
 
-        if not self.ilce_uygun_mu:
-            return {
-                'type': 'ir.actions.client',
-                'tag': 'display_notification',
-                'params': {
-                    'title': 'Uyarı',
-                    'message': self.uygunluk_mesaji,
-                    'type': 'warning',
-                    'sticky': False,
-                }
-            }
-        
-        # Tarih listesini hesapla
+        # Mevcut kalıcı kayıtta hesaplamaları güncelle ve formu yeniden aç
         self._compute_tarih_listesi()
         self._compute_kapasite_bilgileri()
-        
-        # Notebook'ta Tarih Bazlı Kapasite sekmesini öne getir
+
         return {
-            'type': 'ir.actions.client',
-            'tag': 'reload',
+            'type': 'ir.actions.act_window',
+            'res_model': 'teslimat.ana.sayfa',
+            'res_id': self.id,
+            'view_mode': 'form',
+            'target': 'current',
+            'name': 'Ana Sayfa',
         }
     
 
