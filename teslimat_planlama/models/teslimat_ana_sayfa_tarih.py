@@ -31,7 +31,7 @@ class TeslimatAnaSayfaTarih(models.Model):
     durum_gosterim = fields.Char(string='Durum Gösterimi', compute='_compute_durum_gosterim')
     
     # Hesaplanan Alanlar
-    doluluk_bar = fields.Html(string='Doluluk Barı', compute='_compute_doluluk_bar')
+    doluluk_bar = fields.Html(string='Doluluk Barı', compute='_compute_doluluk_bar', store=True)
     
     @api.depends('durum_icon', 'durum_text')
     def _compute_durum_gosterim(self):
@@ -51,22 +51,12 @@ class TeslimatAnaSayfaTarih(models.Model):
                 color = '#28a745'
                 icon = '🟢'
         
-            # Basit buton HTML
+            # Çok basit test HTML - sadece buton
             record.doluluk_bar = f"""
-                <div style="text-align: center; padding: 10px;">
-                    <div style="font-size: 18px; margin-bottom: 5px;">{icon}</div>
-                    <div style="font-weight: bold; color: {color}; margin-bottom: 5px;">
-                        {record.durum_text}
-                    </div>
-                    <div style="background: #f8f9fa; border-radius: 10px; height: 20px; margin: 5px 0;">
-                        <div style="background: {color}; height: 100%; border-radius: 10px; width: {min(record.doluluk_orani, 100)}%;"></div>
-                    </div>
-                    <div style="font-size: 12px; color: #6c757d; margin-bottom: 10px;">
-                        {record.doluluk_orani:.1f}% Dolu
-                    </div>
+                <div style="text-align: center; padding: 20px; background-color: #f0f0f0; border: 2px solid #007bff;">
+                    <h3 style="color: #007bff; margin-bottom: 15px;">📋 TESLİMAT OLUŞTUR</h3>
                     <button type="button" 
-                            class="btn btn-primary" 
-                            style="padding: 8px 15px; font-size: 14px; cursor: pointer; background-color: #007bff; color: white; border: none; border-radius: 4px; font-weight: bold;"
+                            style="padding: 15px 30px; font-size: 16px; background-color: #007bff; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;"
                             onclick="
                                 var action = {{
                                     'type': 'ir.actions.act_window',
@@ -86,8 +76,11 @@ class TeslimatAnaSayfaTarih(models.Model):
                                     ActionManager.do_action(action);
                                 }});
                             ">
-                        📋 Teslimat Oluştur
+                        🚀 TESLİMAT BELGESİ OLUŞTUR
                     </button>
+                    <p style="margin-top: 10px; font-size: 12px; color: #666;">
+                        Tarih: {record.tarih} | Durum: {record.durum_text}
+                    </p>
                 </div>
             """
 
