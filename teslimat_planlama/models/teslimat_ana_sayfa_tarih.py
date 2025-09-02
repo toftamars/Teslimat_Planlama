@@ -5,6 +5,7 @@ class TeslimatAnaSayfaTarih(models.Model):
     _name = 'teslimat.ana.sayfa.tarih'
     _description = 'Ana Sayfa Tarih Listesi'
     _order = 'tarih'
+    _rec_name = 'tarih'
 
     ana_sayfa_id = fields.Many2one('teslimat.ana.sayfa', string='Ana Sayfa')
     

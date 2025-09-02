@@ -12,7 +12,14 @@ class TeslimatAnaSayfa(models.Model):
     ilce_id = fields.Many2one('teslimat.ilce', string='İlçe', required=False)
     
     # Sonuç Alanları (Hesaplanan)
-    tarih_listesi = fields.One2many('teslimat.ana.sayfa.tarih', 'ana_sayfa_id', string='Uygun Tarihler', compute='_compute_tarih_listesi')
+    tarih_listesi = fields.One2many(
+        'teslimat.ana.sayfa.tarih',
+        'ana_sayfa_id',
+        string='Uygun Tarihler',
+        compute='_compute_tarih_listesi',
+        store=True,
+        compute_sudo=True
+    )
     uygun_arac_ids = fields.Many2many('teslimat.arac', string='Uygun Araçlar', compute='_compute_uygun_araclar')
     arac_kucuk_mu = fields.Boolean(string='Küçük Araç mı?', compute='_compute_arac_kucuk_mu')
     
