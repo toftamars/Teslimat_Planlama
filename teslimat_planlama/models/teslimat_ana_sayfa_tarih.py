@@ -117,12 +117,18 @@ class TeslimatAnaSayfaTarih(models.Model):
         
         # Ana sayfa bilgilerini al
         ana_sayfa = self.ana_sayfa_id
-        if not ana_sayfa or not ana_sayfa.arac_id or not ana_sayfa.ilce_id:
+        if not ana_sayfa or not ana_sayfa.arac_id:
             raise AccessError("Gerekli bilgiler eksik!")
+
+        # Küçük araçlar için ilçe zorunlu değildir
+        arac_tipi = ana_sayfa.arac_id.arac_tipi or ''
+        is_small = arac_tipi in ['kucuk_arac_1', 'kucuk_arac_2', 'ek_arac']
+        if not is_small and not ana_sayfa.ilce_id:
+            raise AccessError("İlçe seçimi zorunludur!")
         
         # Teslimat Belgesi Wizard'ını aç (view_id açıkça belirtilir)
         view = self.env.ref('teslimat_planlama.view_teslimat_belgesi_wizard_form')
-        return {
+        action = {
             'type': 'ir.actions.act_window',
             'res_model': 'teslimat.belgesi.wizard',
             'view_mode': 'form',
@@ -133,9 +139,12 @@ class TeslimatAnaSayfaTarih(models.Model):
             'context': {
                 'default_teslimat_tarihi': self.tarih,
                 'default_arac_id': ana_sayfa.arac_id.id,
-                'default_ilce_id': ana_sayfa.ilce_id.id,
             }
         }
+        # İlçe varsa context'e ekle
+        if ana_sayfa.ilce_id:
+            action['context']['default_ilce_id'] = ana_sayfa.ilce_id.id
+        return action
 
     def get_formview_action(self, access_uid=None):
         """Satıra tıklamayı tamamen engelle: Eski wizard açılmasın."""

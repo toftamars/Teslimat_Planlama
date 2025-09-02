@@ -10,7 +10,7 @@ class TeslimatBelgesiWizard(models.TransientModel):
     # Temel bilgiler (context ile otomatik dolu gelir)
     teslimat_tarihi = fields.Date(string='Teslimat Tarihi', required=True, readonly=True)
     arac_id = fields.Many2one('teslimat.arac', string='Araç', required=True, readonly=True)
-    ilce_id = fields.Many2one('teslimat.ilce', string='İlçe', required=True, readonly=True)
+    ilce_id = fields.Many2one('teslimat.ilce', string='İlçe', required=False, readonly=True)
 
     # Transfer No (stock.picking)
     transfer_id = fields.Many2one(
