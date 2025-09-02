@@ -55,25 +55,9 @@ class TeslimatAnaSayfaTarih(models.Model):
             record.doluluk_bar = f"""
                 <div style="text-align: center; padding: 20px; background-color: #f0f0f0; border: 2px solid #007bff;">
                     <h3 style="color: #007bff; margin-bottom: 15px;">📋 TESLİMAT OLUŞTUR</h3>
-                    <a href="#" 
+                    <a href="/web#action=teslimat_planlama.action_teslimat_belgesi&view_type=form&model=teslimat.belgesi&menu_id=teslimat_planlama.menu_teslimat_belgesi" 
                        style="display: inline-block; padding: 15px 30px; font-size: 16px; background-color: #007bff; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;"
-                       onclick="
-                           var action = {{
-                               'type': 'ir.actions.act_window',
-                               'name': 'Teslimat Belgesi Oluştur',
-                               'res_model': 'teslimat.belgesi',
-                               'view_mode': 'form',
-                               'target': 'current',
-                               'context': {{
-                                   'default_teslimat_tarihi': '{record.tarih}',
-                                   'default_arac_id': {record.ana_sayfa_id.arac_id.id if record.ana_sayfa_id and record.ana_sayfa_id.arac_id else 'false'},
-                                   'default_ilce_id': {record.ana_sayfa_id.ilce_id.id if record.ana_sayfa_id and record.ana_sayfa_id.ilce_id else 'false'},
-                                   'form_view_initial_mode': 'edit'
-                               }}
-                           }};
-                           window.location.href = '/web#action=' + encodeURIComponent(JSON.stringify(action));
-                           return false;
-                       ">
+                       target="_self">
                         🚀 TESLİMAT BELGESİ OLUŞTUR
                     </a>
                     <p style="margin-top: 10px; font-size: 12px; color: #666;">
