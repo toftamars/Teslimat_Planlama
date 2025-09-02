@@ -271,8 +271,7 @@
                             <field name="ilce_id"/>
                         </group>
                         <group>
-                            <field name="arac_id"/>
-                            <field name="surucu_id"/>
+                            <field name="arac_id" readonly="1"/>
                         </group>
                     </group>
                     <group>
