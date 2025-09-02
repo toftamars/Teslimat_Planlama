@@ -359,12 +359,25 @@ class TeslimatBelgesi(models.Model):
         # Context'ten gelen değerleri al
         context = self.env.context
         
+        # Tarih alanını context'ten al
         if 'default_teslimat_tarihi' in context and context['default_teslimat_tarihi']:
-            defaults['teslimat_tarihi'] = context['default_teslimat_tarihi']
+            try:
+                # Tarih string'ini date objesine çevir
+                tarih_str = context['default_teslimat_tarihi']
+                if isinstance(tarih_str, str):
+                    from datetime import datetime
+                    tarih_obj = datetime.strptime(tarih_str, '%Y-%m-%d').date()
+                    defaults['teslimat_tarihi'] = tarih_obj
+                else:
+                    defaults['teslimat_tarihi'] = tarih_str
+            except:
+                defaults['teslimat_tarihi'] = context['default_teslimat_tarihi']
             
+        # Araç alanını context'ten al
         if 'default_arac_id' in context and context['default_arac_id']:
             defaults['arac_id'] = context['default_arac_id']
             
+        # İlçe alanını context'ten al
         if 'default_ilce_id' in context and context['default_ilce_id']:
             defaults['ilce_id'] = context['default_ilce_id']
             
