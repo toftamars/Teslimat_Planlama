@@ -15,7 +15,7 @@ class TeslimatAnaSayfa(models.Model):
     tarih_listesi = fields.One2many(
         'teslimat.ana.sayfa.tarih',
         'ana_sayfa_id',
-        string='Uygun Tarihler',
+        string=' ',
         compute='_compute_tarih_listesi',
         store=True,
         compute_sudo=True
