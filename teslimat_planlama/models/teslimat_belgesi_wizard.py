@@ -24,6 +24,35 @@ class TeslimatBelgesiWizard(models.TransientModel):
     musteri_id = fields.Many2one('res.partner', string='Müşteri', readonly=True)
     adres = fields.Char(string='Adres', readonly=True)
 
+    @api.model
+    def default_get(self, fields_list):
+        res = super().default_get(fields_list)
+        ctx = dict(self.env.context or {})
+
+        # Context'ten tarih/araç/ilçe al
+        tarih_ctx = ctx.get('default_teslimat_tarihi')
+        arac_ctx = ctx.get('default_arac_id')
+        ilce_ctx = ctx.get('default_ilce_id')
+
+        if tarih_ctx and 'teslimat_tarihi' in (fields_list or []):
+            res['teslimat_tarihi'] = tarih_ctx
+        if arac_ctx and 'arac_id' in (fields_list or []):
+            res['arac_id'] = arac_ctx
+        if ilce_ctx and 'ilce_id' in (fields_list or []):
+            res['ilce_id'] = ilce_ctx
+
+        # Eğer context boş ise aktif kaynaktan doldur (parent form)
+        if (not res.get('arac_id') or not res.get('teslimat_tarihi')) and ctx.get('active_model') == 'teslimat.ana.sayfa':
+            parent = self.env['teslimat.ana.sayfa'].browse(ctx.get('active_id'))
+            if parent:
+                if not res.get('arac_id') and parent.arac_id:
+                    res['arac_id'] = parent.arac_id.id
+                if not res.get('ilce_id') and parent.ilce_id:
+                    res['ilce_id'] = parent.ilce_id.id
+                # Tarih context ile gelmediyse boş bırakılır, kullanıcı satır butonundan açınca gelir
+
+        return res
+
     @api.onchange('transfer_id')
     def _onchange_transfer_id(self):
         picking = self.transfer_id
