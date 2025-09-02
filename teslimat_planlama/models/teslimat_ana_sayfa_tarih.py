@@ -35,31 +35,25 @@ class TeslimatAnaSayfaTarih(models.Model):
     
     @api.depends('durum_icon', 'durum_text')
     def _compute_durum_gosterim(self):
-        """Durum gösterimi için ikon + metin"""
         for record in self:
             record.durum_gosterim = f"{record.durum_icon} {record.durum_text}"
-    
-
 
     @api.depends('doluluk_orani', 'durum')
     def _compute_doluluk_bar(self):
-        """Doluluk oranı için görsel bar oluştur"""
         for record in self:
             if record.durum == 'dolu':
-                color = '#dc3545'  # Kırmızı
+                color = '#dc3545'
                 icon = '🔴'
             elif record.durum == 'dolu_yakin':
-                color = '#ffc107'  # Sarı
+                color = '#ffc107'
                 icon = '🟡'
             else:
-                color = '#28a745'  # Yeşil
+                color = '#28a745'
                 icon = '🟢'
-            
-            # Yönetici kontrolü
+        
             is_manager = self.env.user.has_group('stock.group_stock_manager')
-            
+        
             if is_manager:
-                # Yönetici için tıklanabilir ikon
                 record.doluluk_bar = f"""
                     <div style="text-align: center;">
                         <div style="font-size: 18px; margin-bottom: 5px; cursor: pointer;" 
@@ -76,7 +70,6 @@ class TeslimatAnaSayfaTarih(models.Model):
                     </div>
                 """
             else:
-                # Normal kullanıcı için tıklanamaz ikon
                 record.doluluk_bar = f"""
                     <div style="text-align: center;">
                         <div style="font-size: 18px; margin-bottom: 5px; cursor: not-allowed; opacity: 0.7; pointer-events: none; user-select: none;" 
@@ -95,39 +88,27 @@ class TeslimatAnaSayfaTarih(models.Model):
                         </div>
                     </div>
                 """
-    
+
     def write(self, vals):
-        """Sadece yönetici düzenleyebilir"""
-        # Yönetici kontrolü
         if not self.env.user.has_group('stock.group_stock_manager'):
             raise AccessError("Bu kayıtları düzenlemek için yönetici yetkisi gereklidir!")
-        
         return super().write(vals)
-    
+
     def unlink(self):
-        """Sadece yönetici silebilir"""
-        # Yönetici kontrolü
         if not self.env.user.has_group('stock.group_stock_manager'):
             raise AccessError("Bu kayıtları silmek için yönetici yetkisi gereklidir!")
-        
         return super().unlink()
-    
+
     def action_teslimat_olustur(self):
         """Seçilen tarih için doğrudan Teslimat Belgesi formunu (create) aç."""
         self.ensure_one()
-        
-        # Ana sayfa bilgilerini al
         ana_sayfa = self.ana_sayfa_id
         if not ana_sayfa or not ana_sayfa.arac_id:
             raise AccessError("Gerekli bilgiler eksik!")
-
-        # Küçük araçlar için ilçe zorunlu değildir
         arac_tipi = ana_sayfa.arac_id.arac_tipi or ''
         is_small = arac_tipi in ['kucuk_arac_1', 'kucuk_arac_2', 'ek_arac']
         if not is_small and not ana_sayfa.ilce_id:
             raise AccessError("İlçe seçimi zorunludur!")
-        
-        # Teslimat Belgesi formunu create modda aç
         form_view = self.env.ref('teslimat_planlama.view_teslimat_belgesi_form')
         ctx = {
             'default_teslimat_tarihi': self.tarih,
@@ -136,7 +117,6 @@ class TeslimatAnaSayfaTarih(models.Model):
         }
         if ana_sayfa.ilce_id:
             ctx['default_ilce_id'] = ana_sayfa.ilce_id.id
-
         return {
             'type': 'ir.actions.act_window',
             'res_model': 'teslimat.belgesi',
@@ -149,8 +129,5 @@ class TeslimatAnaSayfaTarih(models.Model):
         }
 
     def get_formview_action(self, access_uid=None):
-        """Satıra tıklamayı tamamen engelle: Eski wizard açılmasın."""
-        # Boş bir action döndürerek açılmayı engelle
-        return {
-            'type': 'ir.actions.act_window_close'
-        }
+        self.ensure_one()
+        return self.action_teslimat_olustur()
