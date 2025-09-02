@@ -55,22 +55,34 @@ class TeslimatAnaSayfaTarih(models.Model):
             
             # Teslimat Belgesi Oluştur butonu HTML
             create_button_html = f"""
-                <a href="#" onclick="
-                    odoo.__DEBUG__.services['web.core'].bus.trigger('do-action', {{
-                        action: {{'type': 'ir.actions.act_window',
-                                'res_model': 'teslimat.belgesi',
-                                'view_mode': 'form',
-                                'target': 'current',
-                                'context': {{'default_teslimat_tarihi': '{record.tarih}',
-                                           'default_arac_id': {record.ana_sayfa_id.arac_id.id if record.ana_sayfa_id and record.ana_sayfa_id.arac_id else 'false'},
-                                           'default_ilce_id': {record.ana_sayfa_id.ilce_id.id if record.ana_sayfa_id and record.ana_sayfa_id.ilce_id else 'false'},
-                                           'form_view_initial_mode': 'edit'}}
-                               }}
-                    }});
-                    return false;"
-                    class="btn btn-primary btn-sm" style="margin-top: 5px;">
-                    📋 Teslimat Oluştur
-                </a>
+                <div style="margin-top: 10px;">
+                    <button type="button" 
+                            class="btn btn-primary" 
+                            style="padding: 5px 10px; font-size: 12px; cursor: pointer;"
+                            onclick="
+                                var self = this;
+                                var action = {{
+                                    'type': 'ir.actions.act_window',
+                                    'name': 'Teslimat Belgesi Oluştur',
+                                    'res_model': 'teslimat.belgesi',
+                                    'view_mode': 'form',
+                                    'view_type': 'form',
+                                    'target': 'current',
+                                    'context': {{
+                                        'default_teslimat_tarihi': '{record.tarih}',
+                                        'default_arac_id': {record.ana_sayfa_id.arac_id.id if record.ana_sayfa_id and record.ana_sayfa_id.arac_id else 'false'},
+                                        'default_ilce_id': {record.ana_sayfa_id.ilce_id.id if record.ana_sayfa_id and record.ana_sayfa_id.ilce_id else 'false'},
+                                        'form_view_initial_mode': 'edit'
+                                    }}
+                                }};
+                                self.dispatchEvent(new CustomEvent('odoo-action', {{
+                                    bubbles: true,
+                                    detail: {{ action: action }}
+                                }}));
+                            ">
+                        📋 Teslimat Oluştur
+                    </button>
+                </div>
             """
             
             if is_manager:
