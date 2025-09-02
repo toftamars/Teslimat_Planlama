@@ -221,34 +221,8 @@ class TeslimatBelgesi(models.Model):
             if not self.arac_id.aktif:
                 errors.append("Araç aktif değil!")
         
-        # 2. Tarih uygunluk kontrolü
-        if self.teslimat_tarihi:
-            # Haftanın gününü belirle
-            day_mapping = {
-                0: 'pazartesi',
-                1: 'sali', 
-                2: 'carsamba',
-                3: 'persembe',
-                4: 'cuma',
-                5: 'cumartesi',
-                6: 'pazar'
-            }
-            
-            day_of_week = day_mapping.get(self.teslimat_tarihi.weekday())
-            
-            if day_of_week == 'pazar':
-                errors.append("Pazar günü teslimat yapılmaz!")
-            else:
-                # Gün müsaitlik kontrolü
-                availability = self.env['teslimat.gun'].check_availability(
-                    self.teslimat_tarihi, 
-                    self.ilce_id.id if self.ilce_id else None
-                )
-                
-                if not availability['available']:
-                    errors.append(f"Tarih uygun değil: {availability['reason']}")
-                else:
-                    warnings.append(f"Seçilen gün: {availability['day_name']}")
+        # 2. Tarih uygunluk kontrolü - KALDIRILDI
+        # Tarih kontrolü artık yapılmıyor, kullanıcı istediği tarihi seçebilir
         
         # 3. İlçe-araç uyumluluğu kontrolü
         if self.arac_id and self.ilce_id:
