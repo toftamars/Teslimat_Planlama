@@ -336,3 +336,22 @@ class TeslimatBelgesi(models.Model):
                     
                     if not ilce_gun_eslesmesi:
                         raise ValidationError(_('Bu ilçeye seçilen günde teslimat yapılamaz!'))
+    
+    @api.model
+    def create(self, vals):
+        """Teslimat belgesi oluşturulduktan sonra teslimat belgeleri listesine yönlendir"""
+        result = super().create(vals)
+        
+        # Kaydet butonuna basıldığında teslimat belgeleri listesine yönlendir
+        if self.env.context.get('from_form'):
+            return {
+                'type': 'ir.actions.act_window',
+                'name': 'Teslimat Belgeleri',
+                'res_model': 'teslimat.belgesi',
+                'view_mode': 'tree,form',
+                'target': 'current',
+                'domain': [],
+                'context': {},
+            }
+        
+        return result
