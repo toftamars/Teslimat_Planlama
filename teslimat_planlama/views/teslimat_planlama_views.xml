@@ -257,7 +257,6 @@
                     </div>
                     <group>
                         <group>
-                            <field name="transfer_no"/>
                             <field name="stock_picking_id"/>
                         </group>
                         <group>
