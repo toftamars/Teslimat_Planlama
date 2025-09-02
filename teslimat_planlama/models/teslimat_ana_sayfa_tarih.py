@@ -59,7 +59,7 @@ class TeslimatAnaSayfaTarih(models.Model):
             record.doluluk_bar = f"""
                 <div style="text-align: center; padding: 20px; background-color: #f0f0f0; border: 2px solid #007bff;">
                     <h3 style="color: #007bff; margin-bottom: 15px;">📋 TESLİMAT OLUŞTUR</h3>
-                    <a href="/web#action=teslimat_planlama.action_teslimat_belgesi_olustur&context={{'default_teslimat_tarihi': '{record.tarih}', 'default_arac_id': {record.ana_sayfa_id.arac_id.id if record.ana_sayfa_id and record.ana_sayfa_id.arac_id else 'false'}, 'default_ilce_id': {record.ana_sayfa_id.ilce_id.id if record.ana_sayfa_id and record.ana_sayfa_id.ilce_id else 'false'}}}&r={random_id}" 
+                    <a href="/web#action=teslimat_planlama.action_teslimat_belgesi_olustur&default_teslimat_tarihi={record.tarih}&default_arac_id={record.ana_sayfa_id.arac_id.id if record.ana_sayfa_id and record.ana_sayfa_id.arac_id else ''}&default_ilce_id={record.ana_sayfa_id.ilce_id.id if record.ana_sayfa_id and record.ana_sayfa_id.ilce_id else ''}&r={random_id}" 
                        style="display: inline-block; padding: 15px 30px; font-size: 16px; background-color: #007bff; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;"
                        target="_self">
                         🚀 TESLİMAT BELGESİ OLUŞTUR
