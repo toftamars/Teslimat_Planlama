@@ -151,13 +151,16 @@ class TeslimatAnaSayfaTarih(models.Model):
             if ana_sayfa.ilce_id:
                 ctx['default_ilce_id'] = ana_sayfa.ilce_id.id
         
-        # Direkt form create modunda aç
+        # Direkt form create modunda modal olarak aç
+        form_view = self.env.ref('teslimat_planlama.view_teslimat_belgesi_form')
         return {
             'type': 'ir.actions.act_window',
             'name': 'Yeni Teslimat Belgesi',
             'res_model': 'teslimat.belgesi',
             'view_mode': 'form',
-            'target': 'current',
+            'views': [(form_view.id, 'form')],
+            'view_id': form_view.id,
+            'target': 'new',
             'context': ctx,
         }
 
@@ -178,7 +181,7 @@ class TeslimatAnaSayfaTarih(models.Model):
             'view_mode': 'form',
             'views': [(form_view.id, 'form')],
             'view_id': form_view.id,
-            'target': 'current',
+            'target': 'new',
             'context': ctx,
             'name': f'Teslimat Belgesi Oluştur - {self.tarih} ({self.gun_adi})',
         }
