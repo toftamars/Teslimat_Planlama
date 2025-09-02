@@ -54,10 +54,13 @@
                                     <field name="durum_text" readonly="1"/>
                                     <field name="durum_icon" readonly="1"/>
                                     <field name="doluluk_bar" widget="html" readonly="1"/>
-                                    <button name="action_teslimat_olustur"
-                                            string="Teslimat Belgesi Oluştur"
-                                            type="object"
-                                            class="btn-primary"/>
+                                    <button string="📋 Teslimat Oluştur"
+                                            type="action"
+                                            name="%(teslimat_planlama.action_teslimat_belgesi)d"
+                                            class="btn-sm btn-primary"
+                                            context="{'default_teslimat_tarihi': tarih,
+                                                     'default_arac_id': parent.arac_id,
+                                                     'default_ilce_id': parent.ilce_id}"/>
                                 </tree>
                             </field>
                         </page>

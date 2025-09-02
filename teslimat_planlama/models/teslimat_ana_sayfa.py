@@ -17,7 +17,6 @@ class TeslimatAnaSayfa(models.Model):
         'ana_sayfa_id',
         string='Uygun Tarihler',
         compute='_compute_tarih_listesi',
-        store=True,
         compute_sudo=True
     )
     uygun_arac_ids = fields.Many2many('teslimat.arac', string='Uygun Araçlar', compute='_compute_uygun_araclar')
