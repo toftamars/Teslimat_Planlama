@@ -129,23 +129,5 @@ class TeslimatAnaSayfaTarih(models.Model):
         }
 
     def get_formview_action(self, access_uid=None):
-        self.ensure_one()
-        # Satır tıklanınca menüdeki Teslimat Belgesi create formu açılsın
-        form_view = self.env.ref('teslimat_planlama.view_teslimat_belgesi_form')
-        ctx = {
-            'default_teslimat_tarihi': self.tarih,
-            'default_arac_id': self.ana_sayfa_id.arac_id.id if self.ana_sayfa_id and self.ana_sayfa_id.arac_id else False,
-            'form_view_initial_mode': 'edit',
-        }
-        if self.ana_sayfa_id and self.ana_sayfa_id.ilce_id:
-            ctx['default_ilce_id'] = self.ana_sayfa_id.ilce_id.id
-        return {
-            'type': 'ir.actions.act_window',
-            'res_model': 'teslimat.belgesi',
-            'view_mode': 'form',
-            'views': [(form_view.id, 'form')],
-            'view_id': form_view.id,
-            'target': 'current',
-            'context': ctx,
-            'name': f'Teslimat Belgesi Oluştur - {self.tarih} ({self.gun_adi})',
-        }
+        # Satır tıklamasını engelle; sadece buton kullanılacak
+        return {'type': 'ir.actions.act_window_close'}
