@@ -43,8 +43,8 @@
                             <div class="alert alert-info" role="alert">
                                 <strong>💡 Kullanım:</strong> Satırdaki "Teslimat Belgesi Oluştur" butonuna tıklayarak sihirbazı açın.
                             </div>
-                            <field name="tarih_listesi" readonly="1">
-                                <tree editable="false" create="false" edit="false" delete="false">
+                            <field name="tarih_listesi" readonly="1" options="{'no_open': True}">
+                                <tree editable="false" create="false" edit="false" delete="false" options="{'no_open': True}" open_form="0">
                                     <field name="tarih" readonly="1"/>
                                     <field name="gun_adi" readonly="1"/>
                                     <field name="teslimat_sayisi" readonly="1"/>
@@ -54,10 +54,16 @@
                                     <field name="durum_text" readonly="1"/>
                                     <field name="durum_icon" readonly="1"/>
                                     <field name="doluluk_bar" widget="html" readonly="1"/>
-                                    <button name="action_teslimat_olustur"
+                                    <button name="%(teslimat_planlama.action_teslimat_belgesi)d"
                                             string="Teslimat Belgesi Oluştur"
-                                            type="object"
-                                            class="btn-primary"/>
+                                            type="action"
+                                            class="btn-primary"
+                                            context="{
+                                                'default_teslimat_tarihi': tarih,
+                                                'default_arac_id': parent.arac_id,
+                                                'default_ilce_id': parent.ilce_id,
+                                                'form_view_initial_mode': 'edit'
+                                            }"/>
                                 </tree>
                             </field>
                         </page>
