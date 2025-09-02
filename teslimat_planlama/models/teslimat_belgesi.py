@@ -331,6 +331,12 @@ class TeslimatBelgesi(models.Model):
         """Her araç günlük maksimum 7 teslimat yapabilir"""
         for record in self:
             if record.arac_id and record.teslimat_tarihi:
+                # Pazar günü teslimat yapılamaz kontrolü
+                if record.teslimat_tarihi.weekday() == 6:  # 6 = Pazar
+                    raise ValidationError(
+                        f"Pazar günü teslimat yapılamaz! {record.teslimat_tarihi} tarihi pazar günüdür."
+                    )
+                
                 # Aynı araç ve tarihte kaç teslimat var
                 mevcut_teslimat_sayisi = self.search_count([
                     ('arac_id', '=', record.arac_id.id),

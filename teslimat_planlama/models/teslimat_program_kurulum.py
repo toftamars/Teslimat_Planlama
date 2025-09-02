@@ -88,13 +88,13 @@ class TeslimatProgramKurulum(models.Model):
             {'ilce': 'Pendik', 'maksimum_teslimat': 18},
             {'ilce': 'Tuzla', 'maksimum_teslimat': 12},
             # Avrupa Yakası
-            {'ilce': 'Beyoğlu', 'maksimum_teslimat': 25},
             {'ilce': 'Şişli', 'maksimum_teslimat': 20},
             {'ilce': 'Beşiktaş', 'maksimum_teslimat': 22},
+            {'ilce': 'Beyoğlu', 'maksimum_teslimat': 25},
             {'ilce': 'Kağıthane', 'maksimum_teslimat': 18}
         ])
         
-        # Salı (10 ilçe)
+        # Salı (8 ilçe)
         self._gun_ilce_eslesmesi_olustur('sali', [
             # Anadolu Yakası
             {'ilce': 'Üsküdar', 'maksimum_teslimat': 25},
@@ -103,11 +103,9 @@ class TeslimatProgramKurulum(models.Model):
             {'ilce': 'Ataşehir', 'maksimum_teslimat': 22},
             # Avrupa Yakası
             {'ilce': 'Sarıyer', 'maksimum_teslimat': 20},
-            {'ilce': 'Bakırköy', 'maksimum_teslimat': 25},
-            {'ilce': 'Bahçelievler', 'maksimum_teslimat': 22},
-            {'ilce': 'Güngören', 'maksimum_teslimat': 18},
-            {'ilce': 'Esenler', 'maksimum_teslimat': 20},
-            {'ilce': 'Bağcılar', 'maksimum_teslimat': 25}
+            {'ilce': 'Eyüpsultan', 'maksimum_teslimat': 20},
+            {'ilce': 'Sultangazi', 'maksimum_teslimat': 18},
+            {'ilce': 'Gaziosmanpaşa', 'maksimum_teslimat': 22}
         ])
         
         # Çarşamba (8 ilçe)
