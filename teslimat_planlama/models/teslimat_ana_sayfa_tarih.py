@@ -71,10 +71,7 @@ class TeslimatAnaSayfaTarih(models.Model):
                                         'form_view_initial_mode': 'edit'
                                     }}
                                 }};
-                                odoo.define('teslimat_action', function (require) {{
-                                    var ActionManager = require('web.ActionManager');
-                                    ActionManager.do_action(action);
-                                }});
+                                require('web.action_manager').do_action(action);
                             ">
                         🚀 TESLİMAT BELGESİ OLUŞTUR
                     </button>
