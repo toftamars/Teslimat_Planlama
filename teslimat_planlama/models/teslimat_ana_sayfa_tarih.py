@@ -38,7 +38,7 @@ class TeslimatAnaSayfaTarih(models.Model):
         for record in self:
             record.durum_gosterim = f"{record.durum_icon} {record.durum_text}"
 
-    @api.depends('doluluk_orani', 'durum')
+    @api.depends('doluluk_orani', 'durum', 'tarih')
     def _compute_doluluk_bar(self):
         for record in self:
             if record.durum == 'dolu':
@@ -52,8 +52,29 @@ class TeslimatAnaSayfaTarih(models.Model):
                 icon = '🟢'
         
             is_manager = self.env.user.has_group('stock.group_stock_manager')
-        
+            
+            # Teslimat Belgesi Oluştur butonu HTML
+            create_button_html = f"""
+                <a href="#" onclick="
+                    odoo.__DEBUG__.services['web.core'].bus.trigger('do-action', {{
+                        action: {{'type': 'ir.actions.act_window',
+                                'res_model': 'teslimat.belgesi',
+                                'view_mode': 'form',
+                                'target': 'current',
+                                'context': {{'default_teslimat_tarihi': '{record.tarih}',
+                                           'default_arac_id': {record.ana_sayfa_id.arac_id.id if record.ana_sayfa_id and record.ana_sayfa_id.arac_id else 'false'},
+                                           'default_ilce_id': {record.ana_sayfa_id.ilce_id.id if record.ana_sayfa_id and record.ana_sayfa_id.ilce_id else 'false'},
+                                           'form_view_initial_mode': 'edit'}}
+                               }}
+                    }});
+                    return false;"
+                    class="btn btn-primary btn-sm" style="margin-top: 5px;">
+                    📋 Teslimat Oluştur
+                </a>
+            """
+            
             if is_manager:
+                # Yönetici için tıklanabilir ikon ve buton
                 record.doluluk_bar = f"""
                     <div style="text-align: center;">
                         <div style="font-size: 18px; margin-bottom: 5px; cursor: pointer;" 
@@ -67,9 +88,11 @@ class TeslimatAnaSayfaTarih(models.Model):
                         <div style="font-size: 12px; color: #6c757d;">
                             {record.doluluk_orani:.1f}% Dolu
                         </div>
+                        {create_button_html}
                     </div>
                 """
             else:
+                # Normal kullanıcı için tıklanamaz ikon
                 record.doluluk_bar = f"""
                     <div style="text-align: center;">
                         <div style="font-size: 18px; margin-bottom: 5px; cursor: not-allowed; opacity: 0.7; pointer-events: none; user-select: none;" 
