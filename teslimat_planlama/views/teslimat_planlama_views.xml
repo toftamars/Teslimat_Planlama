@@ -257,23 +257,27 @@
                     </div>
                     <group>
                         <group>
-                            <field name="teslimat_tarihi"/>
-                            <field name="durum"/>
-                            <field name="planlanan_teslimat_saati"/>
+                            <field name="transfer_no"/>
+                            <field name="stock_picking_id"/>
                         </group>
                         <group>
-                            <field name="musteri_id"/>
-                            <field name="ilce_id"/>
+                            <field name="teslimat_tarihi"/>
+                            <field name="planlanan_teslimat_saati"/>
                         </group>
                     </group>
                     <group>
                         <group>
+                            <field name="musteri_id"/>
+                            <field name="ilce_id"/>
+                        </group>
+                        <group>
                             <field name="arac_id"/>
                             <field name="surucu_id"/>
                         </group>
+                    </group>
+                    <group>
                         <group>
-                            <field name="transfer_no"/>
-                            <field name="stock_picking_id"/>
+                            <field name="durum"/>
                         </group>
                     </group>
                     <group>
