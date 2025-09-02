@@ -124,11 +124,10 @@ class TeslimatProgramKurulum(models.Model):
             {'ilce': 'Kağıthane', 'maksimum_teslimat': 18}
         ])
         
-        # Perşembe (11 ilçe)
+        # Perşembe (10 ilçe)
         self._gun_ilce_eslesmesi_olustur('persembe', [
             # Anadolu Yakası
             {'ilce': 'Üsküdar', 'maksimum_teslimat': 25},
-            {'ilce': 'Kadıköy', 'maksimum_teslimat': 30},
             {'ilce': 'Ataşehir', 'maksimum_teslimat': 22},
             {'ilce': 'Ümraniye', 'maksimum_teslimat': 28},
             # Avrupa Yakası
