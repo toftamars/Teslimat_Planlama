@@ -80,22 +80,63 @@ class TeslimatGun(models.Model):
     
     @api.model
     def get_uygun_gunler(self, ilce_id, tarih=None):
-        """Belirli ilçe için uygun günleri getir"""
-        # Önce ilçe-gün eşleşmelerini bul
-        ilce_gun_eslesmeleri = self.env['teslimat.gun.ilce'].search([
-            ('ilce_id', '=', ilce_id),
-            ('ozel_durum', '!=', 'kapali')
-        ])
-        
-        if not ilce_gun_eslesmeleri:
+        """Belirli ilçe için uygun günleri getir - Kod ile çalışır"""
+        # İlçe adını al
+        ilce = self.env['teslimat.ilce'].browse(ilce_id)
+        if not ilce:
             return self.env['teslimat.gun']
         
-        # Eşleşmelerden gün ID'lerini al
-        gun_ids = ilce_gun_eslesmeleri.mapped('gun_id.id')
+        ilce_adi = ilce.name
+        
+        # Kod ile ilçe-gün eşleşmelerini tanımla
+        ilce_gun_eslesmeleri = {
+            # ANADOLU YAKASI
+            'Maltepe': ['pazartesi', 'perşembe'],
+            'Kartal': ['pazartesi', 'perşembe'],
+            'Pendik': ['pazartesi', 'perşembe'],
+            'Tuzla': ['pazartesi', 'perşembe'],
+            'Üsküdar': ['sali', 'carsamba', 'cuma'],
+            'Kadıköy': ['sali', 'carsamba', 'cuma'],
+            'Ümraniye': ['sali', 'carsamba', 'cuma'],
+            'Ataşehir': ['sali', 'carsamba', 'cuma'],
+            'Beykoz': ['cumartesi'],
+            'Çekmeköy': ['cumartesi'],
+            'Sancaktepe': ['cumartesi'],
+            'Sultanbeyli': ['cumartesi'],
+            'Şile': ['cumartesi'],
+            
+            # AVRUPA YAKASI
+            'Şişli': ['pazartesi', 'cuma'],
+            'Beşiktaş': ['pazartesi', 'cuma'],
+            'Beyoğlu': ['pazartesi', 'cuma'],
+            'Kağıthane': ['pazartesi', 'cuma'],
+            'Sarıyer': ['sali'],
+            'Eyüpsultan': ['sali'],
+            'Sultangazi': ['sali'],
+            'Gaziosmanpaşa': ['sali'],
+            'Bağcılar': ['carsamba'],
+            'Bahçelievler': ['carsamba'],
+            'Bakırköy': ['carsamba', 'perşembe', 'cumartesi'],
+            'Güngören': ['carsamba'],
+            'Esenler': ['carsamba'],
+            'Zeytinburnu': ['carsamba'],
+            'Bayrampaşa': ['carsamba'],
+            'Fatih': ['carsamba'],
+            'Büyükçekmece': ['perşembe', 'cumartesi'],
+            'Silivri': ['perşembe', 'cumartesi'],
+            'Çatalca': ['perşembe', 'cumartesi'],
+            'Arnavutköy': ['perşembe', 'cumartesi']
+        }
+        
+        # İlçe için uygun günleri bul
+        uygun_gun_kodlari = ilce_gun_eslesmeleri.get(ilce_adi, [])
+        
+        if not uygun_gun_kodlari:
+            return self.env['teslimat.gun']
         
         # Günleri getir
         domain = [
-            ('id', 'in', gun_ids),
+            ('gun_kodu', 'in', uygun_gun_kodlari),
             ('aktif', '=', True),
             ('gecici_kapatma', '=', False)
         ]
@@ -148,23 +189,60 @@ class TeslimatGun(models.Model):
             if day.kapatma_baslangic <= date <= day.kapatma_bitis:
                 return {'available': False, 'reason': f'{day.name} günü {day.kapatma_baslangic.strftime("%d/%m/%Y")} - {day.kapatma_bitis.strftime("%d/%m/%Y")} tarihleri arasında kapatılmış'}
         
-        # 4. İlçe o gün için tanımlı mı?
+        # 4. İlçe o gün için tanımlı mı? (Kod ile kontrol)
         if district_id:
-            ilce_gun_eslesmesi = self.env['teslimat.gun.ilce'].search([
-                ('gun_id', '=', day.id),
-                ('ilce_id', '=', district_id)
-            ], limit=1)
+            # İlçe adını al
+            ilce = self.env['teslimat.ilce'].browse(district_id)
+            if not ilce:
+                return {'available': False, 'reason': 'İlçe bulunamadı'}
             
-            if not ilce_gun_eslesmesi:
+            ilce_adi = ilce.name
+            
+            # Kod ile ilçe-gün eşleşmelerini tanımla
+            ilce_gun_eslesmeleri = {
+                # ANADOLU YAKASI
+                'Maltepe': ['pazartesi', 'perşembe'],
+                'Kartal': ['pazartesi', 'perşembe'],
+                'Pendik': ['pazartesi', 'perşembe'],
+                'Tuzla': ['pazartesi', 'perşembe'],
+                'Üsküdar': ['sali', 'carsamba', 'cuma'],
+                'Kadıköy': ['sali', 'carsamba', 'cuma'],
+                'Ümraniye': ['sali', 'carsamba', 'cuma'],
+                'Ataşehir': ['sali', 'carsamba', 'cuma'],
+                'Beykoz': ['cumartesi'],
+                'Çekmeköy': ['cumartesi'],
+                'Sancaktepe': ['cumartesi'],
+                'Sultanbeyli': ['cumartesi'],
+                'Şile': ['cumartesi'],
+                
+                # AVRUPA YAKASI
+                'Şişli': ['pazartesi', 'cuma'],
+                'Beşiktaş': ['pazartesi', 'cuma'],
+                'Beyoğlu': ['pazartesi', 'cuma'],
+                'Kağıthane': ['pazartesi', 'cuma'],
+                'Sarıyer': ['sali'],
+                'Eyüpsultan': ['sali'],
+                'Sultangazi': ['sali'],
+                'Gaziosmanpaşa': ['sali'],
+                'Bağcılar': ['carsamba'],
+                'Bahçelievler': ['carsamba'],
+                'Bakırköy': ['carsamba', 'perşembe', 'cumartesi'],
+                'Güngören': ['carsamba'],
+                'Esenler': ['carsamba'],
+                'Zeytinburnu': ['carsamba'],
+                'Bayrampaşa': ['carsamba'],
+                'Fatih': ['carsamba'],
+                'Büyükçekmece': ['perşembe', 'cumartesi'],
+                'Silivri': ['perşembe', 'cumartesi'],
+                'Çatalca': ['perşembe', 'cumartesi'],
+                'Arnavutköy': ['perşembe', 'cumartesi']
+            }
+            
+            # İlçe için uygun günleri kontrol et
+            uygun_gun_kodlari = ilce_gun_eslesmeleri.get(ilce_adi, [])
+            
+            if day_of_week not in uygun_gun_kodlari:
                 return {'available': False, 'reason': f'Seçilen ilçeye {day.name} günü teslimat yapılamaz'}
-            
-            # İlçe özel durumu kontrol et
-            if ilce_gun_eslesmesi.ozel_durum == 'kapali':
-                return {'available': False, 'reason': f'İlçe {day.name} günü için kapalı'}
-            
-            # Kapasite kontrolü
-            if ilce_gun_eslesmesi.teslimat_sayisi >= ilce_gun_eslesmesi.maksimum_teslimat:
-                return {'available': False, 'reason': f'İlçe kapasitesi dolu ({ilce_gun_eslesmesi.teslimat_sayisi}/{ilce_gun_eslesmesi.maksimum_teslimat})'}
         
         # 5. Genel kapasite kontrolü
         if day.mevcut_teslimat_sayisi >= day.gunluk_maksimum_teslimat:

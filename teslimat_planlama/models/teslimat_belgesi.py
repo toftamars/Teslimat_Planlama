@@ -125,30 +125,26 @@ class TeslimatBelgesi(models.Model):
         if not self.ilce_id:
             return
         
-        # GEÇİCİ: İlçe-gün uygunluk kontrolü devre dışı
-        # Çünkü ilçe-gün eşleşmeleri henüz veritabanında oluşturulmamış
-        # Bu kontrolü aktif etmek için "Teslimat Programı Kurulumu" menüsünden "Kurulumu Başlat" butonuna basın
+        # İlçe için uygun günleri bul (kod ile çalışır)
+        uygun_gunler = self.env['teslimat.gun'].get_uygun_gunler(self.ilce_id.id)
         
-        # İlçe için uygun günleri bul
-        # uygun_gunler = self.env['teslimat.gun'].get_uygun_gunler(self.ilce_id.id)
-        
-        # if not uygun_gunler:
-        #     return {
-        #         'warning': {
-        #             'title': 'İlçe Uyarısı',
-        #             'message': f'{self.ilce_id.name} ilçesi için hiçbir günde teslimat yapılamaz!'
-        #         }
-        #     }
+        if not uygun_gunler:
+            return {
+                'warning': {
+                    'title': 'İlçe Uyarısı',
+                    'message': f'{self.ilce_id.name} ilçesi için hiçbir günde teslimat yapılamaz!'
+                }
+            }
         
         # Uygun günleri listele
-        # gun_isimleri = [gun.name for gun in uygun_gunler]
-        # gun_listesi = ', '.join(gun_isimleri)
+        gun_isimleri = [gun.name for gun in uygun_gunler]
+        gun_listesi = ', '.join(gun_isimleri)
         
         # Uyarı mesajı göster
         return {
             'warning': {
-                'title': 'İlçe Seçildi',
-                'message': f'{self.ilce_id.name} ilçesi seçildi.\n\nNot: İlçe-gün uygunluk kontrolü geçici olarak devre dışı bırakıldı.'
+                'title': 'Teslimat Günleri',
+                'message': f'{self.ilce_id.name} ilçesi şu günlerde teslimat yapılır:\n{gun_listesi}\n\nSadece bu günlerde teslimat oluşturabilirsiniz.'
             }
         }
     
@@ -158,29 +154,25 @@ class TeslimatBelgesi(models.Model):
         if not self.teslimat_tarihi or not self.ilce_id:
             return
         
-        # GEÇİCİ: İlçe-gün uygunluk kontrolü devre dışı
-        # Çünkü ilçe-gün eşleşmeleri henüz veritabanında oluşturulmamış
-        # Bu kontrolü aktif etmek için "Teslimat Programı Kurulumu" menüsünden "Kurulumu Başlat" butonuna basın
+        # Seçilen tarih için ilçe uygunluğunu kontrol et (kod ile çalışır)
+        availability = self.env['teslimat.gun'].check_availability(
+            self.teslimat_tarihi, 
+            self.ilce_id.id
+        )
         
-        # Seçilen tarih için ilçe uygunluğunu kontrol et
-        # availability = self.env['teslimat.gun'].check_availability(
-        #     self.teslimat_tarihi, 
-        #     self.ilce_id.id
-        # )
-        
-        # if not availability['available']:
-        #     return {
-        #         'warning': {
-        #             'title': 'Tarih Uygun Değil',
-        #             'message': f'{self.teslimat_tarihi.strftime("%d/%m/%Y")} tarihinde {self.ilce_id.name} ilçesine teslimat yapılamaz!\n\nSebep: {availability["reason"]}\n\nLütfen uygun bir tarih seçin.'
-        #         }
-        #     }
+        if not availability['available']:
+            return {
+                'warning': {
+                    'title': 'Tarih Uygun Değil',
+                    'message': f'{self.teslimat_tarihi.strftime("%d/%m/%Y")} tarihinde {self.ilce_id.name} ilçesine teslimat yapılamaz!\n\nSebep: {availability["reason"]}\n\nLütfen uygun bir tarih seçin.'
+                }
+            }
         
         # Uygun tarih seçildiğinde bilgi ver
         return {
             'warning': {
-                'title': 'Tarih Seçildi',
-                'message': f'{self.teslimat_tarihi.strftime("%d/%m/%Y")} tarihinde {self.ilce_id.name} ilçesine teslimat oluşturulacak.\n\nNot: İlçe-gün uygunluk kontrolü geçici olarak devre dışı bırakıldı.'
+                'title': 'Tarih Uygun',
+                'message': f'{self.teslimat_tarihi.strftime("%d/%m/%Y")} tarihinde {self.ilce_id.name} ilçesine teslimat yapılabilir.\n\nGün: {availability["day_name"]}\nKalan Kapasite: {availability["remaining_capacity"]}'
             }
         }
     
