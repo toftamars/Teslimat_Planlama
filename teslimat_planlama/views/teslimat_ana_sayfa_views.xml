@@ -107,5 +107,19 @@
         </field>
     </record>
 
+    <!-- Ana Sayfa Tarih Form View - Satır tıklamada açılmasın -->
+    <record id="view_teslimat_ana_sayfa_tarih_form" model="ir.ui.view">
+        <field name="name">teslimat.ana.sayfa.tarih.form</field>
+        <field name="model">teslimat.ana.sayfa.tarih</field>
+        <field name="arch" type="xml">
+            <form string="Bu form doğrudan açılamaz">
+                <div class="alert alert-warning" role="alert">
+                    <h4>⚠️ Bu form doğrudan açılamaz!</h4>
+                    <p>Lütfen tarih satırındaki "📋 Teslimat Oluştur" butonunu kullanın.</p>
+                </div>
+            </form>
+        </field>
+    </record>
+
     <!-- Menü tanımı menu_views.xml'de yönetilmektedir -->
 </odoo>

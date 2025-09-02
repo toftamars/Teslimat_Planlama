@@ -172,6 +172,7 @@ class TeslimatAnaSayfaTarih(models.Model):
         if self.ana_sayfa_id and self.ana_sayfa_id.ilce_id:
             ctx['default_ilce_id'] = self.ana_sayfa_id.ilce_id.id
         
+        # Direkt teslimat belgesi create formunu aç
         return {
             'type': 'ir.actions.act_window',
             'name': 'Yeni Teslimat Belgesi',
