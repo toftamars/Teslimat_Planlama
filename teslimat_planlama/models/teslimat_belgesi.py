@@ -323,9 +323,23 @@ class TeslimatBelgesi(models.Model):
         """İlçe-gün uygunluğu kontrolü"""
         for record in self:
             if record.ilce_id and record.teslimat_tarihi:
+                # Gün kodunu Türkçe'ye çevir
+                gun_cevirme = {
+                    'monday': 'pazartesi',
+                    'tuesday': 'sali', 
+                    'wednesday': 'carsamba',
+                    'thursday': 'persembe',
+                    'friday': 'cuma',
+                    'saturday': 'cumartesi',
+                    'sunday': 'pazar'
+                }
+                
+                ingilizce_gun = record.teslimat_tarihi.strftime('%A').lower()
+                turkce_gun = gun_cevirme.get(ingilizce_gun, ingilizce_gun)
+                
                 # İlçenin o gün teslimat yapılıp yapılamayacağını kontrol et
                 gun = self.env['teslimat.gun'].search([
-                    ('gun_kodu', '=', record.teslimat_tarihi.strftime('%A').lower())
+                    ('gun_kodu', '=', turkce_gun)
                 ], limit=1)
                 
                 if gun:
