@@ -128,23 +128,4 @@ class TeslimatAnaSayfaTarih(models.Model):
             'context': ctx,
         }
 
-    def get_formview_action(self, access_uid=None):
-        self.ensure_one()
-        # Satıra tıklanınca direkt teslimat belgesi create formunu aç
-        ctx = {
-            'default_teslimat_tarihi': self.tarih,
-            'default_arac_id': self.ana_sayfa_id.arac_id.id if self.ana_sayfa_id and self.ana_sayfa_id.arac_id else False,
-            'form_view_initial_mode': 'edit',
-        }
-        if self.ana_sayfa_id and self.ana_sayfa_id.ilce_id:
-            ctx['default_ilce_id'] = self.ana_sayfa_id.ilce_id.id
-        
-        # Direkt teslimat belgesi create formunu aç
-        return {
-            'type': 'ir.actions.act_window',
-            'name': 'Yeni Teslimat Belgesi',
-            'res_model': 'teslimat.belgesi',
-            'view_mode': 'form',
-            'target': 'current',
-            'context': ctx,
-        }
+
