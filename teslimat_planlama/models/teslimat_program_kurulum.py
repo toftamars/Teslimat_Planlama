@@ -108,7 +108,7 @@ class TeslimatProgramKurulum(models.Model):
             {'ilce': 'Gaziosmanpaşa', 'maksimum_teslimat': 22}
         ])
         
-        # Çarşamba (8 ilçe)
+        # Çarşamba (12 ilçe)
         self._gun_ilce_eslesmesi_olustur('carsamba', [
             # Anadolu Yakası
             {'ilce': 'Üsküdar', 'maksimum_teslimat': 25},
@@ -116,13 +116,17 @@ class TeslimatProgramKurulum(models.Model):
             {'ilce': 'Ümraniye', 'maksimum_teslimat': 28},
             {'ilce': 'Ataşehir', 'maksimum_teslimat': 22},
             # Avrupa Yakası
-            {'ilce': 'Beyoğlu', 'maksimum_teslimat': 25},
-            {'ilce': 'Şişli', 'maksimum_teslimat': 20},
-            {'ilce': 'Beşiktaş', 'maksimum_teslimat': 22},
-            {'ilce': 'Kağıthane', 'maksimum_teslimat': 18}
+            {'ilce': 'Bağcılar', 'maksimum_teslimat': 25},
+            {'ilce': 'Bahçelievler', 'maksimum_teslimat': 22},
+            {'ilce': 'Bakırköy', 'maksimum_teslimat': 25},
+            {'ilce': 'Güngören', 'maksimum_teslimat': 18},
+            {'ilce': 'Esenler', 'maksimum_teslimat': 20},
+            {'ilce': 'Zeytinburnu', 'maksimum_teslimat': 20},
+            {'ilce': 'Bayrampaşa', 'maksimum_teslimat': 18},
+            {'ilce': 'Fatih', 'maksimum_teslimat': 30}
         ])
         
-        # Perşembe (8 ilçe)
+        # Perşembe (9 ilçe)
         self._gun_ilce_eslesmesi_olustur('persembe', [
             # Anadolu Yakası
             {'ilce': 'Maltepe', 'maksimum_teslimat': 15},
@@ -130,10 +134,11 @@ class TeslimatProgramKurulum(models.Model):
             {'ilce': 'Pendik', 'maksimum_teslimat': 18},
             {'ilce': 'Tuzla', 'maksimum_teslimat': 12},
             # Avrupa Yakası
-            {'ilce': 'Eyüpsultan', 'maksimum_teslimat': 20},
-            {'ilce': 'Gaziosmanpaşa', 'maksimum_teslimat': 22},
-            {'ilce': 'Küçükçekmece', 'maksimum_teslimat': 25},
-            {'ilce': 'Avcılar', 'maksimum_teslimat': 18}
+            {'ilce': 'Büyükçekmece', 'maksimum_teslimat': 25},
+            {'ilce': 'Silivri', 'maksimum_teslimat': 15},
+            {'ilce': 'Çatalca', 'maksimum_teslimat': 10},
+            {'ilce': 'Arnavutköy', 'maksimum_teslimat': 15},
+            {'ilce': 'Bakırköy', 'maksimum_teslimat': 25}
         ])
         
         # Cuma (7 ilçe)
@@ -144,9 +149,9 @@ class TeslimatProgramKurulum(models.Model):
             {'ilce': 'Ümraniye', 'maksimum_teslimat': 28},
             {'ilce': 'Ataşehir', 'maksimum_teslimat': 22},
             # Avrupa Yakası
-            {'ilce': 'Fatih', 'maksimum_teslimat': 30},
-            {'ilce': 'Zeytinburnu', 'maksimum_teslimat': 20},
-            {'ilce': 'Bayrampaşa', 'maksimum_teslimat': 18}
+            {'ilce': 'Şişli', 'maksimum_teslimat': 20},
+            {'ilce': 'Beşiktaş', 'maksimum_teslimat': 22},
+            {'ilce': 'Beyoğlu', 'maksimum_teslimat': 25}
         ])
         
         # Cumartesi (9 ilçe)
@@ -158,10 +163,10 @@ class TeslimatProgramKurulum(models.Model):
             {'ilce': 'Sultanbeyli', 'maksimum_teslimat': 15},
             {'ilce': 'Şile', 'maksimum_teslimat': 8},
             # Avrupa Yakası
-            {'ilce': 'Esenyurt', 'maksimum_teslimat': 25},
-            {'ilce': 'Beylikdüzü', 'maksimum_teslimat': 20},
+            {'ilce': 'Büyükçekmece', 'maksimum_teslimat': 25},
             {'ilce': 'Silivri', 'maksimum_teslimat': 15},
-            {'ilce': 'Çatalca', 'maksimum_teslimat': 10}
+            {'ilce': 'Çatalca', 'maksimum_teslimat': 10},
+            {'ilce': 'Arnavutköy', 'maksimum_teslimat': 15}
         ])
         
         # Pazar: Teslimat yapılmaz (otomatik olarak oluşturulmaz)
