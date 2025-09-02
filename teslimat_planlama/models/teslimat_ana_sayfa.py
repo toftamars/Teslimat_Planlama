@@ -11,11 +11,14 @@ class TeslimatAnaSayfa(models.Model):
                               domain="[('aktif', '=', True), ('gecici_kapatma', '=', False)]")
     ilce_id = fields.Many2one('teslimat.ilce', string='İlçe', required=False)
     
-    # Sonuç Alanları
+    # Sonuç Alanları (Hesaplanan)
     tarih_listesi = fields.One2many(
         'teslimat.ana.sayfa.tarih',
         'ana_sayfa_id',
-        string='Uygun Tarihler'
+        string='Uygun Tarihler',
+        compute='_compute_tarih_listesi',
+        store=True,
+        compute_sudo=True
     )
     uygun_arac_ids = fields.Many2many('teslimat.arac', string='Uygun Araçlar', compute='_compute_uygun_araclar')
     arac_kucuk_mu = fields.Boolean(string='Küçük Araç mı?', compute='_compute_arac_kucuk_mu')
@@ -97,59 +100,82 @@ class TeslimatAnaSayfa(models.Model):
                 record.ilce_uygun_mu = False
                 record.uygunluk_mesaji = "Lütfen araç ve ilçe seçin"
 
-    def _build_tarih_kayitlari(self):
-        """Uygun tarih kayıtlarını DB'ye oluşturur."""
-        self.ensure_one()
-        # Eski kayıtları temizle
-        self.env['teslimat.ana.sayfa.tarih'].search([('ana_sayfa_id', '=', self.id)]).unlink()
-        
-        small_vehicle = bool(self.arac_id and self.arac_id.arac_tipi in ['kucuk_arac_1', 'kucuk_arac_2', 'ek_arac'])
-        if not self.arac_id or (not small_vehicle and not (self.ilce_id and self.ilce_uygun_mu)):
-            return
-        
-        bugun = fields.Date.today()
-        gun_eslesmesi = {
-            'Monday': 'Pazartesi',
-            'Tuesday': 'Salı',
-            'Wednesday': 'Çarşamba',
-            'Thursday': 'Perşembe',
-            'Friday': 'Cuma',
-            'Saturday': 'Cumartesi',
-            'Sunday': 'Pazar'
-        }
-        TarihModel = self.env['teslimat.ana.sayfa.tarih']
-        for i in range(30):
-            tarih = bugun + timedelta(days=i)
-            gun_adi_tr = gun_eslesmesi.get(tarih.strftime('%A'), tarih.strftime('%A'))
-            ilce_uygun_mu = True if small_vehicle else self._check_ilce_gun_uygunlugu(self.ilce_id, tarih)
-            if not ilce_uygun_mu:
-                continue
-            teslimat_sayisi = self.env['teslimat.belgesi'].search_count([
-                ('teslimat_tarihi', '=', tarih),
-                ('arac_id', '=', self.arac_id.id),
-                ('durum', 'in', ['hazir', 'yolda', 'teslim_edildi'])
-            ])
-            toplam_kapasite = self.arac_id.gunluk_teslimat_limiti
-            kalan_kapasite = toplam_kapasite - teslimat_sayisi
-            doluluk_orani = (teslimat_sayisi / toplam_kapasite * 100) if toplam_kapasite > 0 else 0
-            if kalan_kapasite <= 0:
-                durum = 'dolu'; durum_icon = '🔴'; durum_text = 'DOLU'
-            elif doluluk_orani >= 80:
-                durum = 'dolu_yakin'; durum_icon = '🟡'; durum_text = 'DOLU YAKIN'
+    @api.depends('ilce_id', 'arac_id', 'ilce_uygun_mu')
+    def _compute_tarih_listesi(self):
+        """Seçilen ilçe ve araç için uygun tarihleri hesapla"""
+        for record in self:
+            small_vehicle = bool(record.arac_id and record.arac_id.arac_tipi in ['kucuk_arac_1', 'kucuk_arac_2', 'ek_arac'])
+            if record.arac_id and (small_vehicle or (record.ilce_id and record.ilce_uygun_mu)):
+                # Sonraki 30 günü kontrol et
+                bugun = fields.Date.today()
+                tarihler = []
+                
+                for i in range(30):
+                    tarih = bugun + timedelta(days=i)
+                    gun_adi = tarih.strftime('%A')  # İngilizce gün adı
+                    
+                    # Türkçe gün adlarını eşleştir
+                    gun_eslesmesi = {
+                        'Monday': 'Pazartesi',
+                        'Tuesday': 'Salı', 
+                        'Wednesday': 'Çarşamba',
+                        'Thursday': 'Perşembe',
+                        'Friday': 'Cuma',
+                        'Saturday': 'Cumartesi',
+                        'Sunday': 'Pazar'
+                    }
+                    
+                    gun_adi_tr = gun_eslesmesi.get(gun_adi, gun_adi)
+                    
+                    # İlçe-gün uygunluğunu kontrol et (küçük araçlar için kısıt yok)
+                    ilce_uygun_mu = True if small_vehicle else self._check_ilce_gun_uygunlugu(record.ilce_id, tarih)
+                    
+                    # Sadece uygun günleri ekle
+                    if ilce_uygun_mu:
+                        # Bu tarih için teslimat sayısını hesapla
+                        teslimat_sayisi = self.env['teslimat.belgesi'].search_count([
+                            ('teslimat_tarihi', '=', tarih),
+                            ('arac_id', '=', record.arac_id.id),
+                            ('durum', 'in', ['hazir', 'yolda', 'teslim_edildi'])
+                        ])
+                        
+                        # Kapasite hesaplama
+                        toplam_kapasite = record.arac_id.gunluk_teslimat_limiti
+                        kalan_kapasite = toplam_kapasite - teslimat_sayisi
+                        doluluk_orani = (teslimat_sayisi / toplam_kapasite * 100) if toplam_kapasite > 0 else 0
+                        
+                        # Durum belirleme
+                        if kalan_kapasite <= 0:
+                            durum = 'dolu'
+                            durum_icon = '🔴'
+                            durum_text = 'DOLU'
+                        elif doluluk_orani >= 80:
+                            durum = 'dolu_yakin'
+                            durum_icon = '🟡'
+                            durum_text = 'DOLU YAKIN'
+                        else:
+                            durum = 'musait'
+                            durum_icon = '🟢'
+                            durum_text = 'MUSAİT'
+                        
+                        tarihler.append({
+                            'tarih': tarih,
+                            'gun_adi': gun_adi_tr,
+                            'teslimat_sayisi': teslimat_sayisi,
+                            'toplam_kapasite': toplam_kapasite,
+                            'kalan_kapasite': kalan_kapasite,
+                            'doluluk_orani': doluluk_orani,
+                            'durum': durum,
+                            'durum_icon': durum_icon,
+                            'durum_text': durum_text
+                        })
+                
+                commands = [(5, 0, 0)]
+                for tarih_bilgi in tarihler:
+                    commands.append((0, 0, tarih_bilgi))
+                record.tarih_listesi = commands
             else:
-                durum = 'musait'; durum_icon = '🟢'; durum_text = 'MUSAİT'
-            TarihModel.create({
-                'ana_sayfa_id': self.id,
-                'tarih': tarih,
-                'gun_adi': gun_adi_tr,
-                'teslimat_sayisi': teslimat_sayisi,
-                'toplam_kapasite': toplam_kapasite,
-                'kalan_kapasite': kalan_kapasite,
-                'doluluk_orani': doluluk_orani,
-                'durum': durum,
-                'durum_icon': durum_icon,
-                'durum_text': durum_text,
-            })
+                record.tarih_listesi = [(5, 0, 0)]
     
     def _check_ilce_gun_uygunlugu(self, ilce, tarih):
         """İlçe ve tarih uygunluğunu kontrol et.
@@ -274,8 +300,9 @@ class TeslimatAnaSayfa(models.Model):
                 'arac_id': self.arac_id.id if self.arac_id else False,
                 'ilce_id': self.ilce_id.id if self.ilce_id else False,
             })
-            # Yeni kayıtta çocuk kayıtları üret
-            new_rec._build_tarih_kayitlari()
+
+            # Yeni kayıtta hesaplamaları çalıştır
+            new_rec._compute_tarih_listesi()
             new_rec._compute_kapasite_bilgileri()
 
             return {
@@ -300,8 +327,8 @@ class TeslimatAnaSayfa(models.Model):
                 }
             }
 
-        # Mevcut kalıcı kayıtta çocuk kayıtları üret ve formu yeniden aç
-        self._build_tarih_kayitlari()
+        # Mevcut kalıcı kayıtta hesaplamaları güncelle ve formu yeniden aç
+        self._compute_tarih_listesi()
         self._compute_kapasite_bilgileri()
 
         return {
