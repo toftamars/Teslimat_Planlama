@@ -326,6 +326,24 @@ class TeslimatBelgesi(models.Model):
             
         return defaults
 
+    @api.constrains('arac_id', 'teslimat_tarihi')
+    def _check_arac_gunluk_limit(self):
+        """Her araç günlük maksimum 7 teslimat yapabilir"""
+        for record in self:
+            if record.arac_id and record.teslimat_tarihi:
+                # Aynı araç ve tarihte kaç teslimat var
+                mevcut_teslimat_sayisi = self.search_count([
+                    ('arac_id', '=', record.arac_id.id),
+                    ('teslimat_tarihi', '=', record.teslimat_tarihi),
+                    ('id', '!=', record.id)  # Kendisi hariç
+                ])
+                
+                if mevcut_teslimat_sayisi >= 7:
+                    raise ValidationError(
+                        f"{record.arac_id.name} aracı {record.teslimat_tarihi} tarihinde "
+                        f"zaten 7 teslimat yapmış. Günlük maksimum teslimat limiti 7'dir."
+                    )
+
     @api.model
     def create(self, vals):
         """Teslimat belgesi oluşturulduktan sonra teslimat belgeleri listesine yönlendir"""
