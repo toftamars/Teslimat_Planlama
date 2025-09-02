@@ -43,8 +43,8 @@
                             <div class="alert alert-info" role="alert">
                                 <strong>💡 Kullanım:</strong> Satırdaki "Teslimat Belgesi Oluştur" butonuna tıklayarak sihirbazı açın.
                             </div>
-                            <field name="tarih_listesi" readonly="1" options="{'no_open': True}">
-                                <tree editable="false" create="false" edit="false" delete="false" options="{'no_open': True}" open_form="0">
+                            <field name="tarih_listesi" readonly="1">
+                                <tree editable="false" create="false" edit="false" delete="false">
                                     <field name="tarih" readonly="1"/>
                                     <field name="gun_adi" readonly="1"/>
                                     <field name="teslimat_sayisi" readonly="1"/>
