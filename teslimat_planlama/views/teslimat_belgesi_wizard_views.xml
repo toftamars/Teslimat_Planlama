@@ -24,7 +24,7 @@
                     
                     <!-- Transfer No -->
                     <group>
-                        <field name="transfer_id" options="{'no_create': True}" placeholder="AKS/OUT/12345 yazarak arayın"/>
+                        <field name="transfer_id" options="{'no_create': True}" placeholder="DEPO/OUT/00085 yazarak arayın"/>
                     </group>
                     
                     <!-- Müşteri ve Adres (otomatik) -->

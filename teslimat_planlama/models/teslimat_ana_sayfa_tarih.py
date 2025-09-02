@@ -138,6 +138,8 @@ class TeslimatAnaSayfaTarih(models.Model):
         }
 
     def get_formview_action(self, access_uid=None):
-        """Satıra tıklanınca doğrudan Teslimat Belgesi wizard'ını aç."""
-        self.ensure_one()
-        return self.action_teslimat_olustur()
+        """Satıra tıklamayı tamamen engelle: Eski wizard açılmasın."""
+        # Boş bir action döndürerek açılmayı engelle
+        return {
+            'type': 'ir.actions.act_window_close'
+        }
