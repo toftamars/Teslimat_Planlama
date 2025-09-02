@@ -113,7 +113,7 @@ class TeslimatAnaSayfaTarih(models.Model):
         return super().unlink()
     
     def action_teslimat_olustur(self):
-        """Seçilen tarih için yeni teslimat belgesi oluşturma sihirbazını aç"""
+        """Seçilen tarih için doğrudan Teslimat Belgesi formunu (create) aç."""
         self.ensure_one()
         
         # Ana sayfa bilgilerini al
@@ -127,25 +127,26 @@ class TeslimatAnaSayfaTarih(models.Model):
         if not is_small and not ana_sayfa.ilce_id:
             raise AccessError("İlçe seçimi zorunludur!")
         
-        # Teslimat Belgesi Wizard'ını aç (view_id açıkça belirtilir)
-        view = self.env.ref('teslimat_planlama.view_teslimat_belgesi_wizard_form')
-        action = {
-            'type': 'ir.actions.act_window',
-            'res_model': 'teslimat.belgesi.wizard',
-            'view_mode': 'form',
-            'views': [(view.id, 'form')],
-            'view_id': view.id,
-            'target': 'new',
-            'name': f'Teslimat Belgesi Oluştur - {self.tarih} ({self.gun_adi})',
-            'context': {
-                'default_teslimat_tarihi': self.tarih,
-                'default_arac_id': ana_sayfa.arac_id.id,
-            }
+        # Teslimat Belgesi formunu create modda aç
+        form_view = self.env.ref('teslimat_planlama.view_teslimat_belgesi_form')
+        ctx = {
+            'default_teslimat_tarihi': self.tarih,
+            'default_arac_id': ana_sayfa.arac_id.id,
+            'form_view_initial_mode': 'edit',
         }
-        # İlçe varsa context'e ekle
         if ana_sayfa.ilce_id:
-            action['context']['default_ilce_id'] = ana_sayfa.ilce_id.id
-        return action
+            ctx['default_ilce_id'] = ana_sayfa.ilce_id.id
+
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'teslimat.belgesi',
+            'view_mode': 'form',
+            'views': [(form_view.id, 'form')],
+            'view_id': form_view.id,
+            'target': 'current',
+            'context': ctx,
+            'name': f'Teslimat Belgesi Oluştur - {self.tarih} ({self.gun_adi})',
+        }
 
     def get_formview_action(self, access_uid=None):
         """Satıra tıklamayı tamamen engelle: Eski wizard açılmasın."""
