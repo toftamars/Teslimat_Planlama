@@ -10,13 +10,13 @@
 try:
     if env.user.has_group('teslimat_planlama.group_teslimat_driver'):
         # Sürücü ise bugünkü teslimatları göster
-        action = env.ref('teslimat_planlama.action_teslimat_belgesi_surucu')
+        action = env.ref('teslimat_planlama.action_teslimat_belgesi_surucu').read()[0]
     else:
         # Normal kullanıcı ise ana sayfaya yönlendir
-        action = env.ref('teslimat_planlama.action_teslimat_ana_sayfa')
+        action = env.ref('teslimat_planlama.action_teslimat_ana_sayfa').read()[0]
 except:
     # Hata durumunda ana sayfaya yönlendir
-    action = env.ref('teslimat_planlama.action_teslimat_ana_sayfa')
+    action = env.ref('teslimat_planlama.action_teslimat_ana_sayfa').read()[0]
 
 action['target'] = 'current'
         </field>
