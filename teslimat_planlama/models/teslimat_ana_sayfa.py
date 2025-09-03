@@ -150,10 +150,11 @@ class TeslimatAnaSayfa(models.Model):
                         
                         # Doluluk oranı hesaplama - çok güvenli hesaplama
                         try:
-                            if toplam_kapasite and toplam_kapasite > 0:
-                                # Güvenli float dönüşümü
-                                teslimat_float = float(teslimat_sayisi)
-                                kapasite_float = float(toplam_kapasite)
+                            # Güvenli değer dönüşümü
+                            teslimat_float = float(teslimat_sayisi or 0)
+                            kapasite_float = float(toplam_kapasite or 0)
+                            
+                            if kapasite_float > 0:
                                 doluluk_orani = round((teslimat_float / kapasite_float) * 100, 2)
                                 
                                 # Maksimum %100 sınırı
@@ -161,7 +162,12 @@ class TeslimatAnaSayfa(models.Model):
                                     doluluk_orani = 100.0
                             else:
                                 doluluk_orani = 0.0
-                        except (TypeError, ValueError, ZeroDivisionError):
+                        except (TypeError, ValueError, ZeroDivisionError) as e:
+                            import logging
+                            _logger = logging.getLogger(__name__)
+                            _logger.error(f"DOLULUK ORANI HESAPLAMA HATASI: {str(e)}")
+                            _logger.error(f"  teslimat_sayisi: {teslimat_sayisi} (type: {type(teslimat_sayisi)})")
+                            _logger.error(f"  toplam_kapasite: {toplam_kapasite} (type: {type(toplam_kapasite)})")
                             doluluk_orani = 0.0
                         
                         # Debug log
@@ -170,6 +176,8 @@ class TeslimatAnaSayfa(models.Model):
                         _logger.info(f"KAPASITE HESAPLAMA - Araç: {record.arac_id.name}")
                         _logger.info(f"  Teslimat Sayısı: {teslimat_sayisi} (type: {type(teslimat_sayisi)})")
                         _logger.info(f"  Toplam Kapasite: {toplam_kapasite} (type: {type(toplam_kapasite)})")
+                        _logger.info(f"  Float Teslimat: {teslimat_float}")
+                        _logger.info(f"  Float Kapasite: {kapasite_float}")
                         _logger.info(f"  Hesaplama: ({teslimat_float} / {kapasite_float}) * 100 = {doluluk_orani}%")
                         
                         # Durum belirleme

@@ -503,6 +503,10 @@ class TeslimatBelgesi(models.Model):
         
         result = super().create(vals)
         
+        # Transfer ürünlerini güncelle
+        if result.stock_picking_id:
+            result._update_transfer_urunleri()
+        
         # Teslimat planlandığında müşteriye SMS gönder
         if result.musteri_id and result.musteri_id.phone:
             result._send_planning_sms()
