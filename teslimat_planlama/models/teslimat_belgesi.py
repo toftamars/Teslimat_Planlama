@@ -114,6 +114,40 @@ class TeslimatBelgesi(models.Model):
             if not self.name:
                 self.name = f"T-{picking.name}"
     
+    @api.onchange('stock_picking_id')
+    def _onchange_stock_picking_id(self):
+        """Transfer belgesi seçildiğinde durum kontrolü yap"""
+        if self.stock_picking_id:
+            # Transfer durumu kontrolü
+            if self.stock_picking_id.state in ['cancel', 'draft']:
+                return {
+                    'warning': {
+                        'title': 'Transfer Durumu Uyarısı',
+                        'message': f'Transfer {self.stock_picking_id.name} durumu "{self.stock_picking_id.state}" olduğu için teslimat belgesi oluşturulamaz!\n\n'
+                                 f'Lütfen onaylanmış veya tamamlanmış bir transfer seçin.'
+                    }
+                }
+            
+            # Mükerrer teslimat kontrolü
+            existing = self.env['teslimat.belgesi'].search([
+                ('stock_picking_id', '=', self.stock_picking_id.id)
+            ], limit=1)
+            if existing:
+                return {
+                    'warning': {
+                        'title': 'Mükerrer Teslimat Uyarısı',
+                        'message': f'Transfer {self.stock_picking_id.name} için zaten bir teslimat belgesi mevcut!\n\n'
+                                 f'Teslimat No: {existing.name}\n'
+                                 f'Durum: {existing.durum}\n\n'
+                                 f'Lütfen farklı bir transfer seçin.'
+                    }
+                }
+            
+            # Transfer bilgilerini doldur
+            if self.stock_picking_id.partner_id:
+                self.musteri_id = self.stock_picking_id.partner_id.id
+                self.transfer_no = self.stock_picking_id.name
+
     @api.onchange('musteri_id')
     def _onchange_musteri(self):
         """Müşteri seçildiğinde ilçe bilgisini otomatik doldur"""
@@ -404,6 +438,12 @@ class TeslimatBelgesi(models.Model):
     @api.model
     def create(self, vals):
         """Teslimat belgesi oluşturulduktan sonra belge no atar, durumu hazır yapar"""
+        # Transfer belgesi durumu kontrolü
+        if vals.get('stock_picking_id'):
+            picking = self.env['stock.picking'].browse(vals['stock_picking_id'])
+            if picking.state in ['cancel', 'draft']:
+                raise ValidationError(_(f"Transfer {picking.name} durumu '{picking.state}' olduğu için teslimat belgesi oluşturulamaz!\n\nLütfen onaylanmış veya tamamlanmış bir transfer seçin."))
+        
         # Belge no otomatik oluştur
         if vals.get('name', _('Yeni')) == _('Yeni'):
             vals['name'] = self.env['ir.sequence'].next_by_code('teslimat.belgesi') or _('Yeni')

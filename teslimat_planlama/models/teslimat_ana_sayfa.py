@@ -139,6 +139,11 @@ class TeslimatAnaSayfa(models.Model):
                             ('durum', 'in', ['hazir', 'yolda', 'teslim_edildi'])
                         ])
                         
+                        # Debug: Teslimat sayısını kontrol et
+                        import logging
+                        _logger = logging.getLogger(__name__)
+                        _logger.info(f"TESLIMAT SAYISI DEBUG - Tarih: {tarih}, Araç: {record.arac_id.name}, Sayı: {teslimat_sayisi}")
+                        
                         # Kapasite hesaplama
                         toplam_kapasite = record.arac_id.gunluk_teslimat_limiti
                         kalan_kapasite = toplam_kapasite - teslimat_sayisi
