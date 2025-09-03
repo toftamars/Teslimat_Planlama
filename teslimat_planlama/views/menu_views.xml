@@ -7,11 +7,15 @@
         <field name="state">code</field>
         <field name="code">
 # Kullanıcı yetkisine göre yönlendirme
-if env.user.has_group('teslimat_planlama.group_teslimat_driver'):
-    # Sürücü ise bugünkü teslimatları göster
-    action = env.ref('teslimat_planlama.action_teslimat_belgesi_surucu')
-else:
-    # Normal kullanıcı ise ana sayfaya yönlendir
+try:
+    if env.user.has_group('teslimat_planlama.group_teslimat_driver'):
+        # Sürücü ise bugünkü teslimatları göster
+        action = env.ref('teslimat_planlama.action_teslimat_belgesi_surucu')
+    else:
+        # Normal kullanıcı ise ana sayfaya yönlendir
+        action = env.ref('teslimat_planlama.action_teslimat_ana_sayfa')
+except:
+    # Hata durumunda ana sayfaya yönlendir
     action = env.ref('teslimat_planlama.action_teslimat_ana_sayfa')
 
 action['target'] = 'current'
@@ -31,22 +35,19 @@ action['target'] = 'current'
               name="🏠 Ana Sayfa" 
               parent="menu_teslimat_planlama_root" 
               action="action_teslimat_ana_sayfa" 
-              sequence="5"
-              groups="!teslimat_planlama.group_teslimat_driver"/>
+              sequence="5"/>
     
     <!-- 📄 Teslimat Belgeleri (Normal kullanıcılar için) -->
     <menuitem id="menu_teslimat_belgeleri" 
               name="📄 Teslimat Belgeleri" 
               parent="menu_teslimat_planlama_root" 
-              sequence="10"
-              groups="!teslimat_planlama.group_teslimat_driver"/>
+              sequence="10"/>
     
     <menuitem id="menu_action_teslimat_belgesi" 
               name="📄 Teslimat Belgeleri" 
               parent="menu_teslimat_belgeleri" 
               action="action_teslimat_belgesi" 
-              sequence="10"
-              groups="!teslimat_planlama.group_teslimat_driver"/>
+              sequence="10"/>
 
     <!-- 🚚 Bugünkü Teslimatlarım (Sürücüler için) -->
     <menuitem id="menu_teslimat_belgeleri_surucu" 
