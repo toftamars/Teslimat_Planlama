@@ -283,6 +283,7 @@
                         </group>
                         <group>
                             <field name="arac_id"/>
+                            <field name="durum" readonly="1"/>
                         </group>
                     </group>
                     <group>
