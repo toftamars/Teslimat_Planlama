@@ -256,6 +256,9 @@
                 <header>
                     <button name="action_yol_tarifi" string="🗺️ Yol Tarifi" type="object" 
                             class="btn-primary" icon="fa-map-marker"/>
+                    <button name="action_yola_cik" string="🚗 Yolda" type="object" 
+                            class="btn-secondary" icon="fa-truck"
+                            attrs="{'invisible': [('durum', '!=', 'hazir')]}"/>
                     <button name="action_teslimat_tamamla" string="✅ Teslimatı Tamamla" type="object" 
                             class="oe_highlight" icon="fa-check"
                             attrs="{'invisible': [('durum', 'not in', ['hazir', 'yolda'])]}"
