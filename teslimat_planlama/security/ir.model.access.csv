@@ -31,3 +31,5 @@ access_teslimat_gun_kapatma_wizard_manager,teslimat.gun.kapatma.wizard.manager,m
 access_teslimat_belgesi_wizard_user,teslimat.belgesi.wizard.user,model_teslimat_belgesi_wizard,base.group_user,1,1,1,0
 access_teslimat_belgesi_wizard_manager,teslimat.belgesi.wizard.manager,model_teslimat_belgesi_wizard,stock.group_stock_manager,1,1,1,1
 access_teslimat_belgesi_surucu,teslimat.belgesi.surucu,model_teslimat_belgesi,teslimat_planlama.group_teslimat_driver,1,1,0,0
+access_teslimat_belgesi_urun_user,teslimat.belgesi.urun.user,model_teslimat_belgesi_urun,base.group_user,1,1,1,0
+access_teslimat_belgesi_urun_manager,teslimat.belgesi.urun.manager,model_teslimat_belgesi_urun,stock.group_stock_manager,1,1,1,1

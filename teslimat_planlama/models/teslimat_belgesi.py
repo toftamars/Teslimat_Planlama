@@ -2,6 +2,24 @@ from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
 
 
+class TeslimatBelgesiUrun(models.Model):
+    _name = 'teslimat.belgesi.urun'
+    _description = 'Teslimat Belgesi Ürünleri'
+    _order = 'sequence, id'
+
+    teslimat_belgesi_id = fields.Many2one('teslimat.belgesi', string='Teslimat Belgesi', required=True, ondelete='cascade')
+    sequence = fields.Integer(string='Sıra', default=10)
+    
+    # Ürün Bilgileri
+    urun_id = fields.Many2one('product.product', string='Ürün', required=True)
+    miktar = fields.Float(string='Miktar', required=True)
+    birim = fields.Many2one('uom.uom', string='Birim', related='urun_id.uom_id', readonly=True)
+    
+    # Transfer Bilgileri
+    stock_move_id = fields.Many2one('stock.move', string='Transfer Satırı')
+    transfer_no = fields.Char(string='Transfer No', related='teslimat_belgesi_id.transfer_no', readonly=True)
+
+
 class TeslimatBelgesi(models.Model):
     _name = 'teslimat.belgesi'
     _description = 'Teslimat Belgesi'
@@ -32,9 +50,12 @@ class TeslimatBelgesi(models.Model):
     transfer_no = fields.Char(string='Transfer No', help='Transfer belgesi numarası')
     stock_picking_id = fields.Many2one('stock.picking', string='Transfer Belgesi')
     
-    # Ürün Bilgileri
-    urun_id = fields.Many2one('product.product', string='Ürün', required=True)
-    miktar = fields.Float(string='Miktar', required=True)
+    # Ürün Bilgileri (Transfer belgesindeki tüm ürünler)
+    transfer_urun_ids = fields.One2many('teslimat.belgesi.urun', 'teslimat_belgesi_id', string='Transfer Ürünleri')
+    
+    # Eski alanlar (geriye uyumluluk için)
+    urun_id = fields.Many2one('product.product', string='Ürün', required=False)
+    miktar = fields.Float(string='Miktar', required=False)
     birim = fields.Many2one('uom.uom', string='Birim', related='urun_id.uom_id', readonly=True)
     
     # Durum Bilgileri
@@ -147,6 +168,9 @@ class TeslimatBelgesi(models.Model):
             if self.stock_picking_id.partner_id:
                 self.musteri_id = self.stock_picking_id.partner_id.id
                 self.transfer_no = self.stock_picking_id.name
+            
+            # Transfer belgesindeki tüm ürünleri getir
+            self._update_transfer_urunleri()
 
     @api.onchange('musteri_id')
     def _onchange_musteri(self):
@@ -448,8 +472,7 @@ class TeslimatBelgesi(models.Model):
         if vals.get('name', _('Yeni')) == _('Yeni'):
             vals['name'] = self.env['ir.sequence'].next_by_code('teslimat.belgesi') or _('Yeni')
         
-        # Durumu hazır olarak ayarla
-        vals['durum'] = 'hazir'
+        # Durum varsayılan olarak 'taslak' kalır, kullanıcı kaydet butonuna basınca 'hazır' olur
         
         result = super().create(vals)
         
@@ -466,6 +489,27 @@ class TeslimatBelgesi(models.Model):
             }
         
         return result
+    
+    def _update_transfer_urunleri(self):
+        """Transfer belgesindeki tüm ürünleri teslimat belgesine getir"""
+        if not self.stock_picking_id:
+            return
+        
+        # Mevcut ürünleri temizle
+        self.transfer_urun_ids = [(5, 0, 0)]
+        
+        # Transfer belgesindeki tüm ürünleri getir
+        urun_listesi = []
+        for move in self.stock_picking_id.move_ids_without_package:
+            if move.product_id and move.product_uom_qty > 0:
+                urun_listesi.append((0, 0, {
+                    'urun_id': move.product_id.id,
+                    'miktar': move.product_uom_qty,
+                    'stock_move_id': move.id,
+                    'sequence': move.sequence or 10
+                }))
+        
+        self.transfer_urun_ids = urun_listesi
     
     def action_yol_tarifi(self):
         """Müşteri adresine yol tarifi aç"""

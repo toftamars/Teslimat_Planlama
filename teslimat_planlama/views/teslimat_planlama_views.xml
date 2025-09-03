@@ -287,12 +287,16 @@
                             <field name="durum" readonly="1"/>
                         </group>
                     </group>
-                    <group>
-                        <group>
-                            <field name="urun_id"/>
-                            <field name="miktar"/>
-                            <field name="birim"/>
-                        </group>
+                    <group string="Transfer Ürünleri">
+                        <field name="transfer_urun_ids" readonly="1">
+                            <tree editable="false">
+                                <field name="sequence"/>
+                                <field name="urun_id"/>
+                                <field name="miktar"/>
+                                <field name="birim"/>
+                                <field name="stock_move_id" invisible="1"/>
+                            </tree>
+                        </field>
                     </group>
                     <field name="notlar" placeholder="Notlar"/>
                 </sheet>
