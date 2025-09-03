@@ -455,8 +455,11 @@ class TeslimatBelgesi(models.Model):
                 
                 if mevcut_teslimat_sayisi >= 7:
                     raise ValidationError(
-                        f"{record.arac_id.name} aracı {record.teslimat_tarihi} tarihinde "
-                        f"zaten 7 teslimat yapmış. Günlük maksimum teslimat limiti 7'dir."
+                        f"Seçtiğiniz tarih ve araç için günlük teslimat limiti dolmuştur.\n\n"
+                        f"Araç: {record.arac_id.name}\n"
+                        f"Tarih: {record.teslimat_tarihi}\n"
+                        f"Mevcut Teslimat: {mevcut_teslimat_sayisi}/7\n\n"
+                        f"Lütfen farklı bir tarih veya araç seçin."
                     )
 
     @api.model
@@ -630,7 +633,7 @@ class TeslimatBelgesi(models.Model):
             'gercek_teslimat_saati': fields.Datetime.now()
         }
         
-        # Mevcut form verilerini koru (target='new' ile form verileri otomatik kaydedilir)
+        # Mevcut form verilerini koru
         if self.teslim_alan_kisi:
             update_vals['teslim_alan_kisi'] = self.teslim_alan_kisi
         
@@ -647,12 +650,13 @@ class TeslimatBelgesi(models.Model):
         _logger.info(f"Kaydedilen veriler - teslim_fotografi var mı: {bool(self.teslim_fotografi)}")
         _logger.info(f"Kaydedilen veriler - teslim_fotografi_filename: {self.teslim_fotografi_filename}")
         
+        # Ana teslimat belgesi formuna yönlendir
         return {
-            'type': 'ir.actions.client',
-            'tag': 'display_notification',
-            'params': {
-                'title': 'Başarılı',
-                'message': f'Teslimat başarıyla tamamlandı! (No: {self.name})',
-                'type': 'success',
-            }
+            'type': 'ir.actions.act_window',
+            'name': 'Teslimat Belgesi',
+            'res_model': 'teslimat.belgesi',
+            'res_id': self.id,
+            'view_mode': 'form',
+            'target': 'current',
+            'context': {}
         }

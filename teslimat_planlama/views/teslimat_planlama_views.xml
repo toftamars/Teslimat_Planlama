@@ -297,6 +297,17 @@
                             </tree>
                         </field>
                     </group>
+                    <group string="Teslim Bilgileri" attrs="{'invisible': [('durum', 'not in', ['teslim_edildi'])]}">
+                        <group>
+                            <field name="teslim_alan_kisi" readonly="1"/>
+                            <field name="gercek_teslimat_saati" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="teslim_fotografi" widget="image" readonly="1" 
+                                   options="{'size': [90, 90]}"/>
+                            <field name="teslim_fotografi_filename" invisible="1"/>
+                        </group>
+                    </group>
                     <field name="notlar" placeholder="Notlar"/>
                 </sheet>
             </form>
