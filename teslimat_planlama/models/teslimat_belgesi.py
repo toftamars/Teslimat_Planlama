@@ -493,7 +493,7 @@ class TeslimatBelgesi(models.Model):
             'res_id': self.id,
             'view_mode': 'form',
             'view_id': self.env.ref('teslimat_planlama.view_teslimat_belgesi_tamamla_form').id,
-            'target': 'new',
+            'target': 'current',
             'context': {'default_id': self.id}
         }
     
