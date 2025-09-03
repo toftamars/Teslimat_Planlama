@@ -61,6 +61,11 @@ class TeslimatBelgesi(models.Model):
     
     gercek_teslimat_saati = fields.Datetime(string='Gerçek Teslimat Saati')
     
+    # Teslim Bilgileri
+    teslim_alan_kisi = fields.Char(string='Teslim Alan Kişi', help='Ürünü teslim alan kişinin adı')
+    teslim_fotografi = fields.Binary(string='Teslim Fotoğrafı', help='Teslimat fotoğrafı (opsiyonel)')
+    teslim_fotografi_filename = fields.Char(string='Fotoğraf Dosya Adı')
+    
     # Notlar
     notlar = fields.Text(string='Notlar')
     
@@ -451,4 +456,76 @@ class TeslimatBelgesi(models.Model):
             'type': 'ir.actions.act_url',
             'url': maps_url,
             'target': 'new',
+        }
+    
+    def action_teslimat_tamamla(self):
+        """Sürücü teslimatı tamamlar"""
+        self.ensure_one()
+        
+        # Sürücü yetkisi kontrolü
+        if not self._check_surucu_yetkisi():
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': 'Yetki Hatası',
+                    'message': 'Bu işlem için sürücü yetkisine sahip olmalısınız!',
+                    'type': 'danger',
+                }
+            }
+        
+        # Teslimat durumu kontrolü
+        if self.durum not in ['hazir', 'yolda']:
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': 'Durum Hatası',
+                    'message': 'Sadece hazır veya yolda durumundaki teslimatlar tamamlanabilir!',
+                    'type': 'warning',
+                }
+            }
+        
+        return {
+            'name': 'Teslimat Tamamla',
+            'type': 'ir.actions.act_window',
+            'res_model': 'teslimat.belgesi',
+            'res_id': self.id,
+            'view_mode': 'form',
+            'view_id': self.env.ref('teslimat_planlama.view_teslimat_belgesi_tamamla_form').id,
+            'target': 'new',
+            'context': {'default_id': self.id}
+        }
+    
+    def _check_surucu_yetkisi(self):
+        """Kullanıcının sürücü yetkisi olup olmadığını kontrol et"""
+        # Sürücü grubu kontrolü
+        surucu_group = self.env.ref('teslimat_planlama.group_teslimat_surucu', raise_if_not_found=False)
+        if surucu_group and self.env.user.has_group('teslimat_planlama.group_teslimat_surucu'):
+            return True
+        
+        # Alternatif: is_driver field kontrolü
+        if hasattr(self.env.user.partner_id, 'is_driver') and self.env.user.partner_id.is_driver:
+            return True
+        
+        return False
+    
+    def action_teslimat_tamamla_kaydet(self):
+        """Teslimat tamamlama bilgilerini kaydet"""
+        self.ensure_one()
+        
+        # Teslimat durumunu güncelle
+        self.write({
+            'durum': 'teslim_edildi',
+            'gercek_teslimat_saati': fields.Datetime.now()
+        })
+        
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': 'Başarılı',
+                'message': f'Teslimat başarıyla tamamlandı! (No: {self.name})',
+                'type': 'success',
+            }
         }

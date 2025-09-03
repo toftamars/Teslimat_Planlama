@@ -239,6 +239,10 @@
                 <field name="surucu_id"/>
                 <field name="transfer_no"/>
                 <field name="durum"/>
+                <button name="action_teslimat_tamamla" string="Tamamla" type="object" 
+                        icon="fa-check" class="btn-primary"
+                        attrs="{'invisible': [('durum', 'not in', ['hazir', 'yolda'])]}"
+                        groups="teslimat_planlama.group_teslimat_driver"/>
             </tree>
         </field>
     </record>
@@ -252,6 +256,10 @@
                 <header>
                     <button name="action_yol_tarifi" string="🗺️ Yol Tarifi" type="object" 
                             class="btn-primary" icon="fa-map-marker"/>
+                    <button name="action_teslimat_tamamla" string="✅ Teslimatı Tamamla" type="object" 
+                            class="oe_highlight" icon="fa-check"
+                            attrs="{'invisible': [('durum', 'not in', ['hazir', 'yolda'])]}"
+                            groups="teslimat_planlama.group_teslimat_driver"/>
                 </header>
                 <sheet>
                     <div class="oe_title">
@@ -285,6 +293,51 @@
                         </group>
                     </group>
                     <field name="notlar" placeholder="Notlar"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Teslimat Belgesi Tamamlama Form View -->
+    <record id="view_teslimat_belgesi_tamamla_form" model="ir.ui.view">
+        <field name="name">teslimat.belgesi.tamamla.form</field>
+        <field name="model">teslimat.belgesi</field>
+        <field name="arch" type="xml">
+            <form string="Teslimat Tamamla">
+                <header>
+                    <button name="action_teslimat_tamamla_kaydet" string="✅ Teslimatı Tamamla" type="object" 
+                            class="oe_highlight"/>
+                    <button string="İptal" class="btn-secondary" special="cancel"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="musteri_id" readonly="1"/>
+                            <field name="teslimat_tarihi" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="arac_id" readonly="1"/>
+                            <field name="durum" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Teslim Bilgileri">
+                        <group>
+                            <field name="teslim_alan_kisi" placeholder="Teslim alan kişinin adını girin"/>
+                        </group>
+                        <group>
+                            <field name="teslim_fotografi" widget="image" 
+                                   options="{'size': [90, 90]}"/>
+                            <field name="teslim_fotografi_filename" invisible="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="notlar" placeholder="Teslimat notları (opsiyonel)"/>
+                    </group>
                 </sheet>
             </form>
         </field>
