@@ -1,30 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data noupdate="1">
-        <!-- Teslimat Planlama Sequence -->
-        <record id="seq_teslimat_planlama" model="ir.sequence">
-            <field name="name">Teslimat Planlama</field>
-            <field name="code">teslimat.planlama</field>
-            <field name="prefix">TP</field>
-            <field name="padding">5</field>
-            <field name="number_increment">1</field>
-        </record>
-        
         <!-- Teslimat Belgesi Sequence -->
         <record id="seq_teslimat_belgesi" model="ir.sequence">
             <field name="name">Teslimat Belgesi</field>
             <field name="code">teslimat.belgesi</field>
-            <field name="prefix">T</field>
-            <field name="padding">6</field>
-            <field name="number_increment">1</field>
-        </record>
-        
-        <!-- Kapasite Onay Sequence -->
-        <record id="seq_teslimat_kapasite_onay" model="ir.sequence">
-            <field name="name">Kapasite Onay</field>
-            <field name="code">teslimat.kapasite.onay</field>
-            <field name="prefix">KO</field>
-            <field name="padding">5</field>
+            <field name="prefix">TB</field>
+            <field name="padding">4</field>
+            <field name="number_next">1</field>
             <field name="number_increment">1</field>
         </record>
     </data>

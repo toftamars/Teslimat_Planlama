@@ -249,6 +249,10 @@
         <field name="model">teslimat.belgesi</field>
         <field name="arch" type="xml">
             <form string="Teslimat Belgesi">
+                <header>
+                    <button name="action_yol_tarifi" string="🗺️ Yol Tarifi" type="object" 
+                            class="btn-primary" icon="fa-map-marker"/>
+                </header>
                 <sheet>
                     <div class="oe_title">
                         <h1>
@@ -266,6 +270,7 @@
                     <group>
                         <group>
                             <field name="musteri_id"/>
+                            <field name="musteri_telefon"/>
                             <field name="ilce_id"/>
                         </group>
                         <group>

@@ -14,6 +14,7 @@ class TeslimatBelgesi(models.Model):
     # Müşteri Bilgileri
     musteri_id = fields.Many2one('res.partner', string='Müşteri', required=True, 
                                 domain=[('customer_rank', '>', 0)])
+    musteri_telefon = fields.Char(string='Müşteri Telefon', related='musteri_id.phone', readonly=True)
     
     # Araç ve İlçe Bilgileri
     arac_id = fields.Many2one('teslimat.arac', string='Araç', required=True)
@@ -246,8 +247,7 @@ class TeslimatBelgesi(models.Model):
                 errors.append(f"Bu araç için günlük teslimat limiti dolu! (Limit: {self.arac_id.gunluk_teslimat_limiti})")
             elif kalan_kapasite <= 2:
                 warnings.append(f"Araç kapasitesi kritik seviyede! (Kalan: {kalan_kapasite})")
-            else:
-                warnings.append(f"Araç kapasitesi: {kalan_kapasite}/{self.arac_id.gunluk_teslimat_limiti}")
+            # Normal kapasite durumunda uyarı verme
             
             # Araç durumu kontrolü
             if self.arac_id.gecici_kapatma:
@@ -398,7 +398,11 @@ class TeslimatBelgesi(models.Model):
 
     @api.model
     def create(self, vals):
-        """Teslimat belgesi oluşturulduktan sonra durumu hazır yap ve teslimat belgeleri listesine yönlendir"""
+        """Teslimat belgesi oluşturulduktan sonra belge no atar, durumu hazır yapar"""
+        # Belge no otomatik oluştur
+        if vals.get('name', _('Yeni')) == _('Yeni'):
+            vals['name'] = self.env['ir.sequence'].next_by_code('teslimat.belgesi') or _('Yeni')
+        
         # Durumu hazır olarak ayarla
         vals['durum'] = 'hazir'
         
@@ -417,3 +421,34 @@ class TeslimatBelgesi(models.Model):
             }
         
         return result
+    
+    def action_yol_tarifi(self):
+        """Müşteri adresine yol tarifi aç"""
+        if not self.musteri_id or not self.musteri_id.street:
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': 'Uyarı',
+                    'message': 'Müşteri adresi bulunamadı!',
+                    'type': 'warning',
+                }
+            }
+        
+        # Adres bilgisini hazırla
+        adres = f"{self.musteri_id.street or ''}"
+        if self.musteri_id.street2:
+            adres += f", {self.musteri_id.street2}"
+        if self.musteri_id.city:
+            adres += f", {self.musteri_id.city}"
+        if self.musteri_id.zip:
+            adres += f" {self.musteri_id.zip}"
+        
+        # Google Maps URL oluştur
+        maps_url = f"https://www.google.com/maps/dir/?api=1&destination={adres}"
+        
+        return {
+            'type': 'ir.actions.act_url',
+            'url': maps_url,
+            'target': 'new',
+        }
