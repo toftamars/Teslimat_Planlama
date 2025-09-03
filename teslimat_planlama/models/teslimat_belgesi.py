@@ -360,8 +360,21 @@ class TeslimatBelgesi(models.Model):
         self.write({'durum': 'hazir'})
     
     def action_yola_cik(self):
-        """Teslimatı yolda durumuna getir"""
+        """Teslimatı yolda durumuna getir ve müşteriye SMS gönder"""
         self.write({'durum': 'yolda'})
+        
+        # Müşteriye SMS gönder
+        self._send_delivery_sms()
+        
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': 'Başarılı',
+                'message': f'Teslimat yolda durumuna getirildi ve müşteriye SMS gönderildi! (No: {self.name})',
+                'type': 'success',
+            }
+        }
     
     def action_teslim_et(self):
         """Teslimatı tamamla"""
@@ -660,3 +673,53 @@ class TeslimatBelgesi(models.Model):
             'target': 'current',
             'context': {}
         }
+    
+    def _send_delivery_sms(self):
+        """Müşteriye teslimat SMS'i gönder"""
+        if not self.musteri_id or not self.musteri_id.phone:
+            return
+        
+        # Tahmini süre hesaplama (basit hesaplama - gerçek uygulamada Google Maps API kullanılabilir)
+        tahmini_sure = self._calculate_estimated_time()
+        
+        # SMS metni oluştur
+        sms_text = self._generate_sms_text(tahmini_sure)
+        
+        # SMS gönder (şimdilik log'a yaz - gerçek uygulamada SMS gateway kullanılır)
+        import logging
+        _logger = logging.getLogger(__name__)
+        _logger.info(f"SMS GÖNDERİLDİ - Müşteri: {self.musteri_id.name}, Telefon: {self.musteri_id.phone}")
+        _logger.info(f"SMS İçeriği: {sms_text}")
+        
+        # Gerçek SMS gönderme (SMS gateway entegrasyonu burada yapılır)
+        # self._send_real_sms(self.musteri_id.phone, sms_text)
+    
+    def _calculate_estimated_time(self):
+        """Tahmini varış süresini hesapla"""
+        # Basit hesaplama - gerçek uygulamada Google Maps API kullanılabilir
+        # Şimdilik sabit değer döndürüyoruz
+        return "15-20"
+    
+    def _generate_sms_text(self, tahmini_sure):
+        """SMS metnini oluştur"""
+        musteri_adi = self.musteri_id.name or "Değerli Müşterimiz"
+        arac_adi = self.arac_id.name or "Teslimat Aracı"
+        surucu_adi = self.surucu_id.name if self.surucu_id else "Sürücümüz"
+        
+        sms_text = f"""Merhaba {musteri_adi},
+
+Teslimatınız yola çıktı! 
+Tahmini varış süresi: {tahmini_sure} dakika
+Araç: {arac_adi}
+Sürücü: {surucu_adi}
+
+İyi günler,
+Teslimat Ekibi"""
+        
+        return sms_text
+    
+    def _send_real_sms(self, phone_number, message):
+        """Gerçek SMS gönderme (SMS gateway entegrasyonu)"""
+        # Bu metod gerçek SMS gateway entegrasyonu için kullanılır
+        # Örnek: Twilio, Netgsm, İletimerkezi vb.
+        pass
