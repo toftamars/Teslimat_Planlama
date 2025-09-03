@@ -83,7 +83,7 @@ class TeslimatBelgesi(models.Model):
     gercek_teslimat_saati = fields.Datetime(string='Gerçek Teslimat Saati')
     
     # Teslim Bilgileri
-    teslim_alan_kisi = fields.Char(string='Teslim Alan Kişi', help='Ürünü teslim alan kişinin adı')
+    teslim_alan_kisi = fields.Char(string='Teslim Alan Kişi', required=True, help='Ürünü teslim alan kişinin adı')
     teslim_fotografi = fields.Binary(string='Teslim Fotoğrafı', help='Teslimat fotoğrafı (opsiyonel)')
     teslim_fotografi_filename = fields.Char(string='Fotoğraf Dosya Adı')
     
@@ -467,6 +467,16 @@ class TeslimatBelgesi(models.Model):
             picking = self.env['stock.picking'].browse(vals['stock_picking_id'])
             if picking.state in ['cancel', 'draft']:
                 raise ValidationError(_(f"Transfer {picking.name} durumu '{picking.state}' olduğu için teslimat belgesi oluşturulamaz!\n\nLütfen onaylanmış veya tamamlanmış bir transfer seçin."))
+            
+            # Mükerrer teslimat kontrolü
+            existing = self.env['teslimat.belgesi'].search([
+                ('stock_picking_id', '=', vals['stock_picking_id'])
+            ], limit=1)
+            if existing:
+                raise ValidationError(_(f"Transfer {picking.name} için zaten bir teslimat belgesi mevcut!\n\n"
+                                      f"Teslimat No: {existing.name}\n"
+                                      f"Durum: {existing.durum}\n\n"
+                                      f"Lütfen farklı bir transfer seçin."))
         
         # Belge no otomatik oluştur
         if vals.get('name', _('Yeni')) == _('Yeni'):
