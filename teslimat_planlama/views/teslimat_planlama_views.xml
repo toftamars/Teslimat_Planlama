@@ -344,7 +344,7 @@
                     </group>
                     <group string="Teslim Bilgileri">
                         <group>
-                            <field name="teslim_alan_kisi" placeholder="Teslim alan kişinin adını girin" required="1"/>
+                            <field name="teslim_alan_kisi" placeholder="Teslim alan kişinin adını girin"/>
                         </group>
                         <group>
                             <field name="teslim_fotografi" widget="image" 

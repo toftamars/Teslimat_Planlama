@@ -83,7 +83,7 @@ class TeslimatBelgesi(models.Model):
     gercek_teslimat_saati = fields.Datetime(string='Gerçek Teslimat Saati')
     
     # Teslim Bilgileri
-    teslim_alan_kisi = fields.Char(string='Teslim Alan Kişi', required=True, help='Ürünü teslim alan kişinin adı')
+    teslim_alan_kisi = fields.Char(string='Teslim Alan Kişi', help='Ürünü teslim alan kişinin adı')
     teslim_fotografi = fields.Binary(string='Teslim Fotoğrafı', help='Teslimat fotoğrafı (opsiyonel)')
     teslim_fotografi_filename = fields.Char(string='Fotoğraf Dosya Adı')
     
@@ -636,6 +636,18 @@ class TeslimatBelgesi(models.Model):
         """Teslimat tamamlama bilgilerini kaydet"""
         self.ensure_one()
         
+        # Teslim alan kişi kontrolü
+        if not self.teslim_alan_kisi or not self.teslim_alan_kisi.strip():
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': 'Hata',
+                    'message': 'Teslim alan kişi bilgisi zorunludur!',
+                    'type': 'danger',
+                }
+            }
+        
         # Debug log
         import logging
         _logger = logging.getLogger(__name__)
@@ -647,13 +659,11 @@ class TeslimatBelgesi(models.Model):
         # Güncellenecek veriler
         update_vals = {
             'durum': 'teslim_edildi',
-            'gercek_teslimat_saati': fields.Datetime.now()
+            'gercek_teslimat_saati': fields.Datetime.now(),
+            'teslim_alan_kisi': self.teslim_alan_kisi
         }
         
-        # Mevcut form verilerini koru
-        if self.teslim_alan_kisi:
-            update_vals['teslim_alan_kisi'] = self.teslim_alan_kisi
-        
+        # Fotoğraf bilgilerini ekle
         if self.teslim_fotografi:
             update_vals['teslim_fotografi'] = self.teslim_fotografi
             update_vals['teslim_fotografi_filename'] = self.teslim_fotografi_filename or 'teslimat_foto.jpg'
