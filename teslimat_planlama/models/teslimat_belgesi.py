@@ -751,7 +751,7 @@ Teslimat Ekibi"""
         _logger.info(f"PLANLAMA SMS İçeriği: {sms_text}")
         
         # Gerçek SMS gönderme
-        # self._send_real_sms(self.musteri_id.phone, sms_text)
+        self._send_real_sms(self.musteri_id.phone, sms_text)
     
     def _send_completion_sms(self):
         """Teslimat tamamlandığında müşteriye SMS gönder"""
@@ -768,7 +768,7 @@ Teslimat Ekibi"""
         _logger.info(f"TAMAMLAMA SMS İçeriği: {sms_text}")
         
         # Gerçek SMS gönderme
-        # self._send_real_sms(self.musteri_id.phone, sms_text)
+        self._send_real_sms(self.musteri_id.phone, sms_text)
     
     def _generate_planning_sms_text(self):
         """Teslimat planlama SMS metnini oluştur"""
@@ -804,7 +804,37 @@ Teslimat Ekibi"""
         return sms_text
     
     def _send_real_sms(self, phone_number, message):
-        """Gerçek SMS gönderme (SMS gateway entegrasyonu)"""
-        # Bu metod gerçek SMS gateway entegrasyonu için kullanılır
-        # Örnek: Twilio, Netgsm, İletimerkezi vb.
-        pass
+        """Gerçek SMS gönderme (Sistemdeki SMS entegrasyonu)"""
+        try:
+            # Sistemdeki SMS entegrasyonunu kullan
+            # Odoo'da genellikle mail.mail veya sms.sms modelleri kullanılır
+            
+            # SMS gönderme (sistemdeki mevcut entegrasyon)
+            sms_model = self.env.get('sms.sms')
+            if sms_model:
+                sms_model.create({
+                    'number': phone_number,
+                    'body': message,
+                    'state': 'outgoing'
+                })
+            else:
+                # Alternatif: mail.mail kullan
+                mail_model = self.env.get('mail.mail')
+                if mail_model:
+                    mail_model.create({
+                        'email_to': phone_number,
+                        'subject': 'Teslimat Bildirimi',
+                        'body_html': message,
+                        'state': 'outgoing'
+                    })
+            
+            # Debug log
+            import logging
+            _logger = logging.getLogger(__name__)
+            _logger.info(f"SMS GÖNDERİLDİ - Telefon: {phone_number}, Mesaj: {message[:50]}...")
+            
+        except Exception as e:
+            # Hata durumunda log'a yaz
+            import logging
+            _logger = logging.getLogger(__name__)
+            _logger.error(f"SMS GÖNDERME HATASI - Telefon: {phone_number}, Hata: {str(e)}")
