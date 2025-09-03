@@ -472,7 +472,8 @@ class TeslimatBelgesi(models.Model):
         if vals.get('name', _('Yeni')) == _('Yeni'):
             vals['name'] = self.env['ir.sequence'].next_by_code('teslimat.belgesi') or _('Yeni')
         
-        # Durum varsayılan olarak 'taslak' kalır, kullanıcı kaydet butonuna basınca 'hazır' olur
+        # Durum otomatik olarak 'hazır' yapılır
+        vals['durum'] = 'hazir'
         
         result = super().create(vals)
         

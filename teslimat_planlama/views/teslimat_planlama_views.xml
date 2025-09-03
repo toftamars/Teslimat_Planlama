@@ -237,7 +237,6 @@
                 <field name="musteri_telefon" widget="phone"/>
                 <field name="arac_id"/>
                 <field name="ilce_id"/>
-                <field name="surucu_id"/>
                 <field name="transfer_no"/>
                 <field name="durum"/>
                 <button name="action_teslimat_tamamla" string="Tamamla" type="object" 
