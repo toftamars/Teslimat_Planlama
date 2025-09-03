@@ -142,7 +142,17 @@ class TeslimatAnaSayfa(models.Model):
                         # Kapasite hesaplama
                         toplam_kapasite = record.arac_id.gunluk_teslimat_limiti
                         kalan_kapasite = toplam_kapasite - teslimat_sayisi
-                        doluluk_orani = (teslimat_sayisi / toplam_kapasite * 100) if toplam_kapasite > 0 else 0
+                        
+                        # Doluluk oranı hesaplama - güvenli hesaplama
+                        if toplam_kapasite > 0:
+                            doluluk_orani = round((teslimat_sayisi / toplam_kapasite) * 100, 2)
+                        else:
+                            doluluk_orani = 0.0
+                        
+                        # Debug log
+                        import logging
+                        _logger = logging.getLogger(__name__)
+                        _logger.info(f"KAPASITE HESAPLAMA - Araç: {record.arac_id.name}, Teslimat: {teslimat_sayisi}, Limit: {toplam_kapasite}, Oran: {doluluk_orani}%")
                         
                         # Durum belirleme
                         if kalan_kapasite <= 0:
