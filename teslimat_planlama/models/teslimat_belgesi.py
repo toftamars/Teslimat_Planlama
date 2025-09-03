@@ -836,28 +836,45 @@ Teslimat Ekibi"""
     
     def _send_real_sms(self, phone_number, message):
         """Gerçek SMS gönderme (Netgsm entegrasyonu)"""
+        import logging
+        _logger = logging.getLogger(__name__)
+        _logger.info(f"=== _send_real_sms BAŞLADI ===")
+        _logger.info(f"Telefon: {phone_number}")
+        _logger.info(f"Mesaj: {message[:100]}...")
+        
         try:
             # Netgsm SMS gönderme
             sms_model = self.env['sms.sms']
+            _logger.info(f"SMS Model: {sms_model}")
             
-            # SMS oluştur ve gönder
-            sms = sms_model.create({
+            # SMS oluştur
+            sms_vals = {
                 'number': phone_number,
                 'body': message,
                 'partner_id': self.musteri_id.id if self.musteri_id else False,
-            })
+            }
+            _logger.info(f"SMS Vals: {sms_vals}")
+            
+            sms = sms_model.create(sms_vals)
+            _logger.info(f"SMS Oluşturuldu - ID: {sms.id}")
             
             # SMS'i gönder
+            _logger.info("SMS.send() çağrılıyor...")
             sms.send()
+            _logger.info("SMS.send() tamamlandı")
+            
+            # SMS durumunu kontrol et
+            sms.refresh()
+            _logger.info(f"SMS Durumu: {sms.state}")
             
             # Debug log
-            import logging
-            _logger = logging.getLogger(__name__)
-            _logger.info(f"NETGSM SMS GÖNDERİLDİ - Telefon: {phone_number}, Mesaj: {message[:50]}...")
+            _logger.info(f"✅ NETGSM SMS GÖNDERİLDİ - Telefon: {phone_number}")
             _logger.info(f"SMS ID: {sms.id}, Durum: {sms.state}")
             
         except Exception as e:
             # Hata durumunda log'a yaz
-            import logging
-            _logger = logging.getLogger(__name__)
-            _logger.error(f"NETGSM SMS GÖNDERME HATASI - Telefon: {phone_number}, Hata: {str(e)}")
+            _logger.error(f"❌ NETGSM SMS GÖNDERME HATASI - Telefon: {phone_number}")
+            _logger.error(f"Hata: {str(e)}")
+            _logger.error(f"Hata Tipi: {type(e)}")
+            import traceback
+            _logger.error(f"Traceback: {traceback.format_exc()}")
