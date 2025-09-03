@@ -577,8 +577,11 @@ class TeslimatBelgesi(models.Model):
             'res_id': self.id,
             'view_mode': 'form',
             'view_id': self.env.ref('teslimat_planlama.view_teslimat_belgesi_tamamla_form').id,
-            'target': 'current',
-            'context': {'default_id': self.id}
+            'target': 'new',
+            'context': {
+                'default_id': self.id,
+                'form_view_initial_mode': 'edit'
+            }
         }
     
     def _check_surucu_yetkisi(self):
@@ -602,11 +605,36 @@ class TeslimatBelgesi(models.Model):
         """Teslimat tamamlama bilgilerini kaydet"""
         self.ensure_one()
         
-        # Teslimat durumunu güncelle
-        self.write({
+        # Debug log
+        import logging
+        _logger = logging.getLogger(__name__)
+        _logger.info(f"TESLİMAT TAMAMLA KAYDET - Mevcut veriler:")
+        _logger.info(f"teslim_alan_kisi: {self.teslim_alan_kisi}")
+        _logger.info(f"teslim_fotografi var mı: {bool(self.teslim_fotografi)}")
+        _logger.info(f"teslim_fotografi_filename: {self.teslim_fotografi_filename}")
+        
+        # Güncellenecek veriler
+        update_vals = {
             'durum': 'teslim_edildi',
             'gercek_teslimat_saati': fields.Datetime.now()
-        })
+        }
+        
+        # Mevcut form verilerini koru (target='new' ile form verileri otomatik kaydedilir)
+        if self.teslim_alan_kisi:
+            update_vals['teslim_alan_kisi'] = self.teslim_alan_kisi
+        
+        if self.teslim_fotografi:
+            update_vals['teslim_fotografi'] = self.teslim_fotografi
+            update_vals['teslim_fotografi_filename'] = self.teslim_fotografi_filename or 'teslimat_foto.jpg'
+        
+        # Veritabanına kaydet
+        self.write(update_vals)
+        
+        # Debug: Kaydedilen verileri kontrol et
+        self.refresh()
+        _logger.info(f"Kaydedilen veriler - teslim_alan_kisi: {self.teslim_alan_kisi}")
+        _logger.info(f"Kaydedilen veriler - teslim_fotografi var mı: {bool(self.teslim_fotografi)}")
+        _logger.info(f"Kaydedilen veriler - teslim_fotografi_filename: {self.teslim_fotografi_filename}")
         
         return {
             'type': 'ir.actions.client',
