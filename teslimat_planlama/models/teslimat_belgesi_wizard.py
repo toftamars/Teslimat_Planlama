@@ -17,7 +17,7 @@ class TeslimatBelgesiWizard(models.TransientModel):
         'stock.picking',
         string='Transfer No',
         domain="[('state','in',['waiting','confirmed','assigned','done'])]",
-        help='Transfer numarasına göre arayın (name)'
+        help='Transfer numarasına göre arayın (name). İptal ve taslak durumundaki transferler görünmez.'
     )
 
     # Müşteri ve Adres (otomatik dolar)
@@ -57,6 +57,32 @@ class TeslimatBelgesiWizard(models.TransientModel):
     def _onchange_transfer_id(self):
         picking = self.transfer_id
         if picking:
+            # 1. Transfer durumu kontrolü (iptal ve taslak durumları için uyarı)
+            if picking.state in ['cancel', 'draft']:
+                return {
+                    'warning': {
+                        'title': 'Transfer Durumu Uyarısı',
+                        'message': f'Transfer {picking.name} durumu "{picking.state}" olduğu için teslimat oluşturulamaz!\n\n'
+                                 f'Lütfen onaylanmış veya tamamlanmış bir transfer seçin.'
+                    }
+                }
+            
+            # 2. Mükerrer teslimat kontrolü
+            existing = self.env['teslimat.belgesi'].search([
+                ('stock_picking_id', '=', picking.id)
+            ], limit=1)
+            if existing:
+                return {
+                    'warning': {
+                        'title': 'Mükerrer Teslimat Uyarısı',
+                        'message': f'Transfer {picking.name} için zaten bir teslimat belgesi mevcut!\n\n'
+                                 f'Teslimat No: {existing.name}\n'
+                                 f'Durum: {existing.durum}\n\n'
+                                 f'Lütfen farklı bir transfer seçin.'
+                    }
+                }
+            
+            # 3. Müşteri ve adres bilgilerini doldur
             if picking.partner_id:
                 self.musteri_id = picking.partner_id.id
                 # Adres metni
@@ -69,13 +95,17 @@ class TeslimatBelgesiWizard(models.TransientModel):
     def action_teslimat_olustur(self):
         self.ensure_one()
 
-        # Mükerrer transfer kontrolü
+        # 1. Transfer durumu kontrolü (iptal ve taslak durumları için hata)
         if self.transfer_id:
+            if self.transfer_id.state in ['cancel', 'draft']:
+                raise UserError(_(f"Transfer {self.transfer_id.name} durumu '{self.transfer_id.state}' olduğu için teslimat oluşturulamaz!\n\nLütfen onaylanmış veya tamamlanmış bir transfer seçin."))
+            
+            # 2. Mükerrer teslimat kontrolü
             existing = self.env['teslimat.belgesi'].search([
                 ('stock_picking_id', '=', self.transfer_id.id)
             ], limit=1)
             if existing:
-                raise UserError(_(f"Bu transfer için zaten bir teslimat belgesi mevcut: {existing.name}"))
+                raise UserError(_(f"Transfer {self.transfer_id.name} için zaten bir teslimat belgesi mevcut!\n\nTeslimat No: {existing.name}\nDurum: {existing.durum}\n\nLütfen farklı bir transfer seçin."))
 
         vals = {
             'teslimat_tarihi': self.teslimat_tarihi,
