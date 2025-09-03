@@ -143,16 +143,26 @@ class TeslimatAnaSayfa(models.Model):
                         toplam_kapasite = record.arac_id.gunluk_teslimat_limiti
                         kalan_kapasite = toplam_kapasite - teslimat_sayisi
                         
-                        # Doluluk oranı hesaplama - güvenli hesaplama
-                        if toplam_kapasite > 0:
-                            doluluk_orani = round((teslimat_sayisi / toplam_kapasite) * 100, 2)
-                        else:
+                        # Doluluk oranı hesaplama - çok güvenli hesaplama
+                        try:
+                            if toplam_kapasite and toplam_kapasite > 0:
+                                # Güvenli float dönüşümü
+                                teslimat_float = float(teslimat_sayisi)
+                                kapasite_float = float(toplam_kapasite)
+                                doluluk_orani = round((teslimat_float / kapasite_float) * 100, 2)
+                                
+                                # Maksimum %100 sınırı
+                                if doluluk_orani > 100:
+                                    doluluk_orani = 100.0
+                            else:
+                                doluluk_orani = 0.0
+                        except (TypeError, ValueError, ZeroDivisionError):
                             doluluk_orani = 0.0
                         
                         # Debug log
                         import logging
                         _logger = logging.getLogger(__name__)
-                        _logger.info(f"KAPASITE HESAPLAMA - Araç: {record.arac_id.name}, Teslimat: {teslimat_sayisi}, Limit: {toplam_kapasite}, Oran: {doluluk_orani}%")
+                        _logger.info(f"KAPASITE HESAPLAMA - Araç: {record.arac_id.name}, Teslimat: {teslimat_sayisi} (type: {type(teslimat_sayisi)}), Limit: {toplam_kapasite} (type: {type(toplam_kapasite)}), Oran: {doluluk_orani}%")
                         
                         # Durum belirleme
                         if kalan_kapasite <= 0:
