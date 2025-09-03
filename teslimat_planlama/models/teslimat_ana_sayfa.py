@@ -167,7 +167,10 @@ class TeslimatAnaSayfa(models.Model):
                         # Debug log
                         import logging
                         _logger = logging.getLogger(__name__)
-                        _logger.info(f"KAPASITE HESAPLAMA - Araç: {record.arac_id.name}, Teslimat: {teslimat_sayisi} (type: {type(teslimat_sayisi)}), Limit: {toplam_kapasite} (type: {type(toplam_kapasite)}), Oran: {doluluk_orani}%")
+                        _logger.info(f"KAPASITE HESAPLAMA - Araç: {record.arac_id.name}")
+                        _logger.info(f"  Teslimat Sayısı: {teslimat_sayisi} (type: {type(teslimat_sayisi)})")
+                        _logger.info(f"  Toplam Kapasite: {toplam_kapasite} (type: {type(toplam_kapasite)})")
+                        _logger.info(f"  Hesaplama: ({teslimat_float} / {kapasite_float}) * 100 = {doluluk_orani}%")
                         
                         # Durum belirleme
                         if kalan_kapasite <= 0:
