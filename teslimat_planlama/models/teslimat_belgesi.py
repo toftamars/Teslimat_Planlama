@@ -543,7 +543,7 @@ class TeslimatBelgesi(models.Model):
         self.transfer_urun_ids = urun_listesi
     
     def action_yol_tarifi(self):
-        """Müşteri adresine yol tarifi aç"""
+        """Müşteri adresine yol tarifi aç ve SMS gönder"""
         if not self.musteri_id or not self.musteri_id.street:
             return {
                 'type': 'ir.actions.client',
@@ -554,6 +554,10 @@ class TeslimatBelgesi(models.Model):
                     'type': 'warning',
                 }
             }
+        
+        # Müşteriye SMS gönder
+        if self.musteri_id.phone:
+            self._send_delivery_sms()
         
         # Adres bilgisini hazırla
         adres = f"{self.musteri_id.street or ''}"
