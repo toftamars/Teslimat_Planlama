@@ -804,37 +804,29 @@ Teslimat Ekibi"""
         return sms_text
     
     def _send_real_sms(self, phone_number, message):
-        """Gerçek SMS gönderme (Sistemdeki SMS entegrasyonu)"""
+        """Gerçek SMS gönderme (Netgsm entegrasyonu)"""
         try:
-            # Sistemdeki SMS entegrasyonunu kullan
-            # Odoo'da genellikle mail.mail veya sms.sms modelleri kullanılır
+            # Netgsm SMS gönderme
+            sms_model = self.env['sms.sms']
             
-            # SMS gönderme (sistemdeki mevcut entegrasyon)
-            sms_model = self.env.get('sms.sms')
-            if sms_model:
-                sms_model.create({
-                    'number': phone_number,
-                    'body': message,
-                    'state': 'outgoing'
-                })
-            else:
-                # Alternatif: mail.mail kullan
-                mail_model = self.env.get('mail.mail')
-                if mail_model:
-                    mail_model.create({
-                        'email_to': phone_number,
-                        'subject': 'Teslimat Bildirimi',
-                        'body_html': message,
-                        'state': 'outgoing'
-                    })
+            # SMS oluştur ve gönder
+            sms = sms_model.create({
+                'number': phone_number,
+                'body': message,
+                'partner_id': self.musteri_id.id if self.musteri_id else False,
+            })
+            
+            # SMS'i gönder
+            sms.send()
             
             # Debug log
             import logging
             _logger = logging.getLogger(__name__)
-            _logger.info(f"SMS GÖNDERİLDİ - Telefon: {phone_number}, Mesaj: {message[:50]}...")
+            _logger.info(f"NETGSM SMS GÖNDERİLDİ - Telefon: {phone_number}, Mesaj: {message[:50]}...")
+            _logger.info(f"SMS ID: {sms.id}, Durum: {sms.state}")
             
         except Exception as e:
             # Hata durumunda log'a yaz
             import logging
             _logger = logging.getLogger(__name__)
-            _logger.error(f"SMS GÖNDERME HATASI - Telefon: {phone_number}, Hata: {str(e)}")
+            _logger.error(f"NETGSM SMS GÖNDERME HATASI - Telefon: {phone_number}, Hata: {str(e)}")
