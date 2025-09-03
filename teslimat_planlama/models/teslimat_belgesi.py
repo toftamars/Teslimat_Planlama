@@ -499,14 +499,18 @@ class TeslimatBelgesi(models.Model):
     
     def _check_surucu_yetkisi(self):
         """Kullanıcının sürücü yetkisi olup olmadığını kontrol et"""
-        # Sürücü grubu kontrolü
-        surucu_group = self.env.ref('teslimat_planlama.group_teslimat_surucu', raise_if_not_found=False)
-        if surucu_group and self.env.user.has_group('teslimat_planlama.group_teslimat_surucu'):
+        # Sürücü grubu kontrolü - doğru grup adı
+        if self.env.user.has_group('teslimat_planlama.group_teslimat_driver'):
             return True
         
         # Alternatif: is_driver field kontrolü
         if hasattr(self.env.user.partner_id, 'is_driver') and self.env.user.partner_id.is_driver:
             return True
+        
+        # Debug için log
+        import logging
+        _logger = logging.getLogger(__name__)
+        _logger.info(f"SÜRÜCÜ YETKİ KONTROLÜ - Kullanıcı: {self.env.user.name}, Gruplar: {[g.name for g in self.env.user.groups_id]}")
         
         return False
     
