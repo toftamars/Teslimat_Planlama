@@ -503,6 +503,10 @@ class TeslimatBelgesi(models.Model):
         
         result = super().create(vals)
         
+        # Teslimat planlandığında müşteriye SMS gönder
+        if result.musteri_id and result.musteri_id.phone:
+            result._send_planning_sms()
+        
         # Kaydet butonuna basıldığında teslimat belgeleri listesine yönlendir
         if self.env.context.get('from_form'):
             return {
@@ -657,6 +661,10 @@ class TeslimatBelgesi(models.Model):
         # Veritabanına kaydet
         self.write(update_vals)
         
+        # Teslimat tamamlandığında müşteriye SMS gönder
+        if self.musteri_id and self.musteri_id.phone:
+            self._send_completion_sms()
+        
         # Debug: Kaydedilen verileri kontrol et
         self.refresh()
         _logger.info(f"Kaydedilen veriler - teslim_alan_kisi: {self.teslim_alan_kisi}")
@@ -712,6 +720,73 @@ Teslimatınız yola çıktı!
 Tahmini varış süresi: {tahmini_sure} dakika
 Araç: {arac_adi}
 Sürücü: {surucu_adi}
+
+İyi günler,
+Teslimat Ekibi"""
+        
+        return sms_text
+    
+    def _send_planning_sms(self):
+        """Teslimat planlandığında müşteriye SMS gönder"""
+        if not self.musteri_id or not self.musteri_id.phone:
+            return
+        
+        # SMS metni oluştur
+        sms_text = self._generate_planning_sms_text()
+        
+        # SMS gönder (şimdilik log'a yaz)
+        import logging
+        _logger = logging.getLogger(__name__)
+        _logger.info(f"PLANLAMA SMS GÖNDERİLDİ - Müşteri: {self.musteri_id.name}, Telefon: {self.musteri_id.phone}")
+        _logger.info(f"PLANLAMA SMS İçeriği: {sms_text}")
+        
+        # Gerçek SMS gönderme
+        # self._send_real_sms(self.musteri_id.phone, sms_text)
+    
+    def _send_completion_sms(self):
+        """Teslimat tamamlandığında müşteriye SMS gönder"""
+        if not self.musteri_id or not self.musteri_id.phone:
+            return
+        
+        # SMS metni oluştur
+        sms_text = self._generate_completion_sms_text()
+        
+        # SMS gönder (şimdilik log'a yaz)
+        import logging
+        _logger = logging.getLogger(__name__)
+        _logger.info(f"TAMAMLAMA SMS GÖNDERİLDİ - Müşteri: {self.musteri_id.name}, Telefon: {self.musteri_id.phone}")
+        _logger.info(f"TAMAMLAMA SMS İçeriği: {sms_text}")
+        
+        # Gerçek SMS gönderme
+        # self._send_real_sms(self.musteri_id.phone, sms_text)
+    
+    def _generate_planning_sms_text(self):
+        """Teslimat planlama SMS metnini oluştur"""
+        musteri_adi = self.musteri_id.name or "Değerli Müşterimiz"
+        tarih = self.teslimat_tarihi.strftime("%d/%m/%Y") if self.teslimat_tarihi else "Belirtilen tarihte"
+        
+        sms_text = f"""Merhaba {musteri_adi},
+
+Teslimatınız {tarih} tarihinde planlanmıştır.
+Teslimat No: {self.name}
+
+İyi günler,
+Teslimat Ekibi"""
+        
+        return sms_text
+    
+    def _generate_completion_sms_text(self):
+        """Teslimat tamamlama SMS metnini oluştur"""
+        musteri_adi = self.musteri_id.name or "Değerli Müşterimiz"
+        teslim_alan = self.teslim_alan_kisi or "Belirtilmemiş"
+        teslim_tarihi = self.gercek_teslimat_saati.strftime("%d/%m/%Y %H:%M") if self.gercek_teslimat_saati else "Bugün"
+        
+        sms_text = f"""Merhaba {musteri_adi},
+
+Teslimat ve kurulumunuz tamamlanmıştır.
+Teslim Alan: {teslim_alan}
+Teslim Tarihi: {teslim_tarihi}
+Teslimat No: {self.name}
 
 İyi günler,
 Teslimat Ekibi"""
