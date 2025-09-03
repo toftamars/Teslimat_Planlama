@@ -548,6 +548,13 @@ class TeslimatBelgesi(models.Model):
     
     def action_yol_tarifi(self):
         """Müşteri adresine yol tarifi aç ve SMS gönder"""
+        import logging
+        _logger = logging.getLogger(__name__)
+        _logger.info("=== YOL TARİFİ BUTONUNA BASILDI ===")
+        _logger.info(f"Müşteri: {self.musteri_id.name if self.musteri_id else 'YOK'}")
+        _logger.info(f"Telefon: {self.musteri_id.phone if self.musteri_id else 'YOK'}")
+        _logger.info(f"Adres: {self.musteri_id.street if self.musteri_id else 'YOK'}")
+        
         if not self.musteri_id or not self.musteri_id.street:
             return {
                 'type': 'ir.actions.client',
@@ -561,7 +568,10 @@ class TeslimatBelgesi(models.Model):
         
         # Müşteriye SMS gönder
         if self.musteri_id.phone:
+            _logger.info("SMS GÖNDERİLİYOR - Yol Tarifi")
             self._send_delivery_sms()
+        else:
+            _logger.warning("SMS GÖNDERİLEMEDİ - Telefon numarası yok!")
         
         # Adres bilgisini hazırla
         adres = f"{self.musteri_id.street or ''}"
@@ -681,7 +691,10 @@ class TeslimatBelgesi(models.Model):
         
         # Teslimat tamamlandığında müşteriye SMS gönder
         if self.musteri_id and self.musteri_id.phone:
+            _logger.info("SMS GÖNDERİLİYOR - Teslimat Tamamlandı")
             self._send_completion_sms()
+        else:
+            _logger.warning("SMS GÖNDERİLEMEDİ - Müşteri veya telefon numarası yok!")
         
         # Debug: Kaydedilen verileri kontrol et
         self.refresh()
@@ -702,7 +715,12 @@ class TeslimatBelgesi(models.Model):
     
     def _send_delivery_sms(self):
         """Müşteriye teslimat SMS'i gönder"""
+        import logging
+        _logger = logging.getLogger(__name__)
+        _logger.info("=== _send_delivery_sms ÇAĞRILDI ===")
+        
         if not self.musteri_id or not self.musteri_id.phone:
+            _logger.warning("SMS GÖNDERİLEMEDİ - Müşteri veya telefon yok!")
             return
         
         # Tahmini süre hesaplama (basit hesaplama - gerçek uygulamada Google Maps API kullanılabilir)
@@ -718,7 +736,7 @@ class TeslimatBelgesi(models.Model):
         _logger.info(f"SMS İçeriği: {sms_text}")
         
         # Gerçek SMS gönderme (SMS gateway entegrasyonu burada yapılır)
-        # self._send_real_sms(self.musteri_id.phone, sms_text)
+        self._send_real_sms(self.musteri_id.phone, sms_text)
     
     def _calculate_estimated_time(self):
         """Tahmini varış süresini hesapla"""
@@ -763,7 +781,12 @@ Teslimat Ekibi"""
     
     def _send_completion_sms(self):
         """Teslimat tamamlandığında müşteriye SMS gönder"""
+        import logging
+        _logger = logging.getLogger(__name__)
+        _logger.info("=== _send_completion_sms ÇAĞRILDI ===")
+        
         if not self.musteri_id or not self.musteri_id.phone:
+            _logger.warning("SMS GÖNDERİLEMEDİ - Müşteri veya telefon yok!")
             return
         
         # SMS metni oluştur
