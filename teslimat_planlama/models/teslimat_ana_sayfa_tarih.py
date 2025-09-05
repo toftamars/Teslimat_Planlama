@@ -66,20 +66,37 @@ class TeslimatAnaSayfaTarih(models.Model):
             _logger.info(f"URL PARAMETRELERİ - Tarih: {tarih_param}, Araç ID: {arac_id_param}, İlçe ID: {ilce_id_param}")
             _logger.info(f"Ana Sayfa: {record.ana_sayfa_id}, Araç: {record.ana_sayfa_id.arac_id if record.ana_sayfa_id else 'YOK'}, İlçe: {record.ana_sayfa_id.ilce_id if record.ana_sayfa_id else 'YOK'}")
             
-            # HTML buton ile context parametreleri
-            context_params = f"'default_teslimat_tarihi': '{tarih_param}'"
-            if arac_id_param:
-                context_params += f", 'default_arac_id': {arac_id_param}"
-            if ilce_id_param:
-                context_params += f", 'default_ilce_id': {ilce_id_param}"
+            # Form action ile direkt parametreler
+            form_action = self.env.ref('teslimat_planlama.action_teslimat_belgesi_olustur').id
             
-            # Tarih bilgisini debug için logla
-            _logger.info(f"BUTON İÇİN TARİH: {tarih_param} (Type: {type(tarih_param)})")
-            _logger.info(f"CONTEXT PARAMS: {context_params}")
+            # URL encode için
+            import urllib.parse
+            
+            # Context oluştur
+            context_dict = {
+                'default_teslimat_tarihi': str(tarih_param),
+                'form_view_initial_mode': 'edit',
+                'default_durum': 'taslak'
+            }
+            
+            if arac_id_param:
+                context_dict['default_arac_id'] = int(arac_id_param)
+            if ilce_id_param:
+                context_dict['default_ilce_id'] = int(ilce_id_param)
+                
+            # Context'i string'e çevir
+            context_str = str(context_dict)
+            
+            # Debug log
+            _logger.info(f"TESLIMAT OLUŞTUR - Tarih: {tarih_param}, Araç: {arac_id_param}, İlçe: {ilce_id_param}")
+            _logger.info(f"Context Dict: {context_dict}")
+            
+            # URL oluştur
+            url = f"/web#action={form_action}&active_model=teslimat.belgesi&context={urllib.parse.quote(context_str)}"
             
             record.doluluk_bar = f"""
                 <div style="text-align: center; padding: 10px;">
-                    <a href="/web#action=teslimat_planlama.action_teslimat_belgesi_olustur&context={{{context_params}}}&r={random_id}" 
+                    <a href="{url}" 
                        style="display: inline-block; padding: 8px 16px; font-size: 14px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;"
                        target="_self">
                         📋 Teslimat Oluştur
