@@ -52,9 +52,8 @@
                                     <field name="kalan_kapasite" readonly="1" options="{'no_open': True}"/>
                                     <field name="durum_text" readonly="1" options="{'no_open': True}"/>
                                     <field name="durum_icon" readonly="1" options="{'no_open': True}"/>
-                                    <button name="action_teslimat_olustur_from_tarih" string="📋 Teslimat Oluştur" type="object" 
-                                            class="btn-primary" icon="fa-plus" 
-                                            context="{'active_id': active_id, 'active_model': 'teslimat.ana.sayfa.tarih'}"/>
+                                    <button name="%(teslimat_planlama.action_server_teslimat_olustur)d" string="📋 Teslimat Oluştur" type="action" 
+                                            class="btn-primary" icon="fa-plus"/>
                                 </tree>
                             </field>
                         </page>

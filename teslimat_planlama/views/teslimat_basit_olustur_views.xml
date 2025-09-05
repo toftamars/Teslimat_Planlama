@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Basit Server Action - Teslimat Oluştur -->
+    <record id="action_server_teslimat_olustur" model="ir.actions.server">
+        <field name="name">Teslimat Belgesi Oluştur</field>
+        <field name="model_id" ref="model_teslimat_ana_sayfa_tarih"/>
+        <field name="binding_model_id" ref="model_teslimat_ana_sayfa_tarih"/>
+        <field name="state">code</field>
+        <field name="code">
+# Seçilen tarih kaydından teslimat belgesi oluştur
+for record in records:
+    vals = {
+        'teslimat_tarihi': record.tarih,
+        'durum': 'taslak'
+    }
+    
+    # Ana sayfa bilgilerini al
+    if record.ana_sayfa_id:
+        if record.ana_sayfa_id.arac_id:
+            vals['arac_id'] = record.ana_sayfa_id.arac_id.id
+        if record.ana_sayfa_id.ilce_id:
+            vals['ilce_id'] = record.ana_sayfa_id.ilce_id.id
+    
+    # Teslimat belgesi oluştur
+    teslimat = env['teslimat.belgesi'].create(vals)
+    
+    # Form'u aç
+    action = {
+        'type': 'ir.actions.act_window',
+        'name': 'Teslimat Belgesi',
+        'res_model': 'teslimat.belgesi',
+        'res_id': teslimat.id,
+        'view_mode': 'form',
+        'target': 'current',
+    }
+        </field>
+    </record>
+</odoo>
