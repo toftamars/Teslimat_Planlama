@@ -566,12 +566,15 @@ class TeslimatBelgesi(models.Model):
                 }
             }
         
-        # Müşteriye SMS gönder
-        if self.musteri_id.phone:
+        # Müşteriye SMS gönder - HER ZAMAN GÖNDER
+        try:
             _logger.info("SMS GÖNDERİLİYOR - Yol Tarifi")
             self._send_delivery_sms()
-        else:
-            _logger.warning("SMS GÖNDERİLEMEDİ - Telefon numarası yok!")
+            _logger.info("✅ YOL TARİFİ SMS GÖNDERİLDİ")
+        except Exception as e:
+            _logger.error(f"❌ YOL TARİFİ SMS HATASI: {str(e)}")
+            import traceback
+            _logger.error(traceback.format_exc())
         
         # Adres bilgisini hazırla
         adres = f"{self.musteri_id.street or ''}"
