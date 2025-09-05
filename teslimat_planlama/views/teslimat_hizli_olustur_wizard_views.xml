@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Hızlı Teslimat Oluştur Wizard Form -->
+    <record id="view_teslimat_hizli_olustur_wizard_form" model="ir.ui.view">
+        <field name="name">teslimat.hizli.olustur.wizard.form</field>
+        <field name="model">teslimat.hizli.olustur.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Teslimat Belgesi Oluştur">
+                <div class="alert alert-info" role="alert">
+                    <h4>📋 Teslimat Belgesi Oluştur</h4>
+                    <p>Seçilen tarih ve kapasite bilgileri ile teslimat belgesi oluşturun.</p>
+                </div>
+                <group>
+                    <field name="tarih" readonly="1"/>
+                    <field name="arac_id" readonly="1"/>
+                    <field name="ilce_id" readonly="1"/>
+                </group>
+                <footer>
+                    <button name="action_olustur" string="✅ Teslimat Belgesi Oluştur" type="object" 
+                            class="btn-primary"/>
+                    <button string="İptal" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+    
+    <!-- Hızlı Teslimat Oluştur Wizard Action -->
+    <record id="action_teslimat_hizli_olustur_wizard" model="ir.actions.act_window">
+        <field name="name">Teslimat Belgesi Oluştur</field>
+        <field name="res_model">teslimat.hizli.olustur.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

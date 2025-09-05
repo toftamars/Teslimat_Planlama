@@ -31,6 +31,7 @@
                'views/teslimat_ana_sayfa_views.xml',
                'views/teslimat_belgesi_wizard_views.xml',
                'views/teslimat_konum_wizard_views.xml',
+               'views/teslimat_hizli_olustur_wizard_views.xml',
                'views/teslimat_planlama_views.xml',
                'views/menu_views.xml',
            ],
