@@ -376,4 +376,46 @@ class TeslimatAnaSayfa(models.Model):
             'name': 'Ana Sayfa',
         }
     
+    def action_teslimat_olustur_from_tarih(self):
+        """Tarih satırından teslimat oluştur"""
+        # Context'ten active_id al (hangi tarih satırı tıklandı)
+        active_id = self.env.context.get('active_id')
+        if not active_id:
+            return
+            
+        # Tarih kaydını bul
+        tarih_record = self.env['teslimat.ana.sayfa.tarih'].browse(active_id)
+        if not tarih_record.exists():
+            return
+            
+        # Teslimat belgesi oluştur
+        vals = {
+            'teslimat_tarihi': tarih_record.tarih,
+            'durum': 'taslak'
+        }
+        
+        # Ana sayfa bilgilerini al
+        if tarih_record.ana_sayfa_id:
+            if tarih_record.ana_sayfa_id.arac_id:
+                vals['arac_id'] = tarih_record.ana_sayfa_id.arac_id.id
+            if tarih_record.ana_sayfa_id.ilce_id:
+                vals['ilce_id'] = tarih_record.ana_sayfa_id.ilce_id.id
+        
+        # Debug log
+        import logging
+        _logger = logging.getLogger(__name__)
+        _logger.info(f"TESLIMAT OLUŞTUR - Vals: {vals}")
+        
+        # Belgeyi oluştur
+        teslimat_belgesi = self.env['teslimat.belgesi'].create(vals)
+        
+        # Form'u aç
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Teslimat Belgesi',
+            'res_model': 'teslimat.belgesi',
+            'res_id': teslimat_belgesi.id,
+            'view_mode': 'form',
+            'target': 'current',
+        }
 
