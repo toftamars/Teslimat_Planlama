@@ -115,8 +115,10 @@ class TeslimatAnaSayfaTarih(models.Model):
         
         import logging
         _logger = logging.getLogger(__name__)
-        _logger.info(f"=== ACTION_TESLIMAT_OLUSTUR ÇAĞRILDI ===")
-        _logger.info(f"Tarih: {self.tarih}")
+        _logger.info(f"=== 📋 ACTION_TESLIMAT_OLUSTUR ÇAĞRILDI ===")
+        _logger.info(f"Record ID: {self.id}")
+        _logger.info(f"Tarih: {self.tarih} (Type: {type(self.tarih)})")
+        _logger.info(f"Ana Sayfa ID: {self.ana_sayfa_id.id if self.ana_sayfa_id else 'YOK'}")
         _logger.info(f"Ana Sayfa Araç: {self.ana_sayfa_id.arac_id.name if self.ana_sayfa_id and self.ana_sayfa_id.arac_id else 'YOK'}")
         _logger.info(f"Ana Sayfa İlçe: {self.ana_sayfa_id.ilce_id.name if self.ana_sayfa_id and self.ana_sayfa_id.ilce_id else 'YOK'}")
         
@@ -130,26 +132,44 @@ class TeslimatAnaSayfaTarih(models.Model):
         if self.ana_sayfa_id:
             if self.ana_sayfa_id.arac_id:
                 vals['arac_id'] = self.ana_sayfa_id.arac_id.id
-                _logger.info(f"Araç ID eklendi: {self.ana_sayfa_id.arac_id.id}")
+                _logger.info(f"✅ Araç ID eklendi: {self.ana_sayfa_id.arac_id.id} - {self.ana_sayfa_id.arac_id.name}")
             if self.ana_sayfa_id.ilce_id:
                 vals['ilce_id'] = self.ana_sayfa_id.ilce_id.id
-                _logger.info(f"İlçe ID eklendi: {self.ana_sayfa_id.ilce_id.id}")
+                _logger.info(f"✅ İlçe ID eklendi: {self.ana_sayfa_id.ilce_id.id} - {self.ana_sayfa_id.ilce_id.name}")
         
-        _logger.info(f"Teslimat belgesi vals: {vals}")
+        _logger.info(f"📋 Teslimat belgesi vals: {vals}")
         
-        # Belgeyi oluştur
-        teslimat_belgesi = self.env['teslimat.belgesi'].create(vals)
-        _logger.info(f"Teslimat belgesi oluşturuldu: {teslimat_belgesi.name}")
-        _logger.info(f"Oluşturulan belge tarihi: {teslimat_belgesi.teslimat_tarihi}")
-        
-        # Oluşturulan belgenin formunu aç
-        return {
-            'type': 'ir.actions.act_window',
-            'name': 'Teslimat Belgesi',
-            'res_model': 'teslimat.belgesi',
-            'res_id': teslimat_belgesi.id,
-            'view_mode': 'form',
-            'target': 'current',
-        }
+        try:
+            # Belgeyi oluştur
+            teslimat_belgesi = self.env['teslimat.belgesi'].create(vals)
+            _logger.info(f"✅ Teslimat belgesi oluşturuldu: {teslimat_belgesi.name}")
+            _logger.info(f"✅ Oluşturulan belge tarihi: {teslimat_belgesi.teslimat_tarihi}")
+            _logger.info(f"✅ Oluşturulan belge araç: {teslimat_belgesi.arac_id.name if teslimat_belgesi.arac_id else 'YOK'}")
+            _logger.info(f"✅ Oluşturulan belge ilçe: {teslimat_belgesi.ilce_id.name if teslimat_belgesi.ilce_id else 'YOK'}")
+            
+            # Oluşturulan belgenin formunu aç
+            return {
+                'type': 'ir.actions.act_window',
+                'name': 'Teslimat Belgesi',
+                'res_model': 'teslimat.belgesi',
+                'res_id': teslimat_belgesi.id,
+                'view_mode': 'form',
+                'target': 'current',
+            }
+            
+        except Exception as e:
+            _logger.error(f"❌ Teslimat belgesi oluşturma hatası: {str(e)}")
+            import traceback
+            _logger.error(f"TRACEBACK: {traceback.format_exc()}")
+            
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': 'Hata',
+                    'message': f'Teslimat belgesi oluşturulamadı: {str(e)}',
+                    'type': 'danger',
+                }
+            }
 
 
