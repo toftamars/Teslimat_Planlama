@@ -48,6 +48,3 @@ class ResPartner(models.Model):
                 partner.konum_bilgisi = "Konum bilgisi yok"
     
     konum_bilgisi = fields.Char(string='Konum Bilgisi', compute='_compute_konum_bilgisi', store=True)
-
-    # Sürücü işareti
-    is_driver = fields.Boolean(string='Sürücü mü?', default=False)

@@ -672,12 +672,8 @@ class TeslimatBelgesi(models.Model):
     
     def _check_surucu_yetkisi(self):
         """Kullanıcının sürücü yetkisi olup olmadığını kontrol et"""
-        # Sürücü grubu kontrolü - doğru grup adı
+        # Sadece sürücü grubu kontrolü
         if self.env.user.has_group('teslimat_planlama.group_teslimat_driver'):
-            return True
-        
-        # Alternatif: is_driver field kontrolü
-        if hasattr(self.env.user.partner_id, 'is_driver') and self.env.user.partner_id.is_driver:
             return True
         
         # Debug için log

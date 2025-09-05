@@ -66,12 +66,27 @@ class TeslimatAnaSayfaTarih(models.Model):
             _logger.info(f"URL PARAMETRELERİ - Tarih: {tarih_param}, Araç ID: {arac_id_param}, İlçe ID: {ilce_id_param}")
             _logger.info(f"Ana Sayfa: {record.ana_sayfa_id}, Araç: {record.ana_sayfa_id.arac_id if record.ana_sayfa_id else 'YOK'}, İlçe: {record.ana_sayfa_id.ilce_id if record.ana_sayfa_id else 'YOK'}")
             
-            # Basit HTML buton - sadece görsel
+            # Mavi buton - onclick ile çalışır
+            onclick_js = f"""
+                var self = this;
+                var rpc = require('web.rpc');
+                rpc.query({{
+                    model: 'teslimat.ana.sayfa.tarih',
+                    method: 'action_teslimat_olustur',
+                    args: [[{record.id}]]
+                }}).then(function(result) {{
+                    if (result && result.type) {{
+                        self.do_action(result);
+                    }}
+                }});
+            """
+            
             record.doluluk_bar = f"""
                 <div style="text-align: center; padding: 10px;">
-                    <span style="display: inline-block; padding: 8px 16px; font-size: 14px; background-color: #007bff; color: white; border-radius: 5px;">
+                    <button onclick="{onclick_js}" 
+                            style="padding: 8px 16px; font-size: 14px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
                         📋 Teslimat Oluştur ({tarih_param})
-                    </span>
+                    </button>
                 </div>
             """
 
