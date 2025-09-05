@@ -66,11 +66,17 @@ class TeslimatAnaSayfaTarih(models.Model):
             _logger.info(f"URL PARAMETRELERİ - Tarih: {tarih_param}, Araç ID: {arac_id_param}, İlçe ID: {ilce_id_param}")
             _logger.info(f"Ana Sayfa: {record.ana_sayfa_id}, Araç: {record.ana_sayfa_id.arac_id if record.ana_sayfa_id else 'YOK'}, İlçe: {record.ana_sayfa_id.ilce_id if record.ana_sayfa_id else 'YOK'}")
             
-            # Çok basit test HTML - sadece buton
+            # HTML buton ile context parametreleri
+            context_params = f"'default_teslimat_tarihi': '{tarih_param}'"
+            if arac_id_param:
+                context_params += f", 'default_arac_id': {arac_id_param}"
+            if ilce_id_param:
+                context_params += f", 'default_ilce_id': {ilce_id_param}"
+            
             record.doluluk_bar = f"""
                 <div style="text-align: center; padding: 20px; background-color: #f0f0f0; border: 2px solid #007bff;">
                     <h3 style="color: #007bff; margin-bottom: 15px;">📋 TESLİMAT OLUŞTUR</h3>
-                    <a href="/web#action=teslimat_planlama.action_teslimat_belgesi_olustur&default_teslimat_tarihi={tarih_param}&default_arac_id={arac_id_param}&default_ilce_id={ilce_id_param}&r={random_id}" 
+                    <a href="/web#action=teslimat_planlama.action_teslimat_belgesi_olustur&context={{{context_params}}}&r={random_id}" 
                        style="display: inline-block; padding: 15px 30px; font-size: 16px; background-color: #007bff; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;"
                        target="_self">
                         🚀 TESLİMAT BELGESİ OLUŞTUR
