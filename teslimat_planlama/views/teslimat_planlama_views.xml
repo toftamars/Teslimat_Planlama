@@ -255,7 +255,7 @@
         </field>
     </record>
 
-    <!-- Teslimat Belgesi Search View -->
+    <!-- Teslimat Belgesi Search View - Basitleştirildi -->
     <record id="view_teslimat_belgesi_search" model="ir.ui.view">
         <field name="name">teslimat.belgesi.search</field>
         <field name="model">teslimat.belgesi</field>
@@ -267,20 +267,11 @@
                 <field name="arac_id" string="Araç"/>
                 <field name="ilce_id" string="İlçe"/>
                 <field name="durum" string="Durum"/>
-                <field name="teslimat_tarihi" string="Teslimat Tarihi"/>
-                <field name="transfer_urun_ids" string="Ürün Adı" filter_domain="[('transfer_urun_ids.urun_id.name', 'ilike', self)]"/>
                 <separator/>
                 <filter string="Hazır" name="hazir" domain="[('durum','=','hazir')]"/>
                 <filter string="Yolda" name="yolda" domain="[('durum','=','yolda')]"/>
                 <filter string="Teslim Edildi" name="teslim_edildi" domain="[('durum','=','teslim_edildi')]"/>
                 <filter string="İptal" name="iptal" domain="[('durum','=','iptal')]"/>
-                <separator/>
-                <group expand="0" string="Grupla">
-                    <filter string="Durum" name="durum" context="{'group_by':'durum'}"/>
-                    <filter string="Tarih" name="tarih" context="{'group_by':'teslimat_tarihi'}"/>
-                    <filter string="Araç" name="arac" context="{'group_by':'arac_id'}"/>
-                    <filter string="İlçe" name="ilce" context="{'group_by':'ilce_id'}"/>
-                </group>
             </search>
         </field>
     </record>
