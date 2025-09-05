@@ -50,7 +50,6 @@
                                     <field name="teslimat_sayisi" readonly="1" options="{'no_open': True}"/>
                                     <field name="toplam_kapasite" readonly="1" options="{'no_open': True}"/>
                                     <field name="kalan_kapasite" readonly="1" options="{'no_open': True}"/>
-                                    <field name="doluluk_orani" widget="percentage" readonly="1" options="{'no_open': True}"/>
                                     <field name="durum_text" readonly="1" options="{'no_open': True}"/>
                                     <field name="durum_icon" readonly="1" options="{'no_open': True}"/>
                                     <field name="doluluk_bar" widget="html" readonly="1" options="{'no_open': True}"/>
