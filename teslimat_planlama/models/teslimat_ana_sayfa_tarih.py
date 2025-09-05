@@ -66,11 +66,28 @@ class TeslimatAnaSayfaTarih(models.Model):
             _logger.info(f"URL PARAMETRELERİ - Tarih: {tarih_param}, Araç ID: {arac_id_param}, İlçe ID: {ilce_id_param}")
             _logger.info(f"Ana Sayfa: {record.ana_sayfa_id}, Araç: {record.ana_sayfa_id.arac_id if record.ana_sayfa_id else 'YOK'}, İlçe: {record.ana_sayfa_id.ilce_id if record.ana_sayfa_id else 'YOK'}")
             
-            # Direkt action_teslimat_olustur metodunu çağır
+            # JavaScript ile form aç
             _logger.info(f"TESLIMAT OLUŞTUR - Tarih: {tarih_param}, Araç: {arac_id_param}, İlçe: {ilce_id_param}")
             
-            # URL: Model metodunu çağır
-            url = f"/web/dataset/call_button?model=teslimat.ana.sayfa.tarih&method=action_teslimat_olustur&args=[[{record.id}]]"
+            # JavaScript action string
+            js_action = f"""
+            var action = {{
+                type: 'ir.actions.act_window',
+                name: 'Teslimat Belgesi Oluştur',
+                res_model: 'teslimat.belgesi',
+                view_mode: 'form',
+                target: 'current',
+                context: {{
+                    'default_teslimat_tarihi': '{tarih_param}',
+                    'default_arac_id': {arac_id_param if arac_id_param else 'false'},
+                    'default_ilce_id': {ilce_id_param if ilce_id_param else 'false'},
+                    'form_view_initial_mode': 'edit'
+                }}
+            }};
+            odoo.__DEBUG__.services['action'].doAction(action);
+            """
+            
+            url = f"javascript:{js_action.replace(chr(10), ' ').replace('  ', ' ')}"
             
             record.doluluk_bar = f"""
                 <div style="text-align: center; padding: 10px;">

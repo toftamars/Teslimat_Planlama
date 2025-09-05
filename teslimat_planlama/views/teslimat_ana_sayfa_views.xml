@@ -53,7 +53,9 @@
                                     <field name="doluluk_orani" widget="percentage" readonly="1" options="{'no_open': True}"/>
                                     <field name="durum_text" readonly="1" options="{'no_open': True}"/>
                                     <field name="durum_icon" readonly="1" options="{'no_open': True}"/>
-                                    <field name="doluluk_bar" widget="html" readonly="1" options="{'no_open': True}"/>
+                                    <button name="action_teslimat_olustur" string="📋 Teslimat Oluştur" type="object" 
+                                            class="btn-primary" icon="fa-plus"/>
+                                    <field name="doluluk_bar" widget="html" readonly="1" options="{'no_open': True}" invisible="1"/>
                                 </tree>
                             </field>
                         </page>
