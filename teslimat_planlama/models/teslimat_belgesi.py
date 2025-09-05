@@ -23,6 +23,7 @@ class TeslimatBelgesiUrun(models.Model):
 class TeslimatBelgesi(models.Model):
     _name = 'teslimat.belgesi'
     _description = 'Teslimat Belgesi'
+    _inherit = ['mail.thread', 'mail.activity.mixin']
     _order = 'teslimat_tarihi desc, name'
 
     name = fields.Char(string='Teslimat No', required=True, copy=False, readonly=True, 
@@ -510,6 +511,12 @@ class TeslimatBelgesi(models.Model):
         # Teslimat planlandığında müşteriye SMS gönder
         if result.musteri_id and result.musteri_id.phone:
             result._send_planning_sms()
+            # Chatter'a log ekle
+            result.message_post(
+                body=f"📱 1. SMS (Planlama) gönderildi - {result.musteri_id.name} ({result.musteri_id.phone})",
+                message_type='notification',
+                subtype_xmlid='mail.mt_note'
+            )
         
         # Kaydet butonuna basıldığında teslimat belgeleri listesine yönlendir
         if self.env.context.get('from_form'):
@@ -696,8 +703,19 @@ class TeslimatBelgesi(models.Model):
         if self.musteri_id and self.musteri_id.phone:
             _logger.info("SMS GÖNDERİLİYOR - Teslimat Tamamlandı")
             self._send_completion_sms()
+            # Chatter'a log ekle
+            self.message_post(
+                body=f"📱 3. SMS (Teslimat Tamamlandı) gönderildi - {self.musteri_id.name} ({self.musteri_id.phone})<br/>Teslim alan: {self.teslim_alan_kisi}",
+                message_type='notification',
+                subtype_xmlid='mail.mt_note'
+            )
         else:
             _logger.warning("SMS GÖNDERİLEMEDİ - Müşteri veya telefon numarası yok!")
+            self.message_post(
+                body="❌ 3. SMS gönderilemedi - Müşteri telefon numarası eksik",
+                message_type='notification',
+                subtype_xmlid='mail.mt_note'
+            )
         
         # Debug: Kaydedilen verileri kontrol et
         self.refresh()
@@ -743,8 +761,19 @@ class TeslimatBelgesi(models.Model):
         try:
             self._send_real_sms(self.musteri_id.phone, sms_text)
             _logger.info("✅ 2. SMS (YOL TARİFİ) BAŞARIYLA GÖNDERİLDİ")
+            # Chatter'a log ekle
+            self.message_post(
+                body=f"📱 2. SMS (Yol Tarifi) gönderildi - {self.musteri_id.name} ({self.musteri_id.phone})<br/>Tahmini varış: {tahmini_sure} dakika",
+                message_type='notification',
+                subtype_xmlid='mail.mt_note'
+            )
         except Exception as e:
             _logger.error(f"❌ 2. SMS (YOL TARİFİ) GÖNDERİM HATASI: {str(e)}")
+            self.message_post(
+                body=f"❌ 2. SMS (Yol Tarifi) gönderilemedi - Hata: {str(e)}",
+                message_type='notification',
+                subtype_xmlid='mail.mt_note'
+            )
     
     def _calculate_estimated_time(self):
         """Tahmini varış süresini hesapla"""
