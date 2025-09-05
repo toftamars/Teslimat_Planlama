@@ -255,8 +255,8 @@
                 <filter string="Teslim Edildi" name="teslim_edildi" domain="[('durum','=','teslim_edildi')]"/>
                 <filter string="İptal" name="iptal" domain="[('durum','=','iptal')]"/>
                 <separator/>
-                <filter string="Bugün" name="bugun" domain="[('teslimat_tarihi','=',context_today())]"/>
-                <filter string="Bu Hafta" name="bu_hafta" domain="[('teslimat_tarihi','>=',(context_today() - datetime.timedelta(days=context_today().weekday())).strftime('%Y-%m-%d')),('teslimat_tarihi','&lt;=',(context_today() + datetime.timedelta(days=6-context_today().weekday())).strftime('%Y-%m-%d'))]"/>
+                <filter string="Bugün" name="bugun" domain="[('teslimat_tarihi','=',datetime.date.today())]"/>
+                <filter string="Bu Hafta" name="bu_hafta" domain="[('teslimat_tarihi','>=',datetime.date.today() - datetime.timedelta(days=7)),('teslimat_tarihi','&lt;=',datetime.date.today())]"/>
                 <separator/>
                 <group expand="0" string="Grupla">
                     <filter string="Durum" name="durum" context="{'group_by':'durum'}"/>
