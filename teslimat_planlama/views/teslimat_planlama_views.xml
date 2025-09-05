@@ -213,19 +213,6 @@
         </field>
     </record>
 
-    <!-- Teslimat Belgesi Actions -->
-    <record id="action_teslimat_belgesi" model="ir.actions.act_window">
-        <field name="name">Teslimat Belgeleri</field>
-        <field name="res_model">teslimat.belgesi</field>
-        <field name="view_mode">tree,form</field>
-        <field name="search_view_id" ref="view_teslimat_belgesi_search"/>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                İlk teslimat belgesini oluşturun!
-            </p>
-        </field>
-    </record>
-
     <!-- Teslimat Belgesi Tree View -->
     <record id="view_teslimat_belgesi_tree" model="ir.ui.view">
         <field name="name">teslimat.belgesi.tree</field>
@@ -278,6 +265,19 @@
                     <filter string="İlçe" name="ilce" context="{'group_by':'ilce_id'}"/>
                 </group>
             </search>
+        </field>
+    </record>
+
+    <!-- Teslimat Belgesi Actions -->
+    <record id="action_teslimat_belgesi" model="ir.actions.act_window">
+        <field name="name">Teslimat Belgeleri</field>
+        <field name="res_model">teslimat.belgesi</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_teslimat_belgesi_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                İlk teslimat belgesini oluşturun!
+            </p>
         </field>
     </record>
 
