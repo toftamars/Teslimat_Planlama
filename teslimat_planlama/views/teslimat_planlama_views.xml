@@ -296,6 +296,10 @@
         <field name="arch" type="xml">
             <form string="Teslimat Belgesi">
                 <header>
+                    <button name="action_update_driver_location_simple" string="📍 Konumumu Güncelle" type="object" 
+                            class="btn-info" icon="fa-location-arrow"
+                            groups="teslimat_planlama.group_teslimat_driver"
+                            attrs="{'invisible': [('durum', 'not in', ['hazir', 'yolda'])]}"/>
                     <button name="action_yol_tarifi" string="🗺️ Yol Tarifi" type="object" 
                             class="btn-primary" icon="fa-map-marker"/>
                     <button name="action_teslimat_tamamla" string="✅ Teslimatı Tamamla" type="object" 

@@ -566,6 +566,8 @@ class TeslimatBelgesi(models.Model):
         _logger.info(f"Müşteri: {self.musteri_id.name if self.musteri_id else 'YOK'}")
         _logger.info(f"Telefon: {self.musteri_id.phone if self.musteri_id else 'YOK'}")
         _logger.info(f"Adres: {self.musteri_id.street if self.musteri_id else 'YOK'}")
+        _logger.info(f"Kullanıcı: {self.env.user.name}")
+        _logger.info(f"Sürücü mü: {self.env.user.has_group('teslimat_planlama.group_teslimat_driver')}")
         
         if not self.musteri_id or not self.musteri_id.street:
             return {
@@ -578,10 +580,26 @@ class TeslimatBelgesi(models.Model):
                 }
             }
         
-        # Müşteriye SMS gönder - SADECE SÜRÜCÜ İSE
+        # Sadece sürücü için konum kontrolü
         if self.env.user.has_group('teslimat_planlama.group_teslimat_driver'):
+            # Konum kontrolü - sürücü konumu var mı?
+            if not self.surucu_latitude or not self.surucu_longitude:
+                _logger.warning("SÜRÜCÜ KONUM BİLGİSİ YOK!")
+                return {
+                    'type': 'ir.actions.client',
+                    'tag': 'display_notification',
+                    'params': {
+                        'title': '📍 Konum Gerekli',
+                        'message': 'Önce "Konumumu Güncelle" butonunu kullanarak konumunuzu güncelleyin!',
+                        'type': 'warning',
+                        'sticky': True,
+                    }
+                }
+            
+            # SMS gönder
             try:
                 _logger.info("SÜRÜCÜ YETKI KONTROLÜ - OK")
+                _logger.info(f"Sürücü konumu: {self.surucu_latitude}, {self.surucu_longitude}")
                 _logger.info("SMS GÖNDERİLİYOR - Yol Tarifi")
                 self._send_delivery_sms()
                 _logger.info("✅ YOL TARİFİ SMS GÖNDERİLDİ")
@@ -768,16 +786,19 @@ class TeslimatBelgesi(models.Model):
         
         # Gerçek SMS gönderme
         try:
+            _logger.info("_send_real_sms çağrılıyor...")
             self._send_real_sms(self.musteri_id.phone, sms_text)
             _logger.info("✅ 2. SMS (YOL TARİFİ) BAŞARIYLA GÖNDERİLDİ")
             # Chatter'a log ekle
             self.message_post(
-                body=f"📱 2. SMS (Yol Tarifi) gönderildi - {self.musteri_id.name} ({self.musteri_id.phone})<br/>Tahmini varış: {tahmini_sure} dakika",
+                body=f"📱 2. SMS (Yol Tarifi) gönderildi - {self.musteri_id.name} ({self.musteri_id.phone})<br/>Tahmini varış: {tahmini_sure}",
                 message_type='notification',
                 subtype_xmlid='mail.mt_note'
             )
         except Exception as e:
             _logger.error(f"❌ 2. SMS (YOL TARİFİ) GÖNDERİM HATASI: {str(e)}")
+            import traceback
+            _logger.error(f"TRACEBACK: {traceback.format_exc()}")
             self.message_post(
                 body=f"❌ 2. SMS (Yol Tarifi) gönderilemedi - Hata: {str(e)}",
                 message_type='notification',
@@ -967,6 +988,48 @@ class TeslimatBelgesi(models.Model):
             return {'status': 'success', 'message': 'Konum güncellendi'}
         
         return {'status': 'error', 'message': 'Konum bilgisi eksik'}
+    
+    def action_update_driver_location_simple(self):
+        """Basit konum güncelleme - Manuel koordinat girişi"""
+        self.ensure_one()
+        
+        if not self.env.user.has_group('teslimat_planlama.group_teslimat_driver'):
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': 'Yetki Hatası',
+                    'message': 'Bu işlem için sürücü yetkisine sahip olmalısınız!',
+                    'type': 'danger',
+                }
+            }
+        
+        # Test için sabit koordinat (İstanbul Fatih)
+        test_lat = 41.0082
+        test_lng = 28.9784
+        
+        self.write({
+            'surucu_latitude': test_lat,
+            'surucu_longitude': test_lng,
+            'surucu_konum_zamani': fields.Datetime.now()
+        })
+        
+        # Chatter'a log
+        self.message_post(
+            body=f"📍 Sürücü konumu güncellendi (TEST): {test_lat}, {test_lng}",
+            message_type='notification',
+            subtype_xmlid='mail.mt_note'
+        )
+        
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': '✅ Konum Güncellendi',
+                'message': f'Koordinatlar: {test_lat}, {test_lng}',
+                'type': 'success',
+            }
+        }
     
     def _generate_sms_text(self, tahmini_sure):
         """SMS metnini oluştur"""
