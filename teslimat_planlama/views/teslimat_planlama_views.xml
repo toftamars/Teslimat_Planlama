@@ -428,7 +428,7 @@
         <field name="res_model">teslimat.belgesi</field>
         <field name="view_mode">form</field>
         <field name="target">current</field>
-        <field name="context">{'form_view_initial_mode': 'edit'}</field>
+        <field name="context">{'form_view_initial_mode': 'edit', 'default_durum': 'taslak'}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 Yeni teslimat belgesi oluşturun!

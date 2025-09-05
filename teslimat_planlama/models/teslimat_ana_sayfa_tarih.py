@@ -73,17 +73,17 @@ class TeslimatAnaSayfaTarih(models.Model):
             if ilce_id_param:
                 context_params += f", 'default_ilce_id': {ilce_id_param}"
             
+            # Tarih bilgisini debug için logla
+            _logger.info(f"BUTON İÇİN TARİH: {tarih_param} (Type: {type(tarih_param)})")
+            _logger.info(f"CONTEXT PARAMS: {context_params}")
+            
             record.doluluk_bar = f"""
-                <div style="text-align: center; padding: 20px; background-color: #f0f0f0; border: 2px solid #007bff;">
-                    <h3 style="color: #007bff; margin-bottom: 15px;">📋 TESLİMAT OLUŞTUR</h3>
+                <div style="text-align: center; padding: 10px;">
                     <a href="/web#action=teslimat_planlama.action_teslimat_belgesi_olustur&context={{{context_params}}}&r={random_id}" 
-                       style="display: inline-block; padding: 15px 30px; font-size: 16px; background-color: #007bff; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;"
+                       style="display: inline-block; padding: 8px 16px; font-size: 14px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;"
                        target="_self">
-                        🚀 TESLİMAT BELGESİ OLUŞTUR
+                        📋 Teslimat Oluştur
                     </a>
-                    <p style="margin-top: 10px; font-size: 12px; color: #666;">
-                        Tarih: {tarih_param} | Araç: {arac_id_param} | İlçe: {ilce_id_param}
-                    </p>
                 </div>
             """
 
