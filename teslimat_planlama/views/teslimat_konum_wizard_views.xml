@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Konum Güncelleme Wizard Form -->
+    <record id="view_teslimat_konum_wizard_form" model="ir.ui.view">
+        <field name="name">teslimat.konum.wizard.form</field>
+        <field name="model">teslimat.konum.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Konum Güncelle">
+                <div class="alert alert-info" role="alert">
+                    <h4>📍 Konum Güncelleme</h4>
+                    <p>Tarayıcınızın konum erişimine izin verin ve "Konumumu Al" butonuna tıklayın.</p>
+                </div>
+                <group>
+                    <field name="teslimat_id" readonly="1"/>
+                    <field name="current_latitude" readonly="1"/>
+                    <field name="current_longitude" readonly="1"/>
+                </group>
+                <div class="text-center" style="margin: 20px;">
+                    <button name="action_get_location" string="📍 Konumumu Al" type="object" 
+                            class="btn-primary" style="font-size: 18px; padding: 10px 30px;"/>
+                </div>
+                <footer>
+                    <button string="Kapat" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+    
+    <!-- Konum Güncelleme Wizard Action -->
+    <record id="action_update_location_wizard" model="ir.actions.act_window">
+        <field name="name">Konum Güncelle</field>
+        <field name="res_model">teslimat.konum.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="context">{'default_teslimat_id': active_id}</field>
+    </record>
+</odoo>

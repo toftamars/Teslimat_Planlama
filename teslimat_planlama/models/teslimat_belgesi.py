@@ -68,6 +68,11 @@ class TeslimatBelgesi(models.Model):
         ('iptal', 'İptal')
     ], string='Durum', default='taslak', required=True)
     
+    # Sürücü konum bilgileri
+    surucu_latitude = fields.Float(string='Sürücü Enlem', digits=(10, 8))
+    surucu_longitude = fields.Float(string='Sürücü Boylam', digits=(11, 8))
+    surucu_konum_zamani = fields.Datetime(string='Konum Güncelleme Zamanı')
+    
     # Zaman Bilgileri
     planlanan_teslimat_saati = fields.Selection([
         ('09:00', '09:00'),
@@ -780,8 +785,20 @@ class TeslimatBelgesi(models.Model):
             )
     
     def _calculate_estimated_time(self):
-        """Tahmini varış süresini hesapla"""
-        # İlçe bazlı tahmini süreler (dakika cinsinden)
+        """Tahmini varış süresini hesapla - Önce Google Maps API, yoksa fallback"""
+        import logging
+        _logger = logging.getLogger(__name__)
+        
+        # Önce Google Maps ile gerçek süre hesapla
+        try:
+            google_time = self._calculate_google_maps_time()
+            if google_time:
+                _logger.info(f"Google Maps süre hesaplandı: {google_time}")
+                return google_time
+        except Exception as e:
+            _logger.warning(f"Google Maps hesaplama hatası: {str(e)}")
+        
+        # Fallback: İlçe bazlı tahmini süreler
         ilce_sureleri = {
             # Anadolu Yakası
             'maltepe': 45, 'kartal': 50, 'pendik': 60, 'tuzla': 70,
@@ -806,31 +823,150 @@ class TeslimatBelgesi(models.Model):
         
         if self.ilce_id:
             ilce_adi = self.ilce_id.name.lower().strip()
-            tahmini_dakika = ilce_sureleri.get(ilce_adi, 45)  # Varsayılan 45 dakika
+            tahmini_dakika = ilce_sureleri.get(ilce_adi, 45)
             
             # Trafik durumuna göre süre ekle
             from datetime import datetime
             saat = datetime.now().hour
             
-            # Yoğun saatlerde %30 fazla süre
             if 7 <= saat <= 9 or 17 <= saat <= 20:
                 tahmini_dakika = int(tahmini_dakika * 1.3)
-            # Normal saatlerde %10 fazla
             elif 9 < saat < 17:
                 tahmini_dakika = int(tahmini_dakika * 1.1)
             
-            # Dakikayı saat-dakika formatına çevir
+            # Format
             if tahmini_dakika >= 60:
                 saat = tahmini_dakika // 60
                 dakika = tahmini_dakika % 60
                 if dakika > 0:
-                    return f"{saat} saat {dakika} dakika"
+                    return f"{saat} saat {dakika} dakika (tahmini)"
                 else:
-                    return f"{saat} saat"
+                    return f"{saat} saat (tahmini)"
             else:
-                return f"{tahmini_dakika} dakika"
+                return f"{tahmini_dakika} dakika (tahmini)"
         
-        return "45 dakika"  # Varsayılan
+        return "45 dakika (tahmini)"
+    
+    def _calculate_google_maps_time(self):
+        """Google Maps API ile gerçek süre hesapla"""
+        import logging
+        _logger = logging.getLogger(__name__)
+        
+        # Google Maps API anahtarı (System Parameters'dan alınmalı)
+        ICP = self.env['ir.config_parameter'].sudo()
+        api_key = ICP.get_param('google_maps_api_key', '')
+        
+        if not api_key:
+            _logger.warning("Google Maps API anahtarı bulunamadı")
+            return None
+        
+        if not self.musteri_id or not self.musteri_id.street:
+            return None
+        
+        # Sürücü konumu varsa kullan, yoksa varsayılan başlangıç noktası
+        if self.surucu_latitude and self.surucu_longitude:
+            origin = f"{self.surucu_latitude},{self.surucu_longitude}"
+            _logger.info(f"Sürücü konumu kullanılıyor: {origin}")
+        else:
+            # Varsayılan başlangıç noktası (örn: depo konumu)
+            origin = "41.0082,28.9784"  # İstanbul merkez
+            _logger.info("Varsayılan başlangıç noktası kullanılıyor")
+        
+        # Hedef adres
+        destination = f"{self.musteri_id.street}"
+        if self.musteri_id.city:
+            destination += f", {self.musteri_id.city}"
+        if self.musteri_id.country_id:
+            destination += f", {self.musteri_id.country_id.name}"
+        
+        try:
+            import requests
+            import json
+            
+            # Google Maps Distance Matrix API
+            url = "https://maps.googleapis.com/maps/api/distancematrix/json"
+            params = {
+                'origins': origin,
+                'destinations': destination,
+                'mode': 'driving',
+                'language': 'tr',
+                'departure_time': 'now',
+                'traffic_model': 'best_guess',
+                'key': api_key
+            }
+            
+            response = requests.get(url, params=params, timeout=5)
+            response.raise_for_status()
+            
+            data = response.json()
+            
+            if data['status'] == 'OK' and data['rows'][0]['elements'][0]['status'] == 'OK':
+                # Trafik dahil süre
+                duration_in_traffic = data['rows'][0]['elements'][0].get('duration_in_traffic', {})
+                duration = duration_in_traffic.get('value') or data['rows'][0]['elements'][0]['duration']['value']
+                
+                # Saniyeyi dakikaya çevir
+                dakika = duration // 60
+                
+                # Mesafe bilgisi
+                distance = data['rows'][0]['elements'][0]['distance']['text']
+                
+                # Log ve chatter
+                _logger.info(f"Google Maps: {distance}, {dakika} dakika")
+                self.message_post(
+                    body=f"📍 Google Maps hesaplaması: {distance} mesafe, tahmini {dakika} dakika",
+                    message_type='notification',
+                    subtype_xmlid='mail.mt_note'
+                )
+                
+                # Format
+                if dakika >= 60:
+                    saat = dakika // 60
+                    dk = dakika % 60
+                    if dk > 0:
+                        return f"{saat} saat {dk} dakika"
+                    else:
+                        return f"{saat} saat"
+                else:
+                    return f"{dakika} dakika"
+            
+            else:
+                _logger.warning(f"Google Maps API yanıt hatası: {data}")
+                return None
+                
+        except Exception as e:
+            _logger.error(f"Google Maps API hatası: {str(e)}")
+            return None
+    
+    def action_update_driver_location(self):
+        """Sürücü konumunu güncelle (JavaScript ile çağrılacak)"""
+        self.ensure_one()
+        
+        # Sadece sürücü güncelleme yapabilir
+        if not self.env.user.has_group('teslimat_planlama.group_teslimat_driver'):
+            return {'status': 'error', 'message': 'Yetkiniz yok'}
+        
+        # Context'ten konum bilgilerini al
+        latitude = self.env.context.get('latitude')
+        longitude = self.env.context.get('longitude')
+        
+        if latitude and longitude:
+            self.write({
+                'surucu_latitude': latitude,
+                'surucu_longitude': longitude,
+                'surucu_konum_zamani': fields.Datetime.now()
+            })
+            
+            # Chatter'a log
+            self.message_post(
+                body=f"📍 Sürücü konumu güncellendi: {latitude}, {longitude}",
+                message_type='notification',
+                subtype_xmlid='mail.mt_note'
+            )
+            
+            return {'status': 'success', 'message': 'Konum güncellendi'}
+        
+        return {'status': 'error', 'message': 'Konum bilgisi eksik'}
     
     def _generate_sms_text(self, tahmini_sure):
         """SMS metnini oluştur"""
