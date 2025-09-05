@@ -52,7 +52,7 @@
                                     <field name="kalan_kapasite" readonly="1" options="{'no_open': True}"/>
                                     <field name="durum_text" readonly="1" options="{'no_open': True}"/>
                                     <field name="durum_icon" readonly="1" options="{'no_open': True}"/>
-                                    <button name="%(teslimat_planlama.action_teslimat_hizli_olustur_wizard)d" string="📋 Teslimat Oluştur" type="action" 
+                                    <button name="action_teslimat_olustur" string="📋 Teslimat Oluştur" type="object" 
                                             class="btn-primary" icon="fa-plus"/>
                                 </tree>
                             </field>
