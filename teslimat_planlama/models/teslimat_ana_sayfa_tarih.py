@@ -66,33 +66,11 @@ class TeslimatAnaSayfaTarih(models.Model):
             _logger.info(f"URL PARAMETRELERİ - Tarih: {tarih_param}, Araç ID: {arac_id_param}, İlçe ID: {ilce_id_param}")
             _logger.info(f"Ana Sayfa: {record.ana_sayfa_id}, Araç: {record.ana_sayfa_id.arac_id if record.ana_sayfa_id else 'YOK'}, İlçe: {record.ana_sayfa_id.ilce_id if record.ana_sayfa_id else 'YOK'}")
             
-            # Form action ile direkt parametreler
-            form_action = self.env.ref('teslimat_planlama.action_teslimat_belgesi_olustur').id
-            
-            # URL encode için
-            import urllib.parse
-            
-            # Context oluştur
-            context_dict = {
-                'default_teslimat_tarihi': str(tarih_param),
-                'form_view_initial_mode': 'edit',
-                'default_durum': 'taslak'
-            }
-            
-            if arac_id_param:
-                context_dict['default_arac_id'] = int(arac_id_param)
-            if ilce_id_param:
-                context_dict['default_ilce_id'] = int(ilce_id_param)
-                
-            # Context'i string'e çevir
-            context_str = str(context_dict)
-            
-            # Debug log
+            # Direkt action_teslimat_olustur metodunu çağır
             _logger.info(f"TESLIMAT OLUŞTUR - Tarih: {tarih_param}, Araç: {arac_id_param}, İlçe: {ilce_id_param}")
-            _logger.info(f"Context Dict: {context_dict}")
             
-            # URL oluştur
-            url = f"/web#action={form_action}&active_model=teslimat.belgesi&context={urllib.parse.quote(context_str)}"
+            # URL: Model metodunu çağır
+            url = f"/web/dataset/call_button?model=teslimat.ana.sayfa.tarih&method=action_teslimat_olustur&args=[[{record.id}]]"
             
             record.doluluk_bar = f"""
                 <div style="text-align: center; padding: 10px;">
@@ -115,30 +93,46 @@ class TeslimatAnaSayfaTarih(models.Model):
         return super().unlink()
 
     def action_teslimat_olustur(self):
-        """Direkt Teslimat Belgesi create formunu aç (kısa yol)"""
+        """Direkt Teslimat Belgesi oluştur ve aç - ZORLA TARİH GEÇİŞİ"""
         self.ensure_one()
         
-        # Context ile varsayılan değerleri hazırla
-        ctx = {
-            'default_teslimat_tarihi': self.tarih,
-            'form_view_initial_mode': 'edit',
+        import logging
+        _logger = logging.getLogger(__name__)
+        _logger.info(f"=== ACTION_TESLIMAT_OLUSTUR ÇAĞRILDI ===")
+        _logger.info(f"Tarih: {self.tarih}")
+        _logger.info(f"Ana Sayfa Araç: {self.ana_sayfa_id.arac_id.name if self.ana_sayfa_id and self.ana_sayfa_id.arac_id else 'YOK'}")
+        _logger.info(f"Ana Sayfa İlçe: {self.ana_sayfa_id.ilce_id.name if self.ana_sayfa_id and self.ana_sayfa_id.ilce_id else 'YOK'}")
+        
+        # Teslimat belgesi oluştur - ZORLA
+        vals = {
+            'teslimat_tarihi': self.tarih,
+            'durum': 'taslak'
         }
         
         # Ana sayfa bilgilerini al
-        ana_sayfa = self.ana_sayfa_id
-        if ana_sayfa and ana_sayfa.arac_id:
-            ctx['default_arac_id'] = ana_sayfa.arac_id.id
-            if ana_sayfa.ilce_id:
-                ctx['default_ilce_id'] = ana_sayfa.ilce_id.id
+        if self.ana_sayfa_id:
+            if self.ana_sayfa_id.arac_id:
+                vals['arac_id'] = self.ana_sayfa_id.arac_id.id
+                _logger.info(f"Araç ID eklendi: {self.ana_sayfa_id.arac_id.id}")
+            if self.ana_sayfa_id.ilce_id:
+                vals['ilce_id'] = self.ana_sayfa_id.ilce_id.id
+                _logger.info(f"İlçe ID eklendi: {self.ana_sayfa_id.ilce_id.id}")
         
-        # Direkt form create modunda aç
+        _logger.info(f"Teslimat belgesi vals: {vals}")
+        
+        # Belgeyi oluştur
+        teslimat_belgesi = self.env['teslimat.belgesi'].create(vals)
+        _logger.info(f"Teslimat belgesi oluşturuldu: {teslimat_belgesi.name}")
+        _logger.info(f"Oluşturulan belge tarihi: {teslimat_belgesi.teslimat_tarihi}")
+        
+        # Oluşturulan belgenin formunu aç
         return {
             'type': 'ir.actions.act_window',
-            'name': 'Yeni Teslimat Belgesi',
+            'name': 'Teslimat Belgesi',
             'res_model': 'teslimat.belgesi',
+            'res_id': teslimat_belgesi.id,
             'view_mode': 'form',
             'target': 'current',
-            'context': ctx,
         }
 
 
