@@ -235,6 +235,26 @@
         </field>
     </record>
 
+    <!-- Sürücüler için Basit Tree View (Search yok) -->
+    <record id="view_teslimat_belgesi_tree_surucu" model="ir.ui.view">
+        <field name="name">teslimat.belgesi.tree.surucu</field>
+        <field name="model">teslimat.belgesi</field>
+        <field name="arch" type="xml">
+            <tree string="Teslimat Belgeleri" create="false" edit="false">
+                <field name="name"/>
+                <field name="teslimat_tarihi"/>
+                <field name="musteri_id"/>
+                <field name="musteri_telefon" widget="phone"/>
+                <field name="arac_id"/>
+                <field name="ilce_id"/>
+                <field name="durum"/>
+                <button name="action_teslimat_tamamla" string="Tamamla" type="object" 
+                        icon="fa-check" class="btn-primary"
+                        attrs="{'invisible': [('durum', 'not in', ['hazir', 'yolda'])]}"/>
+            </tree>
+        </field>
+    </record>
+
     <!-- Teslimat Belgesi Search View -->
     <record id="view_teslimat_belgesi_search" model="ir.ui.view">
         <field name="name">teslimat.belgesi.search</field>
@@ -420,11 +440,12 @@
         </field>
     </record>
 
-    <!-- Sürücüler için özel teslimat belgeleri action (tüm teslimatlar) -->
+    <!-- Sürücüler için özel teslimat belgeleri action (search view yok) -->
     <record id="action_teslimat_belgesi_surucu" model="ir.actions.act_window">
         <field name="name">Teslimat Belgeleri</field>
         <field name="res_model">teslimat.belgesi</field>
         <field name="view_mode">tree,form</field>
+        <field name="view_id" ref="view_teslimat_belgesi_tree_surucu"/>
         <field name="target">current</field>
         <field name="groups_id" eval="[(6,0,[ref('teslimat_planlama.group_teslimat_driver')])]"/>
         <field name="help" type="html">
