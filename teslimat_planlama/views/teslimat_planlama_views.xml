@@ -422,6 +422,7 @@
             <xpath expr="//sheet/notebook" position="before">
                 <group string="Teslimat">
                     <field name="is_driver"/>
+                    <field name="ilce_id"/>
                 </group>
             </xpath>
         </field>
