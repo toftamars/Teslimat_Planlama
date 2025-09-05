@@ -6,7 +6,7 @@
             <field name="name">Teslimat Belgesi</field>
             <field name="code">teslimat.belgesi</field>
             <field name="prefix">T</field>
-            <field name="padding">6</field>
+            <field name="padding">10</field>
             <field name="number_next">1</field>
             <field name="number_increment">1</field>
         </record>
