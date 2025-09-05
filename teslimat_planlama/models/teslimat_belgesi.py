@@ -573,15 +573,19 @@ class TeslimatBelgesi(models.Model):
                 }
             }
         
-        # Müşteriye SMS gönder - HER ZAMAN GÖNDER
-        try:
-            _logger.info("SMS GÖNDERİLİYOR - Yol Tarifi")
-            self._send_delivery_sms()
-            _logger.info("✅ YOL TARİFİ SMS GÖNDERİLDİ")
-        except Exception as e:
-            _logger.error(f"❌ YOL TARİFİ SMS HATASI: {str(e)}")
-            import traceback
-            _logger.error(traceback.format_exc())
+        # Müşteriye SMS gönder - SADECE SÜRÜCÜ İSE
+        if self.env.user.has_group('teslimat_planlama.group_teslimat_driver'):
+            try:
+                _logger.info("SÜRÜCÜ YETKI KONTROLÜ - OK")
+                _logger.info("SMS GÖNDERİLİYOR - Yol Tarifi")
+                self._send_delivery_sms()
+                _logger.info("✅ YOL TARİFİ SMS GÖNDERİLDİ")
+            except Exception as e:
+                _logger.error(f"❌ YOL TARİFİ SMS HATASI: {str(e)}")
+                import traceback
+                _logger.error(traceback.format_exc())
+        else:
+            _logger.info("YÖNETİCİ YETKI - SMS GÖNDERİLMEDİ")
         
         # Adres bilgisini hazırla
         adres = f"{self.musteri_id.street or ''}"
@@ -777,9 +781,56 @@ class TeslimatBelgesi(models.Model):
     
     def _calculate_estimated_time(self):
         """Tahmini varış süresini hesapla"""
-        # Basit hesaplama - gerçek uygulamada Google Maps API kullanılabilir
-        # Şimdilik sabit değer döndürüyoruz
-        return "15-20"
+        # İlçe bazlı tahmini süreler (dakika cinsinden)
+        ilce_sureleri = {
+            # Anadolu Yakası
+            'maltepe': 45, 'kartal': 50, 'pendik': 60, 'tuzla': 70,
+            'uskudar': 30, 'üsküdar': 30, 'kadikoy': 35, 'kadıköy': 35,
+            'atasehir': 40, 'ataşehir': 40, 'umraniye': 45, 'ümraniye': 45,
+            'sancaktepe': 55, 'cekmekoy': 50, 'çekmeköy': 50,
+            'beykoz': 60, 'sile': 90, 'şile': 90, 'sultanbeyli': 65,
+            # Avrupa Yakası
+            'beyoglu': 25, 'beyoğlu': 25, 'sisli': 20, 'şişli': 20,
+            'besiktas': 25, 'beşiktaş': 25, 'kagithane': 30, 'kağıthane': 30,
+            'sariyer': 40, 'sarıyer': 40, 'bakirkoy': 35, 'bakırköy': 35,
+            'bahcelievler': 30, 'bahçelievler': 30, 'gungoren': 35, 'güngören': 35,
+            'esenler': 40, 'bagcilar': 45, 'bağcılar': 45,
+            'eyupsultan': 35, 'eyüpsultan': 35, 'gaziosmanpasa': 40, 'gaziosmanpaşa': 40,
+            'kucukcekmece': 45, 'küçükçekmece': 45, 'avcilar': 50, 'avcılar': 50,
+            'basaksehir': 55, 'başakşehir': 55, 'sultangazi': 45, 
+            'arnavutkoy': 60, 'arnavutköy': 60, 'fatih': 30,
+            'zeytinburnu': 35, 'bayrampasa': 35, 'bayrampaşa': 35,
+            'esenyurt': 65, 'beylikduzu': 70, 'beylikdüzü': 70,
+            'silivri': 90, 'catalca': 85, 'çatalca': 85
+        }
+        
+        if self.ilce_id:
+            ilce_adi = self.ilce_id.name.lower().strip()
+            tahmini_dakika = ilce_sureleri.get(ilce_adi, 45)  # Varsayılan 45 dakika
+            
+            # Trafik durumuna göre süre ekle
+            from datetime import datetime
+            saat = datetime.now().hour
+            
+            # Yoğun saatlerde %30 fazla süre
+            if 7 <= saat <= 9 or 17 <= saat <= 20:
+                tahmini_dakika = int(tahmini_dakika * 1.3)
+            # Normal saatlerde %10 fazla
+            elif 9 < saat < 17:
+                tahmini_dakika = int(tahmini_dakika * 1.1)
+            
+            # Dakikayı saat-dakika formatına çevir
+            if tahmini_dakika >= 60:
+                saat = tahmini_dakika // 60
+                dakika = tahmini_dakika % 60
+                if dakika > 0:
+                    return f"{saat} saat {dakika} dakika"
+                else:
+                    return f"{saat} saat"
+            else:
+                return f"{tahmini_dakika} dakika"
+        
+        return "45 dakika"  # Varsayılan
     
     def _generate_sms_text(self, tahmini_sure):
         """SMS metnini oluştur"""
