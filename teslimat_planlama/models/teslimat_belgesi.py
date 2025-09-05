@@ -717,10 +717,13 @@ class TeslimatBelgesi(models.Model):
         }
     
     def _send_delivery_sms(self):
-        """Müşteriye teslimat SMS'i gönder"""
+        """Müşteriye teslimat SMS'i gönder (2. SMS - Yol Tarifi)"""
         import logging
         _logger = logging.getLogger(__name__)
-        _logger.info("=== _send_delivery_sms ÇAĞRILDI ===")
+        _logger.info("=== _send_delivery_sms ÇAĞRILDI (2. SMS - YOL TARİFİ) ===")
+        _logger.info(f"Belge No: {self.name}")
+        _logger.info(f"Müşteri: {self.musteri_id.name if self.musteri_id else 'YOK'}")
+        _logger.info(f"Telefon: {self.musteri_id.phone if self.musteri_id else 'YOK'}")
         
         if not self.musteri_id or not self.musteri_id.phone:
             _logger.warning("SMS GÖNDERİLEMEDİ - Müşteri veya telefon yok!")
@@ -732,14 +735,16 @@ class TeslimatBelgesi(models.Model):
         # SMS metni oluştur
         sms_text = self._generate_sms_text(tahmini_sure)
         
-        # SMS gönder (şimdilik log'a yaz - gerçek uygulamada SMS gateway kullanılır)
-        import logging
-        _logger = logging.getLogger(__name__)
-        _logger.info(f"SMS GÖNDERİLDİ - Müşteri: {self.musteri_id.name}, Telefon: {self.musteri_id.phone}")
-        _logger.info(f"SMS İçeriği: {sms_text}")
+        # SMS gönder
+        _logger.info(f"2. SMS GÖNDERİLİYOR - Müşteri: {self.musteri_id.name}, Telefon: {self.musteri_id.phone}")
+        _logger.info(f"2. SMS İçeriği: {sms_text}")
         
-        # Gerçek SMS gönderme (SMS gateway entegrasyonu burada yapılır)
-        self._send_real_sms(self.musteri_id.phone, sms_text)
+        # Gerçek SMS gönderme
+        try:
+            self._send_real_sms(self.musteri_id.phone, sms_text)
+            _logger.info("✅ 2. SMS (YOL TARİFİ) BAŞARIYLA GÖNDERİLDİ")
+        except Exception as e:
+            _logger.error(f"❌ 2. SMS (YOL TARİFİ) GÖNDERİM HATASI: {str(e)}")
     
     def _calculate_estimated_time(self):
         """Tahmini varış süresini hesapla"""
