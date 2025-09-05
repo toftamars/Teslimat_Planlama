@@ -51,6 +51,3 @@ class ResPartner(models.Model):
 
     # Sürücü işareti
     is_driver = fields.Boolean(string='Sürücü mü?', default=False)
-    
-    # İlçe bilgisi
-    ilce_id = fields.Many2one('teslimat.ilce', string='İlçe', help='Müşterinin bulunduğu ilçe')

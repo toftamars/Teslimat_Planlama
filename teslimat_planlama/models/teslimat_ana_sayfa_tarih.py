@@ -66,36 +66,12 @@ class TeslimatAnaSayfaTarih(models.Model):
             _logger.info(f"URL PARAMETRELERİ - Tarih: {tarih_param}, Araç ID: {arac_id_param}, İlçe ID: {ilce_id_param}")
             _logger.info(f"Ana Sayfa: {record.ana_sayfa_id}, Araç: {record.ana_sayfa_id.arac_id if record.ana_sayfa_id else 'YOK'}, İlçe: {record.ana_sayfa_id.ilce_id if record.ana_sayfa_id else 'YOK'}")
             
-            # JavaScript ile form aç
-            _logger.info(f"TESLIMAT OLUŞTUR - Tarih: {tarih_param}, Araç: {arac_id_param}, İlçe: {ilce_id_param}")
-            
-            # JavaScript action string
-            js_action = f"""
-            var action = {{
-                type: 'ir.actions.act_window',
-                name: 'Teslimat Belgesi Oluştur',
-                res_model: 'teslimat.belgesi',
-                view_mode: 'form',
-                target: 'current',
-                context: {{
-                    'default_teslimat_tarihi': '{tarih_param}',
-                    'default_arac_id': {arac_id_param if arac_id_param else 'false'},
-                    'default_ilce_id': {ilce_id_param if ilce_id_param else 'false'},
-                    'form_view_initial_mode': 'edit'
-                }}
-            }};
-            odoo.__DEBUG__.services['action'].doAction(action);
-            """
-            
-            url = f"javascript:{js_action.replace(chr(10), ' ').replace('  ', ' ')}"
-            
+            # Basit HTML buton - sadece görsel
             record.doluluk_bar = f"""
                 <div style="text-align: center; padding: 10px;">
-                    <a href="{url}" 
-                       style="display: inline-block; padding: 8px 16px; font-size: 14px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;"
-                       target="_self">
-                        📋 Teslimat Oluştur
-                    </a>
+                    <span style="display: inline-block; padding: 8px 16px; font-size: 14px; background-color: #007bff; color: white; border-radius: 5px;">
+                        📋 Teslimat Oluştur ({tarih_param})
+                    </span>
                 </div>
             """
 
@@ -115,10 +91,8 @@ class TeslimatAnaSayfaTarih(models.Model):
         
         import logging
         _logger = logging.getLogger(__name__)
-        _logger.info(f"=== 📋 ACTION_TESLIMAT_OLUSTUR ÇAĞRILDI ===")
-        _logger.info(f"Record ID: {self.id}")
-        _logger.info(f"Tarih: {self.tarih} (Type: {type(self.tarih)})")
-        _logger.info(f"Ana Sayfa ID: {self.ana_sayfa_id.id if self.ana_sayfa_id else 'YOK'}")
+        _logger.info(f"=== ACTION_TESLIMAT_OLUSTUR ÇAĞRILDI ===")
+        _logger.info(f"Tarih: {self.tarih}")
         _logger.info(f"Ana Sayfa Araç: {self.ana_sayfa_id.arac_id.name if self.ana_sayfa_id and self.ana_sayfa_id.arac_id else 'YOK'}")
         _logger.info(f"Ana Sayfa İlçe: {self.ana_sayfa_id.ilce_id.name if self.ana_sayfa_id and self.ana_sayfa_id.ilce_id else 'YOK'}")
         
@@ -132,44 +106,26 @@ class TeslimatAnaSayfaTarih(models.Model):
         if self.ana_sayfa_id:
             if self.ana_sayfa_id.arac_id:
                 vals['arac_id'] = self.ana_sayfa_id.arac_id.id
-                _logger.info(f"✅ Araç ID eklendi: {self.ana_sayfa_id.arac_id.id} - {self.ana_sayfa_id.arac_id.name}")
+                _logger.info(f"Araç ID eklendi: {self.ana_sayfa_id.arac_id.id}")
             if self.ana_sayfa_id.ilce_id:
                 vals['ilce_id'] = self.ana_sayfa_id.ilce_id.id
-                _logger.info(f"✅ İlçe ID eklendi: {self.ana_sayfa_id.ilce_id.id} - {self.ana_sayfa_id.ilce_id.name}")
+                _logger.info(f"İlçe ID eklendi: {self.ana_sayfa_id.ilce_id.id}")
         
-        _logger.info(f"📋 Teslimat belgesi vals: {vals}")
+        _logger.info(f"Teslimat belgesi vals: {vals}")
         
-        try:
-            # Belgeyi oluştur
-            teslimat_belgesi = self.env['teslimat.belgesi'].create(vals)
-            _logger.info(f"✅ Teslimat belgesi oluşturuldu: {teslimat_belgesi.name}")
-            _logger.info(f"✅ Oluşturulan belge tarihi: {teslimat_belgesi.teslimat_tarihi}")
-            _logger.info(f"✅ Oluşturulan belge araç: {teslimat_belgesi.arac_id.name if teslimat_belgesi.arac_id else 'YOK'}")
-            _logger.info(f"✅ Oluşturulan belge ilçe: {teslimat_belgesi.ilce_id.name if teslimat_belgesi.ilce_id else 'YOK'}")
-            
-            # Oluşturulan belgenin formunu aç
-            return {
-                'type': 'ir.actions.act_window',
-                'name': 'Teslimat Belgesi',
-                'res_model': 'teslimat.belgesi',
-                'res_id': teslimat_belgesi.id,
-                'view_mode': 'form',
-                'target': 'current',
-            }
-            
-        except Exception as e:
-            _logger.error(f"❌ Teslimat belgesi oluşturma hatası: {str(e)}")
-            import traceback
-            _logger.error(f"TRACEBACK: {traceback.format_exc()}")
-            
-            return {
-                'type': 'ir.actions.client',
-                'tag': 'display_notification',
-                'params': {
-                    'title': 'Hata',
-                    'message': f'Teslimat belgesi oluşturulamadı: {str(e)}',
-                    'type': 'danger',
-                }
-            }
+        # Belgeyi oluştur
+        teslimat_belgesi = self.env['teslimat.belgesi'].create(vals)
+        _logger.info(f"Teslimat belgesi oluşturuldu: {teslimat_belgesi.name}")
+        _logger.info(f"Oluşturulan belge tarihi: {teslimat_belgesi.teslimat_tarihi}")
+        
+        # Oluşturulan belgenin formunu aç
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Teslimat Belgesi',
+            'res_model': 'teslimat.belgesi',
+            'res_id': teslimat_belgesi.id,
+            'view_mode': 'form',
+            'target': 'current',
+        }
 
 
