@@ -218,6 +218,7 @@
         <field name="name">Teslimat Belgeleri</field>
         <field name="res_model">teslimat.belgesi</field>
         <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_teslimat_belgesi_search"/>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 İlk teslimat belgesini oluşturun!
@@ -244,6 +245,39 @@
                         attrs="{'invisible': [('durum', 'not in', ['hazir', 'yolda'])]}"
                         groups="teslimat_planlama.group_teslimat_driver"/>
             </tree>
+        </field>
+    </record>
+
+    <!-- Teslimat Belgesi Search View -->
+    <record id="view_teslimat_belgesi_search" model="ir.ui.view">
+        <field name="name">teslimat.belgesi.search</field>
+        <field name="model">teslimat.belgesi</field>
+        <field name="arch" type="xml">
+            <search string="Teslimat Belgesi Arama">
+                <field name="name" string="Teslimat No"/>
+                <field name="musteri_id" string="Müşteri"/>
+                <field name="transfer_no" string="Transfer No"/>
+                <field name="arac_id" string="Araç"/>
+                <field name="ilce_id" string="İlçe"/>
+                <field name="durum" string="Durum"/>
+                <field name="teslimat_tarihi" string="Teslimat Tarihi"/>
+                <field name="transfer_urun_ids" string="Ürün Adı" filter_domain="[('transfer_urun_ids.urun_id.name', 'ilike', self)]"/>
+                <separator/>
+                <filter string="Hazır" name="hazir" domain="[('durum','=','hazir')]"/>
+                <filter string="Yolda" name="yolda" domain="[('durum','=','yolda')]"/>
+                <filter string="Teslim Edildi" name="teslim_edildi" domain="[('durum','=','teslim_edildi')]"/>
+                <filter string="İptal" name="iptal" domain="[('durum','=','iptal')]"/>
+                <separator/>
+                <filter string="Bugün" name="bugun" domain="[('teslimat_tarihi','=',context_today())]"/>
+                <filter string="Bu Hafta" name="bu_hafta" domain="[('teslimat_tarihi','>=',(context_today() - datetime.timedelta(days=context_today().weekday())).strftime('%Y-%m-%d')),('teslimat_tarihi','&lt;=',(context_today() + datetime.timedelta(days=6-context_today().weekday())).strftime('%Y-%m-%d'))]"/>
+                <separator/>
+                <group expand="0" string="Grupla">
+                    <filter string="Durum" name="durum" context="{'group_by':'durum'}"/>
+                    <filter string="Tarih" name="tarih" context="{'group_by':'teslimat_tarihi'}"/>
+                    <filter string="Araç" name="arac" context="{'group_by':'arac_id'}"/>
+                    <filter string="İlçe" name="ilce" context="{'group_by':'ilce_id'}"/>
+                </group>
+            </search>
         </field>
     </record>
 

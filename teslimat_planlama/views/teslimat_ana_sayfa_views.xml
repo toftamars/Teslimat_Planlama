@@ -54,6 +54,8 @@
                                     <field name="durum_text" readonly="1"/>
                                     <field name="durum_icon" readonly="1"/>
                                     <field name="doluluk_bar" widget="html" readonly="1"/>
+                                    <button name="action_teslimat_olustur" string="📋 Teslimat Oluştur" type="object" 
+                                            class="btn-primary" icon="fa-plus"/>
                                 </tree>
                             </field>
                         </page>

@@ -49,13 +49,6 @@ action['target'] = 'current'
               action="action_teslimat_belgesi" 
               sequence="10"/>
 
-    <!-- 🚚 Bugünkü Teslimatlarım (Sürücüler için) -->
-    <menuitem id="menu_teslimat_belgeleri_surucu" 
-              name="🚚 Bugünkü Teslimatlarım" 
-              parent="menu_teslimat_planlama_root" 
-              action="action_teslimat_belgesi_surucu" 
-              sequence="5"
-              groups="teslimat_planlama.group_teslimat_driver"/>
 
     <!-- 🔧 Yönetici Menüleri (Sadece Yöneticiler) -->
     <menuitem id="menu_teslimat_yonetici" 

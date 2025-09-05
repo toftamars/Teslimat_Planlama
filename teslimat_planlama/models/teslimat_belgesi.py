@@ -751,12 +751,10 @@ class TeslimatBelgesi(models.Model):
         surucu_adi = self.surucu_id.name if self.surucu_id else "Sürücümüz"
         
         sms_text = f"""Merhaba {musteri_adi},
-
 Teslimatınız yola çıktı! 
 Tahmini varış süresi: {tahmini_sure} dakika
 Araç: {arac_adi}
 Sürücü: {surucu_adi}
-
 İyi günler,
 Teslimat Ekibi"""
         
@@ -807,10 +805,8 @@ Teslimat Ekibi"""
         tarih = self.teslimat_tarihi.strftime("%d/%m/%Y") if self.teslimat_tarihi else "Belirtilen tarihte"
         
         sms_text = f"""Merhaba {musteri_adi},
-
 Teslimatınız {tarih} tarihinde planlanmıştır.
 Teslimat No: {self.name}
-
 İyi günler,
 Teslimat Ekibi"""
         
@@ -823,12 +819,10 @@ Teslimat Ekibi"""
         teslim_tarihi = self.gercek_teslimat_saati.strftime("%d/%m/%Y %H:%M") if self.gercek_teslimat_saati else "Bugün"
         
         sms_text = f"""Merhaba {musteri_adi},
-
 Teslimat ve kurulumunuz tamamlanmıştır.
 Teslim Alan: {teslim_alan}
 Teslim Tarihi: {teslim_tarihi}
 Teslimat No: {self.name}
-
 İyi günler,
 Teslimat Ekibi"""
         
