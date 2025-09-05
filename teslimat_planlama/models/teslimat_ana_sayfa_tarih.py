@@ -142,5 +142,46 @@ class TeslimatAnaSayfaTarih(models.Model):
             'view_mode': 'form',
             'target': 'current',
         }
+    
+    def action_teslimat_olustur_from_tarih(self):
+        """Bu tarih satırından teslimat oluştur"""
+        self.ensure_one()
+        
+        import logging
+        _logger = logging.getLogger(__name__)
+        _logger.info(f"=== TARIH SATIRINDAN TESLIMAT OLUŞTUR ===")
+        _logger.info(f"Tarih: {self.tarih}")
+        _logger.info(f"Ana Sayfa: {self.ana_sayfa_id}")
+        
+        # Teslimat belgesi oluştur
+        vals = {
+            'teslimat_tarihi': self.tarih,
+            'durum': 'taslak'
+        }
+        
+        # Ana sayfa bilgilerini al
+        if self.ana_sayfa_id:
+            if self.ana_sayfa_id.arac_id:
+                vals['arac_id'] = self.ana_sayfa_id.arac_id.id
+                _logger.info(f"Araç eklendi: {self.ana_sayfa_id.arac_id.name}")
+            if self.ana_sayfa_id.ilce_id:
+                vals['ilce_id'] = self.ana_sayfa_id.ilce_id.id
+                _logger.info(f"İlçe eklendi: {self.ana_sayfa_id.ilce_id.name}")
+        
+        _logger.info(f"Teslimat vals: {vals}")
+        
+        # Belgeyi oluştur
+        teslimat_belgesi = self.env['teslimat.belgesi'].create(vals)
+        _logger.info(f"Teslimat oluşturuldu: {teslimat_belgesi.name}")
+        
+        # Form'u aç
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Teslimat Belgesi',
+            'res_model': 'teslimat.belgesi',
+            'res_id': teslimat_belgesi.id,
+            'view_mode': 'form',
+            'target': 'current',
+        }
 
 
