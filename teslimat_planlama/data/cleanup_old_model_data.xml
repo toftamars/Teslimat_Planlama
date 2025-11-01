@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <data noupdate="1">
+    <data>
         <!-- Eski model referanslarını temizle -->
         <!-- teslimat.planlama.akilli modeli artık kullanılmıyor -->
-        <!-- Bu temizleme işlemi __init__.py içindeki cleanup fonksiyonu ile yapılacak -->
+        <function model="ir.model.data" name="_cleanup_old_teslimat_planlama_akilli"/>
     </data>
 </odoo>
 
