@@ -16,7 +16,7 @@
                             type="object" 
                             class="oe_stat_button" 
                             icon="fa-truck"
-                            invisible="not teslimat_belgesi_count">
+                            attrs="{'invisible': [('teslimat_belgesi_count', '=', 0)]}">
                         <field name="teslimat_belgesi_count" widget="statinfo" string="Teslimat"/>
                     </button>
                 </div>
