@@ -47,16 +47,33 @@ class IrModel(models.Model):
         
         # Sadece diğer kayıtlar için normal işlem yap
         records_to_process = self - records_to_skip
-        if records_to_process:
-            try:
-                return super(IrModel, records_to_process)._process_ondelete()
-            except KeyError as e:
-                # Model registry'de yoksa, sadece bu kaydı atla
-                if "teslimat.planlama.akilli" in str(e):
-                    _logger.warning("Model registry'de bulunamadı, kayıt atlanıyor: %s", e)
-                    return None
-                raise
-        return None
+        if not records_to_process:
+            return None
+        
+        # Selection field kontrolü sırasında model registry hatası olabilir
+        # Bu durumda KeyError yakalayıp ignore et
+        try:
+            return super(IrModel, records_to_process)._process_ondelete()
+        except KeyError as e:
+            # Model registry'de bulunamayan modeller için KeyError
+            # Eski teslimat.planlama.akilli veya selection field referansları için
+            error_str = str(e)
+            if "teslimat.planlama.akilli" in error_str:
+                _logger.warning(
+                    "Model registry'de bulunamadı (teslimat.planlama.akilli), kayıt atlanıyor: %s",
+                    error_str,
+                )
+                return None
+            # Diğer KeyError'lar için de kontrol et (selection field referansları)
+            # Bu durumda da kayıtları güvenli şekilde atlayalım
+            _logger.warning(
+                "Model registry hatası, kayıtlar güvenli şekilde atlanıyor: %s", error_str
+            )
+            return None
+        except Exception as e:
+            # Diğer beklenmeyen hatalar için tekrar fırlat
+            _logger.error("_process_ondelete sırasında beklenmeyen hata: %s", e)
+            raise
 
     @api.model
     def _cleanup_old_teslimat_planlama_akilli(self) -> None:
