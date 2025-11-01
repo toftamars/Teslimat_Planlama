@@ -1,5 +1,8 @@
 from odoo import models, fields, api
 from odoo.exceptions import AccessError
+import logging
+
+_logger = logging.getLogger(__name__)
 
 class TeslimatAnaSayfaTarih(models.Model):
     _name = 'teslimat.ana.sayfa.tarih'
@@ -56,8 +59,6 @@ class TeslimatAnaSayfaTarih(models.Model):
             random_id = random.randint(100000, 999999)
             
             # DEBUG: URL parametrelerini logla
-            import logging
-            _logger = logging.getLogger(__name__)
             
             tarih_param = record.tarih
             arac_id_param = record.ana_sayfa_id.arac_id.id if record.ana_sayfa_id and record.ana_sayfa_id.arac_id else ''
@@ -104,8 +105,6 @@ class TeslimatAnaSayfaTarih(models.Model):
         """Direkt Teslimat Belgesi oluştur ve aç - ZORLA TARİH GEÇİŞİ"""
         self.ensure_one()
         
-        import logging
-        _logger = logging.getLogger(__name__)
         _logger.info(f"=== ACTION_TESLIMAT_OLUSTUR ÇAĞRILDI ===")
         _logger.info(f"Tarih: {self.tarih}")
         _logger.info(f"Ana Sayfa Araç: {self.ana_sayfa_id.arac_id.name if self.ana_sayfa_id and self.ana_sayfa_id.arac_id else 'YOK'}")
@@ -144,44 +143,46 @@ class TeslimatAnaSayfaTarih(models.Model):
         }
     
     def action_teslimat_olustur_from_tarih(self):
-        """Bu tarih satırından teslimat oluştur"""
+        """Bu tarih satırından teslimat sihirbazını aç"""
         self.ensure_one()
         
-        import logging
-        _logger = logging.getLogger(__name__)
-        _logger.info(f"=== TARIH SATIRINDAN TESLIMAT OLUŞTUR ===")
+        _logger.info(f"=== TARIH SATIRINDAN TESLIMAT SİHİRBAZI AÇ ===")
         _logger.info(f"Tarih: {self.tarih}")
         _logger.info(f"Ana Sayfa: {self.ana_sayfa_id}")
         
-        # Teslimat belgesi oluştur
-        vals = {
-            'teslimat_tarihi': self.tarih,
-            'durum': 'taslak'
-        }
+        # Context hazırla - wizard'a bilgileri gönder
+        context = {}
         
-        # Ana sayfa bilgilerini al
+        # Tarih bilgisini ekle
+        if self.tarih:
+            context['default_teslimat_tarihi'] = self.tarih.strftime('%Y-%m-%d')
+            _logger.info(f"Tarih context'e eklendi: {context['default_teslimat_tarihi']}")
+        
+        # Araç bilgisini ekle
+        if self.ana_sayfa_id and self.ana_sayfa_id.arac_id:
+            context['default_arac_id'] = self.ana_sayfa_id.arac_id.id
+            _logger.info(f"Araç context'e eklendi: {self.ana_sayfa_id.arac_id.name}")
+        
+        # İlçe bilgisini ekle
+        if self.ana_sayfa_id and self.ana_sayfa_id.ilce_id:
+            context['default_ilce_id'] = self.ana_sayfa_id.ilce_id.id
+            _logger.info(f"İlçe context'e eklendi: {self.ana_sayfa_id.ilce_id.name}")
+        
+        # Ana sayfa ID'sini de ekle (wizard'ın default_get'inde kullanılabilir)
         if self.ana_sayfa_id:
-            if self.ana_sayfa_id.arac_id:
-                vals['arac_id'] = self.ana_sayfa_id.arac_id.id
-                _logger.info(f"Araç eklendi: {self.ana_sayfa_id.arac_id.name}")
-            if self.ana_sayfa_id.ilce_id:
-                vals['ilce_id'] = self.ana_sayfa_id.ilce_id.id
-                _logger.info(f"İlçe eklendi: {self.ana_sayfa_id.ilce_id.name}")
+            context['active_id'] = self.ana_sayfa_id.id
+            context['active_model'] = 'teslimat.ana.sayfa'
         
-        _logger.info(f"Teslimat vals: {vals}")
+        _logger.info(f"Wizard context: {context}")
         
-        # Belgeyi oluştur
-        teslimat_belgesi = self.env['teslimat.belgesi'].create(vals)
-        _logger.info(f"Teslimat oluşturuldu: {teslimat_belgesi.name}")
-        
-        # Form'u aç
+        # Teslimat Belgesi Wizard'ını aç
         return {
             'type': 'ir.actions.act_window',
-            'name': 'Teslimat Belgesi',
-            'res_model': 'teslimat.belgesi',
-            'res_id': teslimat_belgesi.id,
+            'name': 'Teslimat Belgesi Oluştur',
+            'res_model': 'teslimat.belgesi.wizard',
             'view_mode': 'form',
-            'target': 'current',
+            'target': 'new',
+            'context': context,
         }
 
 

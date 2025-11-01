@@ -24,7 +24,7 @@ action['target'] = 'current'
 
     <!-- Ana Menu -->
     <menuitem id="menu_teslimat_planlama_root" 
-              name="📋 Teslimat" 
+              name="🚚 Teslimat" 
               action="action_teslimat_planlama_root"
               sequence="50"/>
 

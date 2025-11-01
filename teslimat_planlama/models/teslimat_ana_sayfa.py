@@ -1,5 +1,8 @@
 from odoo import models, fields, api
 from datetime import datetime, timedelta
+import logging
+
+_logger = logging.getLogger(__name__)
 
 
 class TeslimatAnaSayfa(models.Model):
@@ -140,8 +143,6 @@ class TeslimatAnaSayfa(models.Model):
                         ])
                         
                         # Debug: Teslimat sayısını kontrol et
-                        import logging
-                        _logger = logging.getLogger(__name__)
                         _logger.info(f"TESLIMAT SAYISI DEBUG - Tarih: {tarih}, Araç: {record.arac_id.name}, Sayı: {teslimat_sayisi}")
                         
                         # Kapasite hesaplama
@@ -163,16 +164,12 @@ class TeslimatAnaSayfa(models.Model):
                             else:
                                 doluluk_orani = 0.0
                         except (TypeError, ValueError, ZeroDivisionError) as e:
-                            import logging
-                            _logger = logging.getLogger(__name__)
                             _logger.error(f"DOLULUK ORANI HESAPLAMA HATASI: {str(e)}")
                             _logger.error(f"  teslimat_sayisi: {teslimat_sayisi} (type: {type(teslimat_sayisi)})")
                             _logger.error(f"  toplam_kapasite: {toplam_kapasite} (type: {type(toplam_kapasite)})")
                             doluluk_orani = 0.0
                         
                         # Debug log
-                        import logging
-                        _logger = logging.getLogger(__name__)
                         _logger.info(f"KAPASITE HESAPLAMA - Araç: {record.arac_id.name}")
                         _logger.info(f"  Teslimat Sayısı: {teslimat_sayisi} (type: {type(teslimat_sayisi)})")
                         _logger.info(f"  Toplam Kapasite: {toplam_kapasite} (type: {type(toplam_kapasite)})")

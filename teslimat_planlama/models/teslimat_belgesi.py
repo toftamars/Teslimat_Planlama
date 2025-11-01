@@ -1,5 +1,8 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
+import logging
+
+_logger = logging.getLogger(__name__)
 
 
 class TeslimatBelgesiUrun(models.Model):
@@ -112,7 +115,10 @@ class TeslimatBelgesi(models.Model):
     @api.onchange('transfer_no')
     def _onchange_transfer_no(self):
         """Transfer no girildiğinde bilgileri otomatik doldur"""
-        if self.transfer_no:
+        if not self.transfer_no:
+            return
+        
+        try:
             picking = self.env['stock.picking'].search([
                 ('name', '=', self.transfer_no)
             ], limit=1)
@@ -120,11 +126,22 @@ class TeslimatBelgesi(models.Model):
             if picking:
                 self.stock_picking_id = picking.id
                 self._onchange_stock_picking()
+        except Exception as e:
+            _logger.error(f"Transfer no değiştirilirken hata oluştu: {str(e)}")
+            return {
+                'warning': {
+                    'title': _('Hata'),
+                    'message': _('Transfer belgesi bulunurken bir hata oluştu. Lütfen tekrar deneyin.')
+                }
+            }
     
     @api.onchange('stock_picking_id')
     def _onchange_stock_picking(self):
         """Transfer belgesi seçildiğinde bilgileri otomatik doldur"""
-        if self.stock_picking_id:
+        if not self.stock_picking_id:
+            return
+        
+        try:
             picking = self.stock_picking_id
             
             # Müşteri bilgisi
@@ -140,6 +157,14 @@ class TeslimatBelgesi(models.Model):
             # Teslimat no
             if not self.name:
                 self.name = f"T-{picking.name}"
+        except Exception as e:
+            _logger.error(f"Transfer belgesi bilgileri doldurulurken hata oluştu: {str(e)}")
+            return {
+                'warning': {
+                    'title': _('Hata'),
+                    'message': _('Transfer belgesi bilgileri yüklenirken bir hata oluştu.')
+                }
+            }
     
     @api.onchange('stock_picking_id')
     def _onchange_stock_picking_id(self):
@@ -181,13 +206,18 @@ class TeslimatBelgesi(models.Model):
     @api.onchange('musteri_id')
     def _onchange_musteri(self):
         """Müşteri seçildiğinde ilçe bilgisini otomatik doldur"""
-        if self.musteri_id and self.musteri_id.state_id:
+        if not self.musteri_id or not self.musteri_id.state_id:
+            return
+        
+        try:
             # Müşterinin bulunduğu ilçeyi bul
             ilce = self.env['teslimat.ilce'].search([
                 ('name', 'ilike', self.musteri_id.state_id.name)
             ], limit=1)
             if ilce:
                 self.ilce_id = ilce.id
+        except Exception as e:
+            _logger.error(f"Müşteri değiştirilirken ilçe bulunurken hata oluştu: {str(e)}")
     
     @api.onchange('ilce_id')
     def _onchange_ilce(self):
@@ -420,8 +450,6 @@ class TeslimatBelgesi(models.Model):
         context = self.env.context
         
         # DEBUG: Context'i logla
-        import logging
-        _logger = logging.getLogger(__name__)
         _logger.info(f"TESLİMAT BELGESİ DEFAULT_GET - Context: {context}")
         
         # Tarih alanını context'ten al
@@ -542,26 +570,28 @@ class TeslimatBelgesi(models.Model):
         if not self.stock_picking_id:
             return
         
-        # Mevcut ürünleri temizle
-        self.transfer_urun_ids = [(5, 0, 0)]
-        
-        # Transfer belgesindeki tüm ürünleri getir
-        urun_listesi = []
-        for move in self.stock_picking_id.move_ids_without_package:
-            if move.product_id and move.product_uom_qty > 0:
-                urun_listesi.append((0, 0, {
-                    'urun_id': move.product_id.id,
-                    'miktar': move.product_uom_qty,
-                    'stock_move_id': move.id,
-                    'sequence': move.sequence or 10
-                }))
-        
-        self.transfer_urun_ids = urun_listesi
+        try:
+            # Mevcut ürünleri temizle
+            self.transfer_urun_ids = [(5, 0, 0)]
+            
+            # Transfer belgesindeki tüm ürünleri getir
+            urun_listesi = []
+            for move in self.stock_picking_id.move_ids_without_package:
+                if move.product_id and move.product_uom_qty > 0:
+                    urun_listesi.append((0, 0, {
+                        'urun_id': move.product_id.id,
+                        'miktar': move.product_uom_qty,
+                        'stock_move_id': move.id,
+                        'sequence': move.sequence or 10
+                    }))
+            
+            self.transfer_urun_ids = urun_listesi
+        except Exception as e:
+            _logger.error(f"Transfer ürünleri güncellenirken hata oluştu: {str(e)}")
+            # Hata durumunda bile işleme devam et
     
     def action_yol_tarifi(self):
         """Müşteri adresine yol tarifi aç ve SMS gönder"""
-        import logging
-        _logger = logging.getLogger(__name__)
         _logger.info("=== YOL TARİFİ BUTONUNA BASILDI ===")
         _logger.info(f"Müşteri: {self.musteri_id.name if self.musteri_id else 'YOK'}")
         _logger.info(f"Telefon: {self.musteri_id.phone if self.musteri_id else 'YOK'}")
@@ -677,8 +707,6 @@ class TeslimatBelgesi(models.Model):
             return True
         
         # Debug için log
-        import logging
-        _logger = logging.getLogger(__name__)
         _logger.info(f"SÜRÜCÜ YETKİ KONTROLÜ - Kullanıcı: {self.env.user.name}, Gruplar: {[g.name for g in self.env.user.groups_id]}")
         
         return False
@@ -700,8 +728,6 @@ class TeslimatBelgesi(models.Model):
             }
         
         # Debug log
-        import logging
-        _logger = logging.getLogger(__name__)
         _logger.info(f"TESLİMAT TAMAMLA KAYDET - Mevcut veriler:")
         _logger.info(f"teslim_alan_kisi: {self.teslim_alan_kisi}")
         _logger.info(f"teslim_fotografi var mı: {bool(self.teslim_fotografi)}")
@@ -759,8 +785,6 @@ class TeslimatBelgesi(models.Model):
     
     def _send_delivery_sms(self):
         """Müşteriye teslimat SMS'i gönder (2. SMS - Yol Tarifi)"""
-        import logging
-        _logger = logging.getLogger(__name__)
         _logger.info("=== _send_delivery_sms ÇAĞRILDI (2. SMS - YOL TARİFİ) ===")
         _logger.info(f"Belge No: {self.name}")
         _logger.info(f"Müşteri: {self.musteri_id.name if self.musteri_id else 'YOK'}")
@@ -803,8 +827,6 @@ class TeslimatBelgesi(models.Model):
     
     def _calculate_estimated_time(self):
         """Tahmini varış süresini hesapla - Önce Google Maps API, yoksa fallback"""
-        import logging
-        _logger = logging.getLogger(__name__)
         
         # Önce Google Maps ile gerçek süre hesapla
         try:
@@ -866,8 +888,6 @@ class TeslimatBelgesi(models.Model):
     
     def _calculate_google_maps_time(self):
         """Google Maps API ile gerçek süre hesapla"""
-        import logging
-        _logger = logging.getLogger(__name__)
         
         # Google Maps API anahtarı (System Parameters'dan alınmalı)
         ICP = self.env['ir.config_parameter'].sudo()
@@ -1052,8 +1072,6 @@ Teslimat Ekibi"""
         sms_text = self._generate_planning_sms_text()
         
         # SMS gönder (şimdilik log'a yaz)
-        import logging
-        _logger = logging.getLogger(__name__)
         _logger.info(f"PLANLAMA SMS GÖNDERİLDİ - Müşteri: {self.musteri_id.name}, Telefon: {self.musteri_id.phone}")
         _logger.info(f"PLANLAMA SMS İçeriği: {sms_text}")
         
@@ -1062,8 +1080,6 @@ Teslimat Ekibi"""
     
     def _send_completion_sms(self):
         """Teslimat tamamlandığında müşteriye SMS gönder"""
-        import logging
-        _logger = logging.getLogger(__name__)
         _logger.info("=== _send_completion_sms ÇAĞRILDI ===")
         
         if not self.musteri_id or not self.musteri_id.phone:
@@ -1074,8 +1090,6 @@ Teslimat Ekibi"""
         sms_text = self._generate_completion_sms_text()
         
         # SMS gönder (şimdilik log'a yaz)
-        import logging
-        _logger = logging.getLogger(__name__)
         _logger.info(f"TAMAMLAMA SMS GÖNDERİLDİ - Müşteri: {self.musteri_id.name}, Telefon: {self.musteri_id.phone}")
         _logger.info(f"TAMAMLAMA SMS İçeriği: {sms_text}")
         
@@ -1113,8 +1127,6 @@ Teslimat Ekibi"""
     
     def _send_real_sms(self, phone_number, message):
         """Gerçek SMS gönderme (Netgsm entegrasyonu)"""
-        import logging
-        _logger = logging.getLogger(__name__)
         _logger.info(f"=== _send_real_sms BAŞLADI ===")
         _logger.info(f"Telefon: {phone_number}")
         _logger.info(f"Mesaj: {message[:100]}...")

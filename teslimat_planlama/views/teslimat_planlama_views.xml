@@ -25,13 +25,13 @@
             <form string="Teslimat Planlaması">
                 <header>
                     <button name="action_onayla" string="Onayla" type="object" 
-                            class="oe_highlight" attrs="{'invisible': [('durum', '!=', 'taslak')]}"/>
+                            class="oe_highlight" invisible="durum != 'taslak'"/>
                     <button name="action_baslat" string="Başlat" type="object" 
-                            class="oe_highlight" attrs="{'invisible': [('durum', '!=', 'onaylandi')]}"/>
+                            class="oe_highlight" invisible="durum != 'onaylandi'"/>
                     <button name="action_tamamla" string="Tamamla" type="object" 
-                            class="oe_highlight" attrs="{'invisible': [('durum', '!=', 'calisiyor')]}"/>
+                            class="oe_highlight" invisible="durum != 'calisiyor'"/>
                     <button name="action_iptal" string="İptal" type="object" 
-                            attrs="{'invisible': [('durum', 'not in', ['taslak', 'onaylandi', 'calisiyor'])]}"/>
+                            invisible="durum not in ['taslak', 'onaylandi', 'calisiyor']"/>
                     <field name="durum" widget="statusbar" 
                            statusbar_visible="taslak,onaylandi,calisiyor,tamamlandi"/>
                 </header>
@@ -134,7 +134,7 @@
                 <header>
                     <button name="action_transfer_belgesi_olustur" string="Teslimat Belgesi Oluştur" 
                             type="object" class="oe_highlight" 
-                            attrs="{'invisible': [('durum', 'not in', ['bekliyor', 'hazirlaniyor'])]}"/>
+                            invisible="durum not in ['bekliyor', 'hazirlaniyor']"/>
                 </header>
                 <sheet>
                     <div class="oe_title">
@@ -229,7 +229,7 @@
                 <field name="durum"/>
                 <button name="action_teslimat_tamamla" string="Tamamla" type="object" 
                         icon="fa-check" class="btn-primary"
-                        attrs="{'invisible': [('durum', 'not in', ['hazir', 'yolda'])]}"
+                        invisible="durum not in ['hazir', 'yolda']"
                         groups="teslimat_planlama.group_teslimat_driver"/>
             </tree>
         </field>
@@ -250,7 +250,7 @@
                 <field name="durum"/>
                 <button name="action_teslimat_tamamla" string="Tamamla" type="object" 
                         icon="fa-check" class="btn-primary"
-                        attrs="{'invisible': [('durum', 'not in', ['hazir', 'yolda'])]}"/>
+                        invisible="durum not in ['hazir', 'yolda']"/>
             </tree>
         </field>
     </record>
@@ -299,12 +299,12 @@
                     <button name="action_update_driver_location_simple" string="📍 Konumumu Güncelle" type="object" 
                             class="btn-info" icon="fa-location-arrow"
                             groups="teslimat_planlama.group_teslimat_driver"
-                            attrs="{'invisible': [('durum', 'not in', ['hazir', 'yolda'])]}"/>
+                            invisible="durum not in ['hazir', 'yolda']"/>
                     <button name="action_yol_tarifi" string="🗺️ Yol Tarifi" type="object" 
                             class="btn-primary" icon="fa-map-marker"/>
                     <button name="action_teslimat_tamamla" string="✅ Teslimatı Tamamla" type="object" 
                             class="oe_highlight" icon="fa-check"
-                            attrs="{'invisible': [('durum', 'not in', ['hazir', 'yolda'])]}"
+                            invisible="durum not in ['hazir', 'yolda']"
                             groups="teslimat_planlama.group_teslimat_driver"/>
                 </header>
                 <sheet>
@@ -343,7 +343,7 @@
                             </tree>
                         </field>
                     </group>
-                    <group string="Teslim Bilgileri" attrs="{'invisible': [('durum', 'not in', ['teslim_edildi'])]}">
+                    <group string="Teslim Bilgileri" invisible="durum != 'teslim_edildi'">
                         <group>
                             <field name="teslim_alan_kisi" readonly="1"/>
                             <field name="gercek_teslimat_saati" readonly="1"/>
@@ -482,8 +482,8 @@
                     <field name="sure_siz"/>
                 </group>
                 <group>
-                    <field name="kapatma_baslangic" attrs="{'invisible':[('sure_siz','=',True)]}"/>
-                    <field name="kapatma_bitis" attrs="{'invisible':[('sure_siz','=',True)]}"/>
+                    <field name="kapatma_baslangic" invisible="sure_siz == True"/>
+                    <field name="kapatma_bitis" invisible="sure_siz == True"/>
                 </group>
                 <group>
                     <field name="kapatma_sebebi"/>

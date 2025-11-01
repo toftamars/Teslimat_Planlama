@@ -34,8 +34,20 @@ class TeslimatBelgesiWizard(models.TransientModel):
         arac_ctx = ctx.get('default_arac_id')
         ilce_ctx = ctx.get('default_ilce_id')
 
+        # Tarih bilgisini işle (string ise date'e çevir)
         if tarih_ctx and 'teslimat_tarihi' in (fields_list or []):
-            res['teslimat_tarihi'] = tarih_ctx
+            if isinstance(tarih_ctx, str):
+                # String formatından date objesine çevir
+                from datetime import datetime
+                try:
+                    tarih_obj = datetime.strptime(tarih_ctx, '%Y-%m-%d').date()
+                    res['teslimat_tarihi'] = tarih_obj
+                except (ValueError, TypeError):
+                    # Hata durumunda string olarak kullan
+                    res['teslimat_tarihi'] = tarih_ctx
+            else:
+                res['teslimat_tarihi'] = tarih_ctx
+        
         if arac_ctx and 'arac_id' in (fields_list or []):
             res['arac_id'] = arac_ctx
         if ilce_ctx and 'ilce_id' in (fields_list or []):
