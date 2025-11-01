@@ -28,6 +28,36 @@ class IrModelData(models.Model):
             return super(IrModelData, records_to_process)._process_ondelete()
         return None
 
+
+class IrModel(models.Model):
+    """IR Model Inherit - Cleanup fonksiyonu."""
+
+    _inherit = "ir.model"
+
+    def _process_ondelete(self):
+        """Override: Eski model referanslarını handle et."""
+        # Eski teslimat.planlama.akilli modeli için özel handling
+        # Bu model kayıtları için _process_ondelete çalıştırma (model registry'de yok)
+        records_to_skip = self.filtered(lambda r: r.model == "teslimat.planlama.akilli")
+        if records_to_skip:
+            _logger.warning(
+                "Eski teslimat.planlama.akilli model kaydı atlanıyor: %s kayıt",
+                len(records_to_skip),
+            )
+        
+        # Sadece diğer kayıtlar için normal işlem yap
+        records_to_process = self - records_to_skip
+        if records_to_process:
+            try:
+                return super(IrModel, records_to_process)._process_ondelete()
+            except KeyError as e:
+                # Model registry'de yoksa, sadece bu kaydı atla
+                if "teslimat.planlama.akilli" in str(e):
+                    _logger.warning("Model registry'de bulunamadı, kayıt atlanıyor: %s", e)
+                    return None
+                raise
+        return None
+
     @api.model
     def _cleanup_old_teslimat_planlama_akilli(self) -> None:
         """Eski teslimat.planlama.akilli model referanslarını temizle."""
