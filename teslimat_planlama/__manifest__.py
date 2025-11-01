@@ -36,6 +36,7 @@
         
         # Data
         'data/ir_sequence_data.xml',
+        'data/cleanup_old_model_data.xml',
         'data/teslimat_program_kurulum_data.xml',
         
         # Core Views
@@ -68,4 +69,5 @@
     'auto_install': False,
     'license': 'LGPL-3',
     'images': ['static/description/icon.png'],
+    'post_init_hook': 'post_init_hook',
 }

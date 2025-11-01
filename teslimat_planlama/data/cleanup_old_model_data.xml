@@ -3,12 +3,7 @@
     <data noupdate="1">
         <!-- Eski model referanslarını temizle -->
         <!-- teslimat.planlama.akilli modeli artık kullanılmıyor -->
-        <delete model="ir.model.data" 
-                search="[('module', '=', 'teslimat_planlama'), ('model', '=', 'teslimat.planlama.akilli')]"/>
-        
-        <!-- Eski model tanımını temizle (eğer varsa) -->
-        <delete model="ir.model" 
-                search="[('model', '=', 'teslimat.planlama.akilli')]"/>
+        <!-- Bu temizleme işlemi __init__.py içindeki cleanup fonksiyonu ile yapılacak -->
     </data>
 </odoo>
 
