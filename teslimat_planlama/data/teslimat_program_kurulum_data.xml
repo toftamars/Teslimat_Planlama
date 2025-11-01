@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <!-- Günleri Oluştur -->
+        <record id="teslimat_gun_pazartesi" model="teslimat.gun">
+            <field name="name">Pazartesi</field>
+            <field name="gun_kodu">pazartesi</field>
+            <field name="sequence">1</field>
+            <field name="yaka_tipi">her_ikisi</field>
+            <field name="aktif">True</field>
+            <field name="gunluk_maksimum_teslimat">50</field>
+        </record>
+
+        <record id="teslimat_gun_sali" model="teslimat.gun">
+            <field name="name">Salı</field>
+            <field name="gun_kodu">sali</field>
+            <field name="sequence">2</field>
+            <field name="yaka_tipi">her_ikisi</field>
+            <field name="aktif">True</field>
+            <field name="gunluk_maksimum_teslimat">50</field>
+        </record>
+
+        <record id="teslimat_gun_carsamba" model="teslimat.gun">
+            <field name="name">Çarşamba</field>
+            <field name="gun_kodu">carsamba</field>
+            <field name="sequence">3</field>
+            <field name="yaka_tipi">her_ikisi</field>
+            <field name="aktif">True</field>
+            <field name="gunluk_maksimum_teslimat">50</field>
+        </record>
+
+        <record id="teslimat_gun_persembe" model="teslimat.gun">
+            <field name="name">Perşembe</field>
+            <field name="gun_kodu">persembe</field>
+            <field name="sequence">4</field>
+            <field name="yaka_tipi">her_ikisi</field>
+            <field name="aktif">True</field>
+            <field name="gunluk_maksimum_teslimat">50</field>
+        </record>
+
+        <record id="teslimat_gun_cuma" model="teslimat.gun">
+            <field name="name">Cuma</field>
+            <field name="gun_kodu">cuma</field>
+            <field name="sequence">5</field>
+            <field name="yaka_tipi">her_ikisi</field>
+            <field name="aktif">True</field>
+            <field name="gunluk_maksimum_teslimat">50</field>
+        </record>
+
+        <record id="teslimat_gun_cumartesi" model="teslimat.gun">
+            <field name="name">Cumartesi</field>
+            <field name="gun_kodu">cumartesi</field>
+            <field name="sequence">6</field>
+            <field name="yaka_tipi">her_ikisi</field>
+            <field name="aktif">True</field>
+            <field name="gunluk_maksimum_teslimat">50</field>
+        </record>
+
+        <record id="teslimat_gun_pazar" model="teslimat.gun">
+            <field name="name">Pazar</field>
+            <field name="gun_kodu">pazar</field>
+            <field name="sequence">7</field>
+            <field name="yaka_tipi">her_ikisi</field>
+            <field name="aktif">False</field>
+            <field name="gunluk_maksimum_teslimat">0</field>
+        </record>
+
+        <!-- Varsayılan Araçlar -->
+        <record id="teslimat_arac_anadolu_1" model="teslimat.arac">
+            <field name="name">Anadolu Yakası Araç 1</field>
+            <field name="arac_tipi">anadolu_yakasi</field>
+            <field name="gunluk_teslimat_limiti">7</field>
+            <field name="aktif">True</field>
+        </record>
+
+        <record id="teslimat_arac_anadolu_2" model="teslimat.arac">
+            <field name="name">Anadolu Yakası Araç 2</field>
+            <field name="arac_tipi">anadolu_yakasi</field>
+            <field name="gunluk_teslimat_limiti">7</field>
+            <field name="aktif">True</field>
+        </record>
+
+        <record id="teslimat_arac_avrupa_1" model="teslimat.arac">
+            <field name="name">Avrupa Yakası Araç 1</field>
+            <field name="arac_tipi">avrupa_yakasi</field>
+            <field name="gunluk_teslimat_limiti">7</field>
+            <field name="aktif">True</field>
+        </record>
+
+        <record id="teslimat_arac_avrupa_2" model="teslimat.arac">
+            <field name="name">Avrupa Yakası Araç 2</field>
+            <field name="arac_tipi">avrupa_yakasi</field>
+            <field name="gunluk_teslimat_limiti">7</field>
+            <field name="aktif">True</field>
+        </record>
+
+        <record id="teslimat_arac_kucuk_1" model="teslimat.arac">
+            <field name="name">Küçük Araç 1</field>
+            <field name="arac_tipi">kucuk_arac_1</field>
+            <field name="gunluk_teslimat_limiti">7</field>
+            <field name="aktif">True</field>
+        </record>
+
+        <record id="teslimat_arac_kucuk_2" model="teslimat.arac">
+            <field name="name">Küçük Araç 2</field>
+            <field name="arac_tipi">kucuk_arac_2</field>
+            <field name="gunluk_teslimat_limiti">7</field>
+            <field name="aktif">True</field>
+        </record>
+
+        <record id="teslimat_arac_ek" model="teslimat.arac">
+            <field name="name">Ek Araç</field>
+            <field name="arac_tipi">ek_arac</field>
+            <field name="gunluk_teslimat_limiti">7</field>
+            <field name="aktif">True</field>
+        </record>
+    </data>
+</odoo>
+

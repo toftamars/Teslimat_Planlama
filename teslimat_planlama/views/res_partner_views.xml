@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Res Partner Inherit Views -->
+    
+    <!-- Teslimat Sekmesi -->
+    <record id="view_partner_form_inherit_teslimat" model="ir.ui.view">
+        <field name="name">res.partner.form.inherit.teslimat</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <!-- Notebook'a Teslimat Sekmesi Ekle -->
+            <xpath expr="//notebook" position="inside">
+                <page string="Teslimat" name="teslimat">
+                    <group>
+                        <group>
+                            <field name="teslimat_bolgesi"/>
+                            <field name="teslimat_suresi"/>
+                            <field name="tercih_edilen_teslimat_gunu"/>
+                            <field name="tercih_edilen_teslimat_saati"/>
+                        </group>
+                        <group>
+                            <field name="enlem"/>
+                            <field name="boylam"/>
+                            <field name="konum_bilgisi" readonly="1"/>
+                            <field name="is_driver"/>
+                        </group>
+                    </group>
+                    <group string="Notlar">
+                        <field name="teslimat_notlari" nolabel="1"/>
+                    </group>
+                    <notebook>
+                        <page string="Teslimat Belgeleri">
+                            <field name="teslimat_belgesi_ids" readonly="1">
+                                <tree>
+                                    <field name="name"/>
+                                    <field name="teslimat_tarihi"/>
+                                    <field name="arac_id"/>
+                                    <field name="ilce_id"/>
+                                    <field name="durum"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>
+

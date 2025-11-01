@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Teslimat Gün Views -->
+    
+    <!-- Tree View -->
+    <record id="view_teslimat_gun_tree" model="ir.ui.view">
+        <field name="name">teslimat.gun.tree</field>
+        <field name="model">teslimat.gun</field>
+        <field name="arch" type="xml">
+            <tree string="Günler">
+                <field name="name"/>
+                <field name="sequence" widget="handle"/>
+                <field name="aktif"/>
+                <field name="gecici_kapatma"/>
+                <field name="gunluk_maksimum_teslimat"/>
+                <field name="mevcut_teslimat_sayisi"/>
+                <field name="kalan_teslimat_kapasitesi"/>
+                <button name="action_aktif_et" string="Aktif Et" type="object" 
+                        class="btn-primary" 
+                        invisible="not gecici_kapatma"
+                        groups="teslimat_planlama.group_teslimat_manager"/>
+                <button name="action_gecici_kapat" string="Kapat" type="object" 
+                        class="btn-secondary"
+                        invisible="gecici_kapatma"
+                        groups="teslimat_planlama.group_teslimat_manager"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_teslimat_gun_form" model="ir.ui.view">
+        <field name="name">teslimat.gun.form</field>
+        <field name="model">teslimat.gun</field>
+        <field name="arch" type="xml">
+            <form string="Teslimat Günü">
+                <header>
+                    <button name="action_aktif_et" string="Aktif Et" type="object" 
+                            class="oe_highlight"
+                            invisible="not gecici_kapatma"
+                            groups="teslimat_planlama.group_teslimat_manager"/>
+                    <button name="action_gecici_kapat" string="Geçici Kapat" type="object" 
+                            class="btn-secondary"
+                            invisible="gecici_kapatma"
+                            groups="teslimat_planlama.group_teslimat_manager"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Gün Adı"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="gun_kodu"/>
+                            <field name="sequence"/>
+                            <field name="yaka_tipi"/>
+                            <field name="aktif"/>
+                            <field name="gecici_kapatma" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="gunluk_maksimum_teslimat" 
+                                   groups="teslimat_planlama.group_teslimat_manager"/>
+                            <field name="mevcut_teslimat_sayisi" readonly="1"/>
+                            <field name="kalan_teslimat_kapasitesi" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Kapatma Bilgileri" invisible="not gecici_kapatma">
+                        <group>
+                            <field name="kapatma_baslangic" readonly="1"/>
+                            <field name="kapatma_bitis" readonly="1"/>
+                            <field name="kapatma_sebebi" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="İlçe Eşleştirmeleri" groups="teslimat_planlama.group_teslimat_manager">
+                            <p class="text-info">
+                                <strong>Yönetim:</strong> İlçe-gün eşleştirmelerini buradan yönetebilirsiniz. 
+                                Dinamik yapılandırma için "Teslimat Gün-İlçe Eşleştirmeleri" menüsünü kullanın.
+                            </p>
+                            <field name="ilce_ids">
+                                <tree>
+                                    <field name="ilce_id"/>
+                                    <field name="tarih"/>
+                                    <field name="maksimum_teslimat" groups="teslimat_planlama.group_teslimat_manager"/>
+                                    <field name="teslimat_sayisi"/>
+                                    <field name="kalan_kapasite"/>
+                                    <field name="ozel_durum"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_teslimat_gun_search" model="ir.ui.view">
+        <field name="name">teslimat.gun.search</field>
+        <field name="model">teslimat.gun</field>
+        <field name="arch" type="xml">
+            <search string="Gün Arama">
+                <field name="name"/>
+                <field name="gun_kodu"/>
+                <filter string="Aktif" name="aktif" domain="[('aktif','=',True)]"/>
+                <filter string="Geçici Kapatılmış" name="gecici_kapatma" domain="[('gecici_kapatma','=',True)]"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_teslimat_gun" model="ir.actions.act_window">
+        <field name="name">Teslimat Günleri</field>
+        <field name="res_model">teslimat.gun</field>
+        <field name="view_mode">tree,form</field>
+        <field name="context">{'search_default_aktif': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Günler yapılandırılmamış
+            </p>
+            <p>
+                Teslimat yapılacak günleri buradan yönetebilirsiniz.
+            </p>
+        </field>
+    </record>
+
+    <!-- Teslimat Gün-İlçe Eşleştirmeleri Views -->
+    
+    <!-- Tree View -->
+    <record id="view_teslimat_gun_ilce_tree" model="ir.ui.view">
+        <field name="name">teslimat.gun.ilce.tree</field>
+        <field name="model">teslimat.gun.ilce</field>
+        <field name="arch" type="xml">
+            <tree string="Gün-İlçe Eşleştirmeleri">
+                <field name="gun_id"/>
+                <field name="ilce_id"/>
+                <field name="tarih"/>
+                <field name="maksimum_teslimat" groups="teslimat_planlama.group_teslimat_manager"/>
+                <field name="teslimat_sayisi"/>
+                <field name="kalan_kapasite"/>
+                <field name="ozel_durum"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_teslimat_gun_ilce_form" model="ir.ui.view">
+        <field name="name">teslimat.gun.ilce.form</field>
+        <field name="model">teslimat.gun.ilce</field>
+        <field name="arch" type="xml">
+            <form string="Gün-İlçe Eşleştirmesi">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="gun_id"/>
+                            <field name="ilce_id"/>
+                            <field name="tarih"/>
+                        </group>
+                        <group>
+                            <field name="maksimum_teslimat" groups="teslimat_planlama.group_teslimat_manager"/>
+                            <field name="teslimat_sayisi"/>
+                            <field name="kalan_kapasite" readonly="1"/>
+                            <field name="ozel_durum"/>
+                        </group>
+                    </group>
+                    <group string="Notlar">
+                        <field name="notlar" nolabel="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_teslimat_gun_ilce_search" model="ir.ui.view">
+        <field name="name">teslimat.gun.ilce.search</field>
+        <field name="model">teslimat.gun.ilce</field>
+        <field name="arch" type="xml">
+            <search string="Gün-İlçe Eşleştirme Arama">
+                <field name="gun_id"/>
+                <field name="ilce_id"/>
+                <field name="tarih"/>
+                <filter string="Bugün" name="bugun" domain="[('tarih','=',context_today().strftime('%Y-%m-%d'))]"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_teslimat_gun_ilce" model="ir.actions.act_window">
+        <field name="name">Gün-İlçe Eşleştirmeleri</field>
+        <field name="res_model">teslimat.gun.ilce</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[]</field>
+        <field name="context">{'search_default_bugun': 1}</field>
+        <field name="groups_id" eval="[(4, ref('teslimat_planlama.group_teslimat_manager'))]"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Henüz eşleştirme yapılmamış
+            </p>
+            <p>
+                <strong>Dinamik Yapılandırma:</strong> İlçe-gün eşleştirmelerini buradan yönetebilirsiniz.
+                Yeni eşleştirmeler ekleyebilir, mevcut eşleştirmeleri düzenleyebilir veya silebilirsiniz.
+            </p>
+        </field>
+    </record>
+</odoo>
+

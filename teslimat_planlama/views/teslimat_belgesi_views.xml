@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Teslimat Belgesi Views -->
+    
+    <!-- Kanban View -->
+    <record id="view_teslimat_belgesi_kanban" model="ir.ui.view">
+        <field name="name">teslimat.belgesi.kanban</field>
+        <field name="model">teslimat.belgesi</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="durum" class="o_kanban_dashboard">
+                <field name="name"/>
+                <field name="teslimat_tarihi"/>
+                <field name="musteri_id"/>
+                <field name="arac_id"/>
+                <field name="ilce_id"/>
+                <field name="durum"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_card oe_kanban_global_click">
+                            <div class="oe_kanban_content">
+                                <div class="o_kanban_record_top">
+                                    <div class="o_kanban_record_headings">
+                                        <strong class="o_kanban_record_title">
+                                            <field name="name"/>
+                                        </strong>
+                                    </div>
+                                </div>
+                                <div class="o_kanban_record_body">
+                                    <div><field name="musteri_id"/></div>
+                                    <div><field name="ilce_id"/> - <field name="arac_id"/></div>
+                                    <div><field name="teslimat_tarihi"/></div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Tree View -->
+    <record id="view_teslimat_belgesi_tree" model="ir.ui.view">
+        <field name="name">teslimat.belgesi.tree</field>
+        <field name="model">teslimat.belgesi</field>
+        <field name="arch" type="xml">
+            <tree string="Teslimat Belgeleri" decoration-info="durum == 'hazir'" decoration-success="durum == 'teslim_edildi'" decoration-danger="durum == 'iptal'">
+                <field name="name"/>
+                <field name="teslimat_tarihi"/>
+                <field name="musteri_id"/>
+                <field name="arac_id"/>
+                <field name="ilce_id"/>
+                <field name="surucu_id"/>
+                <field name="durum" widget="badge" decoration-success="durum == 'teslim_edildi'" decoration-info="durum == 'hazir'" decoration-warning="durum == 'yolda'" decoration-danger="durum == 'iptal'"/>
+                <field name="transfer_no"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_teslimat_belgesi_form" model="ir.ui.view">
+        <field name="name">teslimat.belgesi.form</field>
+        <field name="model">teslimat.belgesi</field>
+        <field name="arch" type="xml">
+            <form string="Teslimat Belgesi">
+                <header>
+                    <button name="action_teslimat_tamamla" string="✅ Teslimatı Tamamla" type="object" 
+                            class="oe_highlight" icon="fa-check"
+                            invisible="durum not in ['hazir', 'yolda']"
+                            groups="teslimat_planlama.group_teslimat_driver"/>
+                    <button name="action_yol_tarifi" string="🗺️ Yol Tarifi" type="object" 
+                            class="btn-primary" icon="fa-map-marker"/>
+                    <field name="durum" widget="statusbar" 
+                           statusbar_visible="taslak,bekliyor,hazir,yolda,teslim_edildi"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Teslimat No"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="teslimat_tarihi"/>
+                            <field name="stock_picking_id"/>
+                            <field name="transfer_no"/>
+                        </group>
+                        <group>
+                            <field name="arac_id"/>
+                            <field name="ilce_id"/>
+                            <field name="surucu_id"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group>
+                            <field name="musteri_id"/>
+                            <field name="musteri_telefon" widget="phone"/>
+                        </group>
+                        <group>
+                            <field name="sira_no"/>
+                            <field name="oncelik_puani"/>
+                        </group>
+                    </group>
+                    <group string="Transfer Ürünleri">
+                        <field name="transfer_urun_ids" readonly="1">
+                            <tree editable="false">
+                                <field name="sequence"/>
+                                <field name="urun_id"/>
+                                <field name="miktar"/>
+                                <field name="birim"/>
+                                <field name="stock_move_id" invisible="1"/>
+                            </tree>
+                        </field>
+                    </group>
+                    <group string="Teslim Bilgileri" invisible="durum != 'teslim_edildi'">
+                        <group>
+                            <field name="teslim_alan_kisi" readonly="1"/>
+                            <field name="gercek_teslimat_saati" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="enlem" readonly="1"/>
+                            <field name="boylam" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Notlar">
+                        <field name="notlar" nolabel="1"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_teslimat_belgesi_search" model="ir.ui.view">
+        <field name="name">teslimat.belgesi.search</field>
+        <field name="model">teslimat.belgesi</field>
+        <field name="arch" type="xml">
+            <search string="Teslimat Belgesi Arama">
+                <field name="name"/>
+                <field name="teslimat_tarihi"/>
+                <field name="musteri_id"/>
+                <field name="arac_id"/>
+                <field name="ilce_id"/>
+                <field name="surucu_id"/>
+                <field name="transfer_no"/>
+                <field name="durum"/>
+                <filter string="Bugün" name="bugun" domain="[('teslimat_tarihi','=',context_today().strftime('%Y-%m-%d'))]"/>
+                <filter string="Bu Hafta" name="bu_hafta" domain="[('teslimat_tarihi','>=',(context_today()-datetime.timedelta(days=7)).strftime('%Y-%m-%d'))]"/>
+                <filter string="Taslak" name="taslak" domain="[('durum','=','taslak')]"/>
+                <filter string="Bekliyor" name="bekliyor" domain="[('durum','=','bekliyor')]"/>
+                <filter string="Hazır" name="hazir" domain="[('durum','=','hazir')]"/>
+                <filter string="Yolda" name="yolda" domain="[('durum','=','yolda')]"/>
+                <filter string="Teslim Edildi" name="teslim_edildi" domain="[('durum','=','teslim_edildi')]"/>
+                <group expand="0" string="Grupla">
+                    <filter string="Tarih" name="group_tarih" context="{'group_by': 'teslimat_tarihi'}"/>
+                    <filter string="Araç" name="group_arac" context="{'group_by': 'arac_id'}"/>
+                    <filter string="İlçe" name="group_ilce" context="{'group_by': 'ilce_id'}"/>
+                    <filter string="Durum" name="group_durum" context="{'group_by': 'durum'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_teslimat_belgesi" model="ir.actions.act_window">
+        <field name="name">Teslimat Belgeleri</field>
+        <field name="res_model">teslimat.belgesi</field>
+        <field name="view_mode">tree,form,kanban</field>
+        <field name="context">{'search_default_bugun': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Henüz teslimat belgesi oluşturulmamış
+            </p>
+            <p>
+                Transfer belgelerinden teslimat belgeleri oluşturabilirsiniz.
+            </p>
+            <p>
+                <strong>Not:</strong> User grubu günlük maksimum 7 teslimat oluşturabilir.
+                Yöneticiler sınırsız teslimat oluşturabilir.
+            </p>
+        </field>
+    </record>
+
+    <!-- Sürücüler için Action -->
+    <record id="action_teslimat_belgesi_surucu" model="ir.actions.act_window">
+        <field name="name">Bugünkü Teslimatlarım</field>
+        <field name="res_model">teslimat.belgesi</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[('teslimat_tarihi','=',context_today().strftime('%Y-%m-%d')),('durum','in',['hazir','yolda'])]</field>
+        <field name="context">{'search_default_bugun': 1}</field>
+        <field name="groups_id" eval="[(4, ref('teslimat_planlama.group_teslimat_driver'))]"/>
+    </record>
+</odoo>
+

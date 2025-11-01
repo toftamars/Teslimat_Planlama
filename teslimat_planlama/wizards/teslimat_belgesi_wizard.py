@@ -1,0 +1,312 @@
+"""Teslimat Belgesi Oluşturma Wizard'ı."""
+import logging
+from datetime import datetime
+from typing import Optional
+
+from odoo import _, api, fields, models
+from odoo.exceptions import UserError
+
+_logger = logging.getLogger(__name__)
+
+
+class TeslimatBelgesiWizard(models.TransientModel):
+    """Teslimat Belgesi Oluşturma Wizard'ı.
+
+    Transfer belgesinden teslimat belgesi oluşturma için wizard.
+    """
+
+    _name = "teslimat.belgesi.wizard"
+    _description = "Teslimat Belgesi Oluşturma Wizard'ı"
+
+    # Temel Bilgiler
+    teslimat_tarihi = fields.Date(
+        string="Teslimat Tarihi",
+        required=True,
+        default=fields.Date.today,
+        readonly=True,
+    )
+    arac_id = fields.Many2one("teslimat.arac", string="Araç", required=True)
+    ilce_id = fields.Many2one("teslimat.ilce", string="İlçe", required=False)
+
+    # Transfer No (stock.picking)
+    transfer_id = fields.Many2one(
+        "stock.picking",
+        string="Transfer No",
+        domain=[("state", "in", ["waiting", "confirmed", "assigned", "done"])],
+        help="Transfer numarasına göre arayın (name). "
+        "İptal ve taslak durumundaki transferler görünmez.",
+    )
+
+    # Müşteri ve Adres (otomatik dolar)
+    musteri_id = fields.Many2one("res.partner", string="Müşteri", readonly=True)
+    adres = fields.Char(string="Adres", readonly=True)
+
+    # Hesaplanan alanlar
+    arac_kucuk_mu = fields.Boolean(
+        string="Küçük Araç",
+        compute="_compute_arac_kucuk_mu",
+        store=False,
+    )
+
+    @api.model
+    def default_get(self, fields_list: list) -> dict:
+        """Varsayılan değerleri context'ten al.
+
+        Args:
+            fields_list: Alan listesi
+
+        Returns:
+            dict: Varsayılan değerler
+        """
+        res = super(TeslimatBelgesiWizard, self).default_get(fields_list)
+        ctx = self.env.context
+
+        # Tarih context'ten geliyorsa kullan
+        if ctx.get("default_teslimat_tarihi") and "teslimat_tarihi" in (
+            fields_list or []
+        ):
+            tarih_str = ctx.get("default_teslimat_tarihi")
+            if isinstance(tarih_str, str):
+                try:
+                    tarih = datetime.strptime(tarih_str, "%Y-%m-%d").date()
+                    res["teslimat_tarihi"] = tarih
+                except ValueError:
+                    res["teslimat_tarihi"] = fields.Date.today()
+            else:
+                res["teslimat_tarihi"] = tarih_str
+
+        # Araç context'ten geliyorsa kullan
+        if ctx.get("default_arac_id") and "arac_id" in (fields_list or []):
+            res["arac_id"] = ctx.get("default_arac_id")
+
+        # İlçe context'ten geliyorsa kullan
+        if ctx.get("default_ilce_id") and "ilce_id" in (fields_list or []):
+            res["ilce_id"] = ctx.get("default_ilce_id")
+
+        # Transfer ID context'ten geliyorsa kullan
+        if ctx.get("default_transfer_id") and "transfer_id" in (fields_list or []):
+            picking_id = ctx.get("default_transfer_id")
+            picking = self.env["stock.picking"].browse(picking_id)
+            if picking.exists():
+                res["transfer_id"] = picking_id
+                if "teslimat_tarihi" in (fields_list or []) and not res.get(
+                    "teslimat_tarihi"
+                ):
+                    res["teslimat_tarihi"] = fields.Date.today()
+                if ctx.get("default_musteri_id") and "musteri_id" in (
+                    fields_list or []
+                ):
+                    res["musteri_id"] = ctx.get("default_musteri_id")
+
+        return res
+
+    @api.depends("arac_id")
+    def _compute_arac_kucuk_mu(self) -> None:
+        """Araç küçük araç mı kontrol et."""
+        for record in self:
+            record.arac_kucuk_mu = bool(
+                record.arac_id
+                and record.arac_id.arac_tipi
+                in ["kucuk_arac_1", "kucuk_arac_2", "ek_arac"]
+            )
+
+    @api.onchange("transfer_id")
+    def _onchange_transfer_id(self) -> None:
+        """Transfer seçildiğinde müşteri bilgilerini otomatik doldur."""
+        picking = self.transfer_id
+        if picking:
+            # 1. Transfer durumu kontrolü
+            if picking.state in ["cancel", "draft"]:
+                return {
+                    "warning": {
+                        "title": _("Transfer Durumu Uyarısı"),
+                        "message": _(
+                            "Seçilen transfer iptal veya taslak durumunda. "
+                            "Teslimat belgesi oluşturulamaz."
+                        ),
+                    }
+                }
+
+            # 2. Mükerrer kontrol
+            existing = self.env["teslimat.belgesi"].search(
+                [("stock_picking_id", "=", picking.id)], limit=1
+            )
+            if existing:
+                return {
+                    "warning": {
+                        "title": _("Mükerrer Teslimat"),
+                        "message": _(
+                            "Bu transfer için zaten bir teslimat belgesi mevcut: %s"
+                            % existing.name
+                        ),
+                    }
+                }
+
+            # 3. Müşteri bilgileri
+            if picking.partner_id:
+                self.musteri_id = picking.partner_id
+                # Adres bilgisi
+                if picking.location_dest_id:
+                    self.adres = picking.location_dest_id.complete_name
+
+    def action_teslimat_olustur(self) -> dict:
+        """Teslimat belgesi oluştur, SMS gönder ve yönlendir.
+
+        Returns:
+            dict: Teslimat belgeleri list view'ı
+        """
+        self.ensure_one()
+
+        # Validasyonlar
+        if not self.arac_id:
+            raise UserError(_("Araç seçimi zorunludur."))
+
+        # Küçük araç değilse ilçe zorunlu
+        small_vehicle = self.arac_id.arac_tipi in [
+            "kucuk_arac_1",
+            "kucuk_arac_2",
+            "ek_arac",
+        ]
+        if not small_vehicle and not self.ilce_id:
+            raise UserError(_("Yaka bazlı araçlar için ilçe seçimi zorunludur."))
+
+        # Transfer zorunlu
+        if not self.transfer_id:
+            raise UserError(_("Transfer belgesi seçimi zorunludur."))
+
+        # Müşteri zorunlu
+        if not self.musteri_id:
+            raise UserError(_("Müşteri seçimi zorunludur."))
+
+        # Kapasite kontrolü - Araç
+        bugun_teslimatlar = self.env["teslimat.belgesi"].search_count(
+            [
+                ("teslimat_tarihi", "=", self.teslimat_tarihi),
+                ("arac_id", "=", self.arac_id.id),
+                ("durum", "in", ["taslak", "bekliyor", "hazir", "yolda"]),
+            ]
+        )
+        if bugun_teslimatlar >= self.arac_id.gunluk_teslimat_limiti:
+            raise UserError(
+                _(
+                    f"Araç kapasitesi dolu! Seçilen tarih için araç kapasitesi: "
+                    f"{bugun_teslimatlar}/{self.arac_id.gunluk_teslimat_limiti}"
+                )
+            )
+
+        # Kapasite kontrolü - İlçe-Gün (eğer ilçe seçiliyse)
+        if self.ilce_id:
+            gun_kodu_map = {
+                0: "pazartesi",
+                1: "sali",
+                2: "carsamba",
+                3: "persembe",
+                4: "cuma",
+                5: "cumartesi",
+                6: "pazar",
+            }
+            gun_kodu = gun_kodu_map.get(self.teslimat_tarihi.weekday())
+            if gun_kodu:
+                gun = self.env["teslimat.gun"].search(
+                    [("gun_kodu", "=", gun_kodu)], limit=1
+                )
+                if gun:
+                    gun_ilce = self.env["teslimat.gun.ilce"].search(
+                        [
+                            ("gun_id", "=", gun.id),
+                            ("ilce_id", "=", self.ilce_id.id),
+                            ("tarih", "=", self.teslimat_tarihi),
+                        ],
+                        limit=1,
+                    )
+                    if gun_ilce and gun_ilce.kalan_kapasite <= 0:
+                        raise UserError(
+                            _(
+                                f"İlçe-gün kapasitesi dolu! "
+                                f"Seçilen tarih için {self.ilce_id.name} ilçesi "
+                                f"{gun.name} günü kapasitesi dolu."
+                            )
+                        )
+
+        # İlçe-Araç uyumluluğu kontrolü
+        if not small_vehicle and self.ilce_id:
+            ilce_yaka = self.ilce_id.yaka_tipi
+            arac_tipi = self.arac_id.arac_tipi
+
+            if arac_tipi == "anadolu_yakasi" and ilce_yaka != "anadolu":
+                raise UserError(
+                    _(
+                        "Anadolu Yakası araç sadece Anadolu Yakası "
+                        "ilçelerine gidebilir!"
+                    )
+                )
+            elif arac_tipi == "avrupa_yakasi" and ilce_yaka != "avrupa":
+                raise UserError(
+                    _(
+                        "Avrupa Yakası araç sadece Avrupa Yakası "
+                        "ilçelerine gidebilir!"
+                    )
+                )
+
+        # İlçe-Gün uyumluluğu kontrolü (küçük araçlar hariç)
+        if not small_vehicle and self.ilce_id:
+            gun_kodu_map = {
+                0: "pazartesi",
+                1: "sali",
+                2: "carsamba",
+                3: "persembe",
+                4: "cuma",
+                5: "cumartesi",
+                6: "pazar",
+            }
+            gun_kodu = gun_kodu_map.get(self.teslimat_tarihi.weekday())
+            if gun_kodu:
+                gun = self.env["teslimat.gun"].search(
+                    [("gun_kodu", "=", gun_kodu)], limit=1
+                )
+                if gun:
+                    gun_ilce = self.env["teslimat.gun.ilce"].search(
+                        [
+                            ("gun_id", "=", gun.id),
+                            ("ilce_id", "=", self.ilce_id.id),
+                        ],
+                        limit=1,
+                    )
+                    if not gun_ilce:
+                        raise UserError(
+                            _(
+                                f"Seçilen tarih ({gun.name}) için "
+                                f"{self.ilce_id.name} ilçesine teslimat yapılamaz! "
+                                f"İlçe-gün eşleştirmesi yok."
+                            )
+                        )
+
+        # Teslimat belgesi oluştur
+        vals = {
+            "teslimat_tarihi": self.teslimat_tarihi,
+            "arac_id": self.arac_id.id,
+            "ilce_id": self.ilce_id.id if self.ilce_id else False,
+            "musteri_id": self.musteri_id.id if self.musteri_id else False,
+            "stock_picking_id": self.transfer_id.id if self.transfer_id else False,
+            "transfer_no": self.transfer_id.name if self.transfer_id else False,
+        }
+
+        teslimat = self.env["teslimat.belgesi"].create(vals)
+
+        # Transfer ürünlerini güncelle
+        if self.transfer_id:
+            teslimat._update_transfer_urunleri(self.transfer_id)
+
+        # SMS gönder
+        teslimat.send_teslimat_sms()
+
+        # Teslimat belgeleri listesine yönlendir
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Teslimat Belgeleri"),
+            "res_model": "teslimat.belgesi",
+            "view_mode": "tree,form",
+            "domain": [("id", "=", teslimat.id)],
+            "target": "current",
+        }
+

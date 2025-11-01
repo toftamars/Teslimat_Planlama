@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Teslimat Belgesi Wizard Form View -->
+    <!-- Teslimat Belgesi Wizard Views -->
+    
     <record id="view_teslimat_belgesi_wizard_form" model="ir.ui.view">
         <field name="name">teslimat.belgesi.wizard.form</field>
         <field name="model">teslimat.belgesi.wizard</field>
@@ -12,24 +13,26 @@
                             <span>📋 Teslimat Belgesi Oluştur</span>
                         </h1>
                     </div>
-                    
                     <!-- Temel Bilgiler -->
                     <group>
                         <group>
                             <field name="teslimat_tarihi" readonly="1"/>
-                            <field name="arac_id"/>
-                            <field name="ilce_id"/>
+                            <field name="arac_id" 
+                                   domain="[('aktif','=',True),('gecici_kapatma','=',False)]"
+                                   options="{'no_create': True, 'no_edit': True}"/>
+                            <field name="ilce_id" 
+                                   domain="[('aktif','=',True),('teslimat_aktif','=',True)]"
+                                   options="{'no_create': True, 'no_edit': True}"
+                                   attrs="{'required': ['&amp;', ('arac_id','!=', False), ('arac_kucuk_mu','=', False)]}"/>
                         </group>
                     </group>
-                    
                     <!-- Transfer No -->
                     <group>
                         <field name="transfer_id" 
                                options="{'no_create': True}" 
                                placeholder="DEPO/OUT/00085 yazarak arayın"
-                               attrs="{'readonly': [('transfer_id', '!=', False)]}"/>
+                               attrs="{'readonly': [('transfer_id','!=', False)]}"/>
                     </group>
-                    
                     <!-- Müşteri ve Adres (otomatik) -->
                     <group>
                         <group>
@@ -38,25 +41,13 @@
                         </group>
                     </group>
                 </sheet>
-                
                 <footer>
-                    <button name="action_teslimat_olustur" 
-                            string="✅ Teslimat Belgesi Oluştur" 
-                            type="object" 
-                            class="btn-primary"/>
-                    <button string="❌ İptal" 
-                            class="btn-secondary" 
-                            special="cancel"/>
+                    <button name="action_teslimat_olustur" string="✅ Teslimat Belgesi Oluştur" 
+                            type="object" class="btn-primary"/>
+                    <button string="❌ İptal" class="btn-secondary" special="cancel"/>
                 </footer>
             </form>
         </field>
     </record>
-    
-    <!-- Teslimat Belgesi Wizard Action -->
-    <record id="action_teslimat_belgesi_wizard" model="ir.actions.act_window">
-        <field name="name">Teslimat Belgesi Oluştur</field>
-        <field name="res_model">teslimat.belgesi.wizard</field>
-        <field name="view_mode">form</field>
-        <field name="target">new</field>
-    </record>
 </odoo>
+

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Stock Picking Inherit Views -->
+    
+    <!-- Smart Button -->
+    <record id="view_picking_form_inherit_teslimat" model="ir.ui.view">
+        <field name="name">stock.picking.form.inherit.teslimat</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
+        <field name="arch" type="xml">
+            <!-- Smart Button Ekle -->
+            <xpath expr="//button[@name='action_view_move_lines']" position="after">
+                <button name="action_view_teslimat_belgeleri" 
+                        string="Teslimatlar" 
+                        type="object" 
+                        class="oe_stat_button" 
+                        icon="fa-truck"
+                        invisible="not teslimat_belgesi_count">
+                    <field name="teslimat_belgesi_count" widget="statinfo" string="Teslimat"/>
+                </button>
+            </xpath>
+            
+            <!-- Kısayol Butonu - Header'a Ekle -->
+            <xpath expr="//header" position="inside">
+                <button name="action_teslimat_sihirbazi_ac" 
+                        string="🚛 Teslimat Oluştur" 
+                        type="object" 
+                        class="btn-primary"
+                        icon="fa-truck"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
+

@@ -1,17 +1,25 @@
 {
     'name': 'Teslimat Planlama',
-    'version': '15.0.1.0.0',
+    'version': '15.0.2.0.0',
     'category': 'Inventory',
     'summary': 'Teslimat planlaması ve rota optimizasyonu',
     'description': """
-        Bu modül teslimat planlaması için geliştirilmiştir.
-        Özellikler:
-        - Kontakt bilgileri yönetimi
-        - Transfer işlemleri
-        - Stok bilgileri entegrasyonu
-        - Teslimat planı oluşturma
+        Teslimat Planlama Modülü
         
-        NOT: SMS özellikleri şu anda deaktif, gelecekte eklenebilir
+        Bu modül teslimat planlaması ve yönetimi için geliştirilmiştir.
+        
+        Özellikler:
+        - Araç ve kapasite yönetimi
+        - İlçe-gün eşleştirmeleri (dinamik yapılandırma)
+        - Teslimat belgesi oluşturma ve takibi
+        - Transfer belgeleri entegrasyonu
+        - Kapasite sorgulama ve raporlama
+        - 3 farklı rol: Kullanıcı, Sürücü, Yönetici
+        
+        Kurallar:
+        - User grubu günlük max 7 teslimat oluşturabilir
+        - Manager grubu sınırsız teslimat oluşturabilir
+        - Tüm yapılandırmalar modül içinden yapılabilir (dinamik)
     """,
     'author': 'Your Company',
     'website': 'https://www.yourcompany.com',
@@ -19,18 +27,39 @@
         'base',
         'contacts',
         'stock',
-        'delivery',
-        'sale',
+        'mail',
     ],
     'data': [
+        # Security
         'security/security.xml',
         'security/ir.model.access.csv',
+        
+        # Data
         'data/ir_sequence_data.xml',
-        'data/demo_data.xml',
+        'data/teslimat_program_kurulum_data.xml',
+        
+        # Core Views
+        'views/teslimat_sehir_views.xml',
+        'views/teslimat_ilce_views.xml',
+        'views/teslimat_gun_views.xml',
+        'views/teslimat_arac_views.xml',
+        
+        # Business Logic Views
         'views/teslimat_planlama_views.xml',
-        'views/teslimat_ana_sayfa_views.xml',
+        'views/teslimat_transfer_views.xml',
+        'views/teslimat_belgesi_views.xml',
+        
+        # Wizard Views
         'views/teslimat_belgesi_wizard_views.xml',
+        'views/teslimat_gun_kapatma_wizard_views.xml',
         'views/teslimat_konum_wizard_views.xml',
+        'views/teslimat_ana_sayfa_views.xml',
+        
+        # Inherit Views
+        'views/stock_picking_views.xml',
+        'views/res_partner_views.xml',
+        
+        # Menu
         'views/menu_views.xml',
     ],
     'demo': [],
@@ -38,4 +67,5 @@
     'application': True,
     'auto_install': False,
     'license': 'LGPL-3',
+    'images': ['static/description/icon.png'],
 }

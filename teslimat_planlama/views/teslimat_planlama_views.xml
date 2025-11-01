@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Teslimat Planlama Tree View -->
+    <!-- Teslimat Planlama Views -->
+    
+    <!-- Tree View -->
     <record id="view_teslimat_planlama_tree" model="ir.ui.view">
         <field name="name">teslimat.planlama.tree</field>
         <field name="model">teslimat.planlama</field>
@@ -11,13 +13,11 @@
                 <field name="durum"/>
                 <field name="toplam_transfer"/>
                 <field name="toplam_urun"/>
-                <field name="baslangic_tarihi"/>
-                <field name="bitis_tarihi"/>
             </tree>
         </field>
     </record>
 
-    <!-- Teslimat Planlama Form View -->
+    <!-- Form View -->
     <record id="view_teslimat_planlama_form" model="ir.ui.view">
         <field name="name">teslimat.planlama.form</field>
         <field name="model">teslimat.planlama</field>
@@ -25,13 +25,16 @@
             <form string="Teslimat Planlaması">
                 <header>
                     <button name="action_onayla" string="Onayla" type="object" 
-                            class="oe_highlight" attrs="{'invisible': [('durum', '!=', 'taslak')]}"/>
+                            class="oe_highlight"
+                            invisible="durum != 'taslak'"/>
                     <button name="action_baslat" string="Başlat" type="object" 
-                            class="oe_highlight" attrs="{'invisible': [('durum', '!=', 'onaylandi')]}"/>
+                            class="oe_highlight"
+                            invisible="durum != 'onaylandi'"/>
                     <button name="action_tamamla" string="Tamamla" type="object" 
-                            class="oe_highlight" attrs="{'invisible': [('durum', '!=', 'calisiyor')]}"/>
-                    <button name="action_iptal" string="İptal" type="object" 
-                            attrs="{'invisible': ['!', ('durum', 'in', ['taslak', 'onaylandi', 'calisiyor'])]}"/>
+                            class="oe_highlight"
+                            invisible="durum != 'calisiyor'"/>
+                    <button name="action_iptal" string="İptal" type="object"
+                            invisible="durum not in ['taslak', 'onaylandi', 'calisiyor']"/>
                     <field name="durum" widget="statusbar" 
                            statusbar_visible="taslak,onaylandi,calisiyor,tamamlandi"/>
                 </header>
@@ -48,8 +51,8 @@
                             <field name="bitis_tarihi"/>
                         </group>
                         <group>
-                            <field name="toplam_transfer"/>
-                            <field name="toplam_urun"/>
+                            <field name="toplam_transfer" readonly="1"/>
+                            <field name="toplam_urun" readonly="1"/>
                         </group>
                     </group>
                     <notebook>
@@ -77,7 +80,7 @@
                             </field>
                         </page>
                         <page string="Notlar">
-                            <field name="notlar" placeholder="Teslimat planlama notları..."/>
+                            <field name="notlar" nolabel="1"/>
                         </page>
                     </notebook>
                 </sheet>
@@ -85,488 +88,36 @@
         </field>
     </record>
 
-    <!-- Teslimat Planlama Search View -->
+    <!-- Search View -->
     <record id="view_teslimat_planlama_search" model="ir.ui.view">
         <field name="name">teslimat.planlama.search</field>
         <field name="model">teslimat.planlama</field>
         <field name="arch" type="xml">
-            <search string="Teslimat Planlama Arama">
+            <search string="Planlama Arama">
                 <field name="name"/>
-                <field name="musteri_ids"/>
-                <field name="urun_ids"/>
+                <field name="tarih"/>
+                <field name="durum"/>
                 <filter string="Taslak" name="taslak" domain="[('durum','=','taslak')]"/>
                 <filter string="Onaylandı" name="onaylandi" domain="[('durum','=','onaylandi')]"/>
                 <filter string="Çalışıyor" name="calisiyor" domain="[('durum','=','calisiyor')]"/>
                 <filter string="Tamamlandı" name="tamamlandi" domain="[('durum','=','tamamlandi')]"/>
-                <group expand="0" string="Grupla">
-                    <filter string="Durum" name="durum" context="{'group_by':'durum'}"/>
-                    <filter string="Tarih" name="tarih" context="{'group_by':'tarih'}"/>
-                </group>
             </search>
         </field>
     </record>
 
-    <!-- Teslimat Transfer Tree View -->
-    <record id="view_teslimat_transfer_tree" model="ir.ui.view">
-        <field name="name">teslimat.transfer.tree</field>
-        <field name="model">teslimat.transfer</field>
-        <field name="arch" type="xml">
-            <tree string="Teslimat Transferler">
-                <field name="sira_no"/>
-                <field name="name"/>
-                <field name="planlama_id"/>
-                <field name="kaynak_konum"/>
-                <field name="hedef_konum"/>
-                <field name="urun_id"/>
-                <field name="miktar"/>
-                <field name="durum"/>
-                <field name="planlanan_tarih"/>
-            </tree>
-        </field>
-    </record>
-
-    <!-- Teslimat Transfer Form View -->
-    <record id="view_teslimat_transfer_form" model="ir.ui.view">
-        <field name="name">teslimat.transfer.form</field>
-        <field name="model">teslimat.transfer</field>
-        <field name="arch" type="xml">
-            <form string="Teslimat Transfer">
-                <header>
-                    <button name="action_transfer_belgesi_olustur" string="Teslimat Belgesi Oluştur" 
-                            type="object" class="oe_highlight" 
-                            attrs="{'invisible': ['!', ('durum', 'in', ['bekliyor', 'hazirlaniyor'])]}"/>
-                </header>
-                <sheet>
-                    <div class="oe_title">
-                        <h1>
-                            <field name="name" placeholder="Transfer Adı"/>
-                        </h1>
-                    </div>
-                    <group>
-                        <group>
-                            <field name="planlama_id"/>
-                            <field name="sira_no"/>
-                            <field name="transfer_no" placeholder="Transfer belgesi numarasını girin"/>
-                            <field name="stock_picking_id"/>
-                        </group>
-                        <group>
-                            <field name="durum"/>
-                            <field name="planlanan_tarih"/>
-                            <field name="gerceklesen_tarih"/>
-                        </group>
-                    </group>
-                    <group>
-                        <group>
-                            <field name="musteri_id"/>
-                            <field name="kaynak_konum"/>
-                            <field name="hedef_konum"/>
-                        </group>
-                        <group>
-                            <field name="urun_id"/>
-                            <field name="miktar"/>
-                            <field name="birim"/>
-                        </group>
-                    </group>
-                    <field name="notlar" placeholder="Transfer notları..."/>
-                </sheet>
-            </form>
-        </field>
-    </record>
-
-    <!-- Stock Picking: Teslimatlar smart buton (inherit) -->
-    <record id="view_picking_form_inherit_teslimatlar" model="ir.ui.view">
-        <field name="name">stock.picking.form.inherit.teslimatlar</field>
-        <field name="model">stock.picking</field>
-        <field name="inherit_id" ref="stock.view_picking_form"/>
-        <field name="arch" type="xml">
-            <xpath expr="//header" position="inside">
-                <button name="action_view_teslimat_belgeleri" type="object" class="oe_stat_button" icon="fa-truck">
-                    <field name="teslimat_belgesi_count" widget="statinfo" string="Teslimatlar"/>
-                </button>
-            </xpath>
-            <!-- Header'a teslimat sihirbazı butonu ekle -->
-            <xpath expr="//header" position="inside">
-                <button name="action_teslimat_sihirbazi_ac" 
-                        type="object" 
-                        class="btn-primary"
-                        icon="fa-truck"
-                        string="🚚 Teslimat Oluştur"
-                        title="Teslimat Belgesi Oluşturma Sihirbazını Aç"/>
-            </xpath>
-        </field>
-    </record>
-
-    <!-- Actions -->
+    <!-- Action -->
     <record id="action_teslimat_planlama" model="ir.actions.act_window">
         <field name="name">Teslimat Planlamaları</field>
         <field name="res_model">teslimat.planlama</field>
         <field name="view_mode">tree,form</field>
-        <field name="groups_id" eval="[(6,0,[ref('teslimat_planlama.group_teslimat_manager')])]"/>
-        <field name="search_view_id" ref="view_teslimat_planlama_search"/>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
-                İlk teslimat planlamasını oluşturun!
-            </p>
-        </field>
-    </record>
-
-    <record id="action_teslimat_transfer" model="ir.actions.act_window">
-        <field name="name">Teslimat Transferler</field>
-        <field name="res_model">teslimat.transfer</field>
-        <field name="view_mode">tree,form</field>
-        <field name="groups_id" eval="[(6,0,[ref('teslimat_planlama.group_teslimat_manager')])]"/>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                İlk teslimat transferini oluşturun!
-            </p>
-        </field>
-    </record>
-
-    <!-- Teslimat Belgesi Tree View -->
-    <record id="view_teslimat_belgesi_tree" model="ir.ui.view">
-        <field name="name">teslimat.belgesi.tree</field>
-        <field name="model">teslimat.belgesi</field>
-        <field name="arch" type="xml">
-            <tree string="Teslimat Belgeleri">
-                <field name="name"/>
-                <field name="teslimat_tarihi"/>
-                <field name="musteri_id"/>
-                <field name="musteri_telefon" widget="phone"/>
-                <field name="arac_id"/>
-                <field name="ilce_id"/>
-                <field name="transfer_no"/>
-                <field name="durum"/>
-                <button name="action_teslimat_tamamla" string="Tamamla" type="object" 
-                        icon="fa-check" class="btn-primary"
-                        attrs="{'invisible': ['!', ('durum', 'in', ['hazir', 'yolda'])]}"
-                        groups="teslimat_planlama.group_teslimat_driver"/>
-            </tree>
-        </field>
-    </record>
-
-    <!-- Sürücüler için Basit Tree View (Search yok) -->
-    <record id="view_teslimat_belgesi_tree_surucu" model="ir.ui.view">
-        <field name="name">teslimat.belgesi.tree.surucu</field>
-        <field name="model">teslimat.belgesi</field>
-        <field name="arch" type="xml">
-            <tree string="Teslimat Belgeleri" create="false" edit="false">
-                <field name="name"/>
-                <field name="teslimat_tarihi"/>
-                <field name="musteri_id"/>
-                <field name="musteri_telefon" widget="phone"/>
-                <field name="arac_id"/>
-                <field name="ilce_id"/>
-                <field name="durum"/>
-                <button name="action_teslimat_tamamla" string="Tamamla" type="object" 
-                        icon="fa-check" class="btn-primary"
-                        attrs="{'invisible': ['!', ('durum', 'in', ['hazir', 'yolda'])]}"/>
-            </tree>
-        </field>
-    </record>
-
-    <!-- Teslimat Belgesi Search View - Basitleştirildi -->
-    <record id="view_teslimat_belgesi_search" model="ir.ui.view">
-        <field name="name">teslimat.belgesi.search</field>
-        <field name="model">teslimat.belgesi</field>
-        <field name="arch" type="xml">
-            <search string="Teslimat Belgesi Arama">
-                <field name="name" string="Teslimat No"/>
-                <field name="musteri_id" string="Müşteri"/>
-                <field name="transfer_no" string="Transfer No"/>
-                <field name="arac_id" string="Araç"/>
-                <field name="ilce_id" string="İlçe"/>
-                <field name="durum" string="Durum"/>
-                <separator/>
-                <filter string="Hazır" name="hazir" domain="[('durum','=','hazir')]"/>
-                <filter string="Yolda" name="yolda" domain="[('durum','=','yolda')]"/>
-                <filter string="Teslim Edildi" name="teslim_edildi" domain="[('durum','=','teslim_edildi')]"/>
-                <filter string="İptal" name="iptal" domain="[('durum','=','iptal')]"/>
-            </search>
-        </field>
-    </record>
-
-    <!-- Teslimat Belgesi Actions -->
-    <record id="action_teslimat_belgesi" model="ir.actions.act_window">
-        <field name="name">Teslimat Belgeleri</field>
-        <field name="res_model">teslimat.belgesi</field>
-        <field name="view_mode">tree,form</field>
-        <field name="search_view_id" ref="view_teslimat_belgesi_search"/>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                İlk teslimat belgesini oluşturun!
-            </p>
-        </field>
-    </record>
-
-    <!-- Teslimat Belgesi Form View -->
-    <record id="view_teslimat_belgesi_form" model="ir.ui.view">
-        <field name="name">teslimat.belgesi.form</field>
-        <field name="model">teslimat.belgesi</field>
-        <field name="arch" type="xml">
-            <form string="Teslimat Belgesi">
-                <header>
-                    <button name="action_update_driver_location_simple" string="📍 Konumumu Güncelle" type="object" 
-                            class="btn-info" icon="fa-location-arrow"
-                            groups="teslimat_planlama.group_teslimat_driver"
-                            attrs="{'invisible': ['!', ('durum', 'in', ['hazir', 'yolda'])]}"/>
-                    <button name="action_yol_tarifi" string="🗺️ Yol Tarifi" type="object" 
-                            class="btn-primary" icon="fa-map-marker"/>
-                    <button name="action_teslimat_tamamla" string="✅ Teslimatı Tamamla" type="object" 
-                            class="oe_highlight" icon="fa-check"
-                            attrs="{'invisible': ['!', ('durum', 'in', ['hazir', 'yolda'])]}"
-                            groups="teslimat_planlama.group_teslimat_driver"/>
-                </header>
-                <sheet>
-                    <div class="oe_title">
-                        <h1>
-                            <field name="name" placeholder="Teslimat No"/>
-                        </h1>
-                    </div>
-                    <group>
-                        <group>
-                            <field name="stock_picking_id"/>
-                        </group>
-                        <group>
-                            <field name="teslimat_tarihi"/>
-                        </group>
-                    </group>
-                    <group>
-                        <group>
-                            <field name="musteri_id"/>
-                            <field name="musteri_telefon" widget="phone"/>
-                            <field name="ilce_id"/>
-                        </group>
-                        <group>
-                            <field name="arac_id"/>
-                            <field name="durum" readonly="1"/>
-                        </group>
-                    </group>
-                    <group string="Transfer Ürünleri">
-                        <field name="transfer_urun_ids" readonly="1">
-                            <tree editable="false">
-                                <field name="sequence"/>
-                                <field name="urun_id"/>
-                                <field name="miktar"/>
-                                <field name="birim"/>
-                                <field name="stock_move_id" invisible="1"/>
-                            </tree>
-                        </field>
-                    </group>
-                    <group string="Teslim Bilgileri" attrs="{'invisible': [('durum', '!=', 'teslim_edildi')]}">
-                        <group>
-                            <field name="teslim_alan_kisi" readonly="1"/>
-                            <field name="gercek_teslimat_saati" readonly="1"/>
-                        </group>
-                        <group>
-                            <field name="teslim_fotografi" widget="image" readonly="1" 
-                                   filename="teslim_fotografi_filename"
-                                   options="{'size': [90, 90], 'clickable': true}"/>
-                            <field name="teslim_fotografi_filename" invisible="1"/>
-                        </group>
-                    </group>
-                    <field name="notlar" placeholder="Notlar"/>
-                </sheet>
-                <div class="oe_chatter">
-                    <field name="message_follower_ids" widget="mail_followers"/>
-                    <field name="activity_ids" widget="mail_activity"/>
-                    <field name="message_ids" widget="mail_thread"/>
-                </div>
-            </form>
-        </field>
-    </record>
-
-    <!-- Teslimat Belgesi Tamamlama Form View -->
-    <record id="view_teslimat_belgesi_tamamla_form" model="ir.ui.view">
-        <field name="name">teslimat.belgesi.tamamla.form</field>
-        <field name="model">teslimat.belgesi</field>
-        <field name="arch" type="xml">
-            <form string="Teslimat Tamamla">
-                <header>
-                    <button name="action_teslimat_tamamla_kaydet" string="✅ Teslimatı Tamamla" type="object" 
-                            class="oe_highlight"/>
-                    <button string="İptal" class="btn-secondary" special="cancel"/>
-                </header>
-                <sheet>
-                    <div class="oe_title">
-                        <h1>
-                            <field name="name" readonly="1"/>
-                        </h1>
-                    </div>
-                    <group>
-                        <group>
-                            <field name="musteri_id" readonly="1"/>
-                            <field name="musteri_telefon" readonly="1" widget="phone"/>
-                            <field name="teslimat_tarihi" readonly="1"/>
-                        </group>
-                        <group>
-                            <field name="arac_id" readonly="1"/>
-                            <field name="durum" readonly="1"/>
-                        </group>
-                    </group>
-                    <group string="Teslim Bilgileri">
-                        <group>
-                            <field name="teslim_alan_kisi" placeholder="Teslim alan kişinin adını girin"/>
-                        </group>
-                        <group>
-                            <field name="teslim_fotografi" widget="image" 
-                                   options="{'size': [90, 90]}" 
-                                   filename="teslim_fotografi_filename"/>
-                            <field name="teslim_fotografi_filename" invisible="1"/>
-                        </group>
-                    </group>
-                    <group>
-                        <field name="notlar" placeholder="Teslimat notları (opsiyonel)"/>
-                    </group>
-                </sheet>
-            </form>
-        </field>
-    </record>
-
-
-    <record id="action_teslimat_belgesi_olustur" model="ir.actions.act_window">
-        <field name="name">Teslimat Belgesi Oluştur</field>
-        <field name="res_model">teslimat.belgesi</field>
-        <field name="view_mode">form</field>
-        <field name="target">current</field>
-        <field name="context">{'form_view_initial_mode': 'edit', 'default_durum': 'taslak'}</field>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                Yeni teslimat belgesi oluşturun!
-            </p>
-        </field>
-    </record>
-
-    <!-- Sürücüler için özel teslimat belgeleri action (search view yok) -->
-    <record id="action_teslimat_belgesi_surucu" model="ir.actions.act_window">
-        <field name="name">Teslimat Belgeleri</field>
-        <field name="res_model">teslimat.belgesi</field>
-        <field name="view_mode">tree,form</field>
-        <field name="view_id" ref="view_teslimat_belgesi_tree_surucu"/>
-        <field name="target">current</field>
-        <field name="groups_id" eval="[(6,0,[ref('teslimat_planlama.group_teslimat_driver')])]"/>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                Teslimat belgeniz bulunmuyor!
+                Henüz planlama oluşturulmamış
             </p>
             <p>
-                Tüm teslimat belgeleri burada görünecek.
-            </p>
-        </field>
-    </record>
-
-    <!-- Teslimat Araç Actions -->
-    <record id="action_teslimat_arac" model="ir.actions.act_window">
-        <field name="name">Teslimat Araçları</field>
-        <field name="res_model">teslimat.arac</field>
-        <field name="view_mode">tree,form</field>
-        <field name="groups_id" eval="[(6,0,[ref('teslimat_planlama.group_teslimat_manager')])]"/>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                İlk teslimat aracını oluşturun!
-            </p>
-        </field>
-    </record>
-
-    <!-- Teslimat Gün Actions -->
-    <record id="action_teslimat_gun" model="ir.actions.act_window">
-        <field name="name">Teslimat Günleri</field>
-        <field name="res_model">teslimat.gun</field>
-        <field name="view_mode">tree,form</field>
-        <field name="groups_id" eval="[(6,0,[ref('teslimat_planlama.group_teslimat_manager')])]"/>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                İlk teslimat gününü oluşturun!
-            </p>
-        </field>
-    </record>
-
-    <!-- Teslimat Gün Kapatma Wizard View -->
-    <record id="view_teslimat_gun_kapatma_wizard_form" model="ir.ui.view">
-        <field name="name">teslimat.gun.kapatma.wizard.form</field>
-        <field name="model">teslimat.gun.kapatma.wizard</field>
-        <field name="arch" type="xml">
-            <form string="Teslimat Gününü Geçici Kapat">
-                <group>
-                    <field name="gun_id" readonly="1"/>
-                    <field name="sure_siz"/>
-                </group>
-                <group>
-                    <field name="kapatma_baslangic" attrs="{'invisible': [('sure_siz', '=', True)]}"/>
-                    <field name="kapatma_bitis" attrs="{'invisible': [('sure_siz', '=', True)]}"/>
-                </group>
-                <group>
-                    <field name="kapatma_sebebi"/>
-                </group>
-                <footer>
-                    <button name="action_onayla" string="Onayla" type="object" class="btn-primary"/>
-                    <button string="İptal" special="cancel"/>
-                </footer>
-            </form>
-        </field>
-    </record>
-
-    <!-- Teslimat Program Kurulum Actions -->
-    <record id="action_teslimat_program_kurulum" model="ir.actions.act_window">
-        <field name="name">Teslimat Programı Kurulumu</field>
-        <field name="res_model">teslimat.program.kurulum</field>
-        <field name="view_mode">tree,form</field>
-        <field name="groups_id" eval="[(6,0,[ref('teslimat_planlama.group_teslimat_manager')])]"/>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                Teslimat programını kurmak için yeni kayıt oluşturun!
-            </p>
-        </field>
-    </record>
-
-    <!-- Şehir Actions -->
-    <record id="action_teslimat_sehir" model="ir.actions.act_window">
-        <field name="name">Şehirler</field>
-        <field name="res_model">teslimat.sehir</field>
-        <field name="view_mode">tree,form</field>
-        <field name="groups_id" eval="[(6,0,[ref('teslimat_planlama.group_teslimat_manager')])]"/>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                İlk şehri oluşturun!
-            </p>
-        </field>
-    </record>
-
-    <!-- İlçe Actions -->
-    <record id="action_teslimat_ilce" model="ir.actions.act_window">
-        <field name="name">İlçeler</field>
-        <field name="res_model">teslimat.ilce</field>
-        <field name="view_mode">tree,form</field>
-        <field name="groups_id" eval="[(6,0,[ref('teslimat_planlama.group_teslimat_manager')])]"/>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                İlk ilçeyi oluşturun!
-            </p>
-        </field>
-    </record>
-
-    <!-- Akıllı Planlama Actions -->
-    <record id="action_teslimat_planlama_akilli" model="ir.actions.act_window">
-        <field name="name">Akıllı Planlama</field>
-        <field name="res_model">teslimat.planlama.akilli</field>
-        <field name="view_mode">tree,form</field>
-        <field name="groups_id" eval="[(6,0,[ref('teslimat_planlama.group_teslimat_manager')])]"/>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                İlk akıllı planlamayı oluşturun!
-            </p>
-        </field>
-    </record>
-
-    <!-- Kapasite Onay Actions -->
-    <record id="action_teslimat_kapasite_onay" model="ir.actions.act_window">
-        <field name="name">Kapasite Onayları</field>
-        <field name="res_model">teslimat.kapasite.onay</field>
-        <field name="view_mode">tree,form</field>
-        <field name="groups_id" eval="[(6,0,[ref('teslimat_planlama.group_teslimat_manager')])]"/>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                Kapasite aşımı onay talepleri burada görünecek!
+                Yeni teslimat planlaması oluşturarak başlayın.
             </p>
         </field>
     </record>
 </odoo>
+

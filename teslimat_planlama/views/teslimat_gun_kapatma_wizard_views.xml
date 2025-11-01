@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Teslimat Günü Kapatma Wizard Views -->
+    
+    <record id="view_teslimat_gun_kapatma_wizard_form" model="ir.ui.view">
+        <field name="name">teslimat.gun.kapatma.wizard.form</field>
+        <field name="model">teslimat.gun.kapatma.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Teslimat Gününü Geçici Kapat">
+                <sheet>
+                    <group>
+                        <field name="gun_id" readonly="1"/>
+                        <field name="sure_siz"/>
+                    </group>
+                    <group attrs="{'invisible': [('sure_siz','=', True)]}">
+                        <field name="kapatma_baslangic"/>
+                        <field name="kapatma_bitis"/>
+                    </group>
+                    <group>
+                        <field name="kapatma_sebebi" placeholder="Kapatma sebebini girin"/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="action_onayla" string="Onayla" type="object" class="btn-primary"/>
+                    <button string="İptal" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>
+

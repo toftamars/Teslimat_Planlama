@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Ana Sayfa Form View -->
+    <!-- Teslimat Ana Sayfa Views -->
+    
     <record id="view_teslimat_ana_sayfa_form" model="ir.ui.view">
         <field name="name">teslimat.ana.sayfa.form</field>
         <field name="model">teslimat.ana.sayfa</field>
@@ -12,53 +13,49 @@
                             <span>🚗 Araç-İlçe Kapasite Sorgulama</span>
                         </h1>
                     </div>
-                    
                     <!-- Sorgulama Alanları -->
                     <group>
                         <group>
-                            <field name="arac_id" domain="[('aktif', '=', True), ('gecici_kapatma', '=', False)]" 
+                            <field name="arac_id" 
+                                   domain="[('aktif','=',True),('gecici_kapatma','=',False)]"
                                    options="{'no_create': True, 'no_edit': True}"/>
-                            <field name="ilce_id" domain="[('aktif', '=', True), ('teslimat_aktif', '=', True)]" 
+                            <field name="ilce_id" 
+                                   domain="[('aktif','=',True),('teslimat_aktif','=',True)]"
                                    options="{'no_create': True, 'no_edit': True}"
-                                   attrs="{'required': ['&amp;', ('arac_id', '!=', False), ('arac_kucuk_mu', '=', False)]}"/>
+                                   attrs="{'required': ['&amp;', ('arac_id','!=', False), ('arac_kucuk_mu','=', False)]}"/>
                         </group>
                         <group>
                             <field name="ilce_uygun_mu" readonly="1"/>
                             <field name="arac_kucuk_mu" invisible="1"/>
                         </group>
                     </group>
-                    
-                                               <!-- Sorgula Butonu -->
-                           <group>
-                               <button name="action_sorgula" 
-                                       string="🔄 Yenile" 
-                                       type="object" 
-                                       class="btn-primary"
-                                       attrs="{'invisible': [('arac_id', '=', False)]}"/>
-                           </group>
-                    
+                    <!-- Sorgula Butonu -->
+                    <group>
+                        <button name="action_sorgula" string="🔄 Yenile" type="object" 
+                                class="btn-primary"
+                                attrs="{'invisible': [('arac_id','=', False)]}"/>
+                    </group>
                     <!-- Sonuç Alanları -->
                     <notebook>
-                        <page string="📅 Tarih Bazlı Kapasite" attrs="{'invisible': [('ilce_uygun_mu', '=', False)]}">
+                        <page string="📅 Tarih Bazlı Kapasite" attrs="{'invisible': [('ilce_uygun_mu','=', False)]}">
                             <div class="alert alert-info" role="alert">
                                 <strong>💡 Kullanım:</strong> Satırdaki "Teslimat Belgesi Oluştur" butonuna tıklayarak sihirbazı açın.
                             </div>
-                            <field name="tarih_listesi" readonly="1" options="{'no_open': True}">
-                                <tree editable="false" create="false" edit="false" delete="false" options="{'no_open': True}">
-                                    <field name="tarih" readonly="1" options="{'no_open': True}"/>
-                                    <field name="gun_adi" readonly="1" options="{'no_open': True}"/>
-                                    <field name="teslimat_sayisi" readonly="1" options="{'no_open': True}"/>
-                                    <field name="toplam_kapasite" readonly="1" options="{'no_open': True}"/>
-                                    <field name="kalan_kapasite" readonly="1" options="{'no_open': True}"/>
-                                    <field name="durum_text" readonly="1" options="{'no_open': True}"/>
-                                    <field name="durum_icon" readonly="1" options="{'no_open': True}"/>
-                                    <button name="action_teslimat_olustur_from_tarih" string="📋 Teslimat Oluştur" type="object" 
-                                            class="btn-primary" icon="fa-plus"/>
+                            <field name="tarih_listesi" readonly="1">
+                                <tree decoration-success="kalan_kapasite > 5" decoration-warning="kalan_kapasite <= 5 and kalan_kapasite > 0" decoration-danger="kalan_kapasite <= 0">
+                                    <field name="tarih" readonly="1"/>
+                                    <field name="gun_adi" readonly="1"/>
+                                    <field name="teslimat_sayisi" readonly="1"/>
+                                    <field name="toplam_kapasite" readonly="1"/>
+                                    <field name="kalan_kapasite" readonly="1"/>
+                                    <field name="durum_text" readonly="1"/>
+                                    <field name="durum_icon" invisible="1"/>
+                                    <button name="action_teslimat_olustur_from_tarih" string="📋 Teslimat Oluştur" 
+                                            type="object" class="btn-primary" icon="fa-plus"/>
                                 </tree>
                             </field>
                         </page>
-                        
-                        <page string="📊 İlçe Kapasitesi" attrs="{'invisible': [('ilce_uygun_mu', '=', False)]}">
+                        <page string="📊 İlçe Kapasitesi" attrs="{'invisible': [('ilce_uygun_mu','=', False)]}">
                             <group>
                                 <group>
                                     <field name="toplam_kapasite" readonly="1"/>
@@ -69,14 +66,10 @@
                                     <field name="teslimat_sayisi" readonly="1"/>
                                 </group>
                             </group>
-                            
                             <!-- Uygun Araçlar -->
                             <field name="uygun_arac_ids" readonly="1" widget="many2many_tags"/>
                         </page>
-                        
-
-                        
-                        <page string="ℹ️ Uygunluk Bilgisi" attrs="{'invisible': [('ilce_uygun_mu', '=', True)]}">
+                        <page string="ℹ️ Uygunluk Bilgisi" attrs="{'invisible': [('ilce_uygun_mu','=', True)]}">
                             <field name="uygunluk_mesaji" readonly="1" nolabel="1"/>
                         </page>
                     </notebook>
@@ -85,28 +78,12 @@
         </field>
     </record>
 
-    <!-- Ana Sayfa Action -->
+    <!-- Action -->
     <record id="action_teslimat_ana_sayfa" model="ir.actions.act_window">
         <field name="name">Ana Sayfa</field>
         <field name="res_model">teslimat.ana.sayfa</field>
         <field name="view_mode">form</field>
         <field name="target">current</field>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                📊 Teslimat kapasite sorgulama sayfasına hoş geldiniz!
-            </p>
-            <p>
-                Araç ve ilçe seçerek kapasite bilgilerini sorgulayabilirsiniz.
-            </p>
-            <p>
-                <strong>Kurallar:</strong><br/>
-                • Anadolu Yakası araç sadece Anadolu Yakası ilçelerine gidebilir<br/>
-                • Avrupa Yakası araç sadece Avrupa Yakası ilçelerine gidebilir<br/>
-                • Küçük Araç 1, Küçük Araç 2 ve Ek Araç her iki yakaya da gidebilir
-            </p>
-        </field>
     </record>
-
-
-    <!-- Menü tanımı menu_views.xml'de yönetilmektedir -->
 </odoo>
+
