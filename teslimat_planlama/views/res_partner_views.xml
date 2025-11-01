@@ -13,10 +13,10 @@
                 <page string="Teslimat" name="teslimat">
                     <group>
                         <group>
-                            <!-- teslimat_bolgesi field'ı geçici olarak kaldırıldı -->
-                            <!-- Modül upgrade edildikten sonra aşağıdaki satırı aktif edin: -->
+                            <!-- Bu field'lar geçici olarak kaldırıldı -->
+                            <!-- Modül upgrade edildikten sonra aşağıdaki satırları aktif edin: -->
                             <!-- <field name="teslimat_bolgesi"/> -->
-                            <field name="teslimat_suresi"/>
+                            <!-- <field name="teslimat_suresi"/> -->
                             <field name="tercih_edilen_teslimat_gunu"/>
                             <field name="tercih_edilen_teslimat_saati"/>
                         </group>
