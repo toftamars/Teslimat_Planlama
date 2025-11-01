@@ -53,11 +53,13 @@ class ResPartner(models.Model):
     )
 
     # Sürücü kontrolü
-    is_driver = fields.Boolean(
-        string="Sürücü",
-        default=False,
-        help="Bu kişi teslimat sürücüsü mü?",
-    )
+    # NOT: Bu field geçici olarak devre dışı bırakıldı.
+    # Modül upgrade edildikten sonra aşağıdaki satırları aktif edin:
+    # is_driver = fields.Boolean(
+    #     string="Sürücü",
+    #     default=False,
+    #     help="Bu kişi teslimat sürücüsü mü?",
+    # )
 
     # Teslimat geçmişi
     teslimat_planlama_ids = fields.One2many(
