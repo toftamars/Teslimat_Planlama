@@ -184,18 +184,14 @@
                     <field name="teslimat_belgesi_count" widget="statinfo" string="Teslimatlar"/>
                 </button>
             </xpath>
-            <!-- Etiketler alanının hemen altına küçük kamyon ikonu butonu ekle -->
-            <!-- category_id field'ından sonra butonu ekle -->
-            <xpath expr="//field[@name='category_id']" position="after">
-                <div style="margin-top: 5px;">
-                    <button name="action_teslimat_sihirbazi_ac" 
-                            type="object" 
-                            class="oe_link"
-                            icon="fa-truck"
-                            string="🚚 Teslimat Oluştur"
-                            title="Teslimat Belgesi Oluşturma Sihirbazını Aç"
-                            style="font-size: 12px; padding: 3px 8px;"/>
-                </div>
+            <!-- Header'a teslimat sihirbazı butonu ekle -->
+            <xpath expr="//header" position="inside">
+                <button name="action_teslimat_sihirbazi_ac" 
+                        type="object" 
+                        class="btn-primary"
+                        icon="fa-truck"
+                        string="🚚 Teslimat Oluştur"
+                        title="Teslimat Belgesi Oluşturma Sihirbazını Aç"/>
             </xpath>
         </field>
     </record>
