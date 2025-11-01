@@ -223,17 +223,11 @@ class TeslimatAnaSayfa(models.TransientModel):
                                 [("gun_kodu", "=", gun_kodu)], limit=1
                             )
 
-                            if gun and record.ilce_id:
-                                # Database'den ilçe-gün eşleşmesi kontrol et
-                                gun_ilce = self.env["teslimat.gun.ilce"].search(
-                                    [
-                                        ("gun_id", "=", gun.id),
-                                        ("ilce_id", "=", record.ilce_id.id),
-                                    ],
-                                    limit=1,
-                                )
+                            if not gun:
+                                continue
 
-                            if gun and record.ilce_id:
+                            # İlçe seçiliyse ilçe-gün eşleşmesi kontrol et
+                            if record.ilce_id:
                                 # Database'den ilçe-gün eşleşmesi kontrol et
                                 gun_ilce = self.env["teslimat.gun.ilce"].search(
                                     [
@@ -253,7 +247,7 @@ class TeslimatAnaSayfa(models.TransientModel):
                                 else:
                                     # Eşleşme yoksa gösterilmez
                                     continue
-                            elif gun:
+                            else:
                                 # Küçük araç için genel gün kapasitesi
                                 toplam_kapasite = gun.gunluk_maksimum_teslimat
                                 kalan_kapasite = gun.kalan_teslimat_kapasitesi
@@ -261,8 +255,6 @@ class TeslimatAnaSayfa(models.TransientModel):
                                 # Genel gün kapasitesi dolu ise atla
                                 if kalan_kapasite <= 0:
                                     continue  # Kapasitesi dolu, listeye ekleme
-                            else:
-                                continue
 
                             # Durum hesaplama
                             doluluk_orani = (
