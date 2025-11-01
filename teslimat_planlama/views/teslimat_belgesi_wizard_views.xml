@@ -20,6 +20,7 @@
                             <field name="arac_id" 
                                    domain="[('aktif','=',True),('gecici_kapatma','=',False)]"
                                    options="{'no_create': True, 'no_edit': True}"/>
+                            <field name="arac_kucuk_mu" invisible="1"/>
                             <field name="ilce_id" 
                                    domain="[('aktif','=',True),('teslimat_aktif','=',True)]"
                                    options="{'no_create': True, 'no_edit': True}"
