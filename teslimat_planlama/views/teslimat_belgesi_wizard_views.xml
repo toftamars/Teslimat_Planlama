@@ -27,7 +27,7 @@
                         <field name="transfer_id" 
                                options="{'no_create': True}" 
                                placeholder="DEPO/OUT/00085 yazarak arayın"
-                               readonly="transfer_id != False"/>
+                               attrs="{'readonly': [('transfer_id', '!=', False)]}"/>
                     </group>
                     
                     <!-- Müşteri ve Adres (otomatik) -->
