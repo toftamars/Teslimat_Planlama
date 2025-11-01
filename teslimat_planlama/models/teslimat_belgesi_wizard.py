@@ -8,9 +8,11 @@ class TeslimatBelgesiWizard(models.TransientModel):
     _description = 'Teslimat Belgesi Oluşturma Sihirbazı'
 
     # Temel bilgiler (context ile otomatik dolu gelir)
+    # Not: Bu alanlar wizard açılırken context'ten veya default_get'ten doldurulur
+    # Ancak stock.picking'den açıldığında arac ve ilçe seçilmeli, bu yüzden readonly=False
     teslimat_tarihi = fields.Date(string='Teslimat Tarihi', required=True, readonly=True)
-    arac_id = fields.Many2one('teslimat.arac', string='Araç', required=True, readonly=True)
-    ilce_id = fields.Many2one('teslimat.ilce', string='İlçe', required=False, readonly=True)
+    arac_id = fields.Many2one('teslimat.arac', string='Araç', required=True)
+    ilce_id = fields.Many2one('teslimat.ilce', string='İlçe', required=False)
 
     # Transfer No (stock.picking)
     transfer_id = fields.Many2one(
@@ -63,10 +65,24 @@ class TeslimatBelgesiWizard(models.TransientModel):
                     res['ilce_id'] = parent.ilce_id.id
                 # Tarih context ile gelmediyse boş bırakılır, kullanıcı satır butonundan açınca gelir
 
+        # Stock picking'den geldiyse transfer bilgilerini doldur
+        if ctx.get('default_transfer_id') and 'transfer_id' in (fields_list or []):
+            picking_id = ctx.get('default_transfer_id')
+            picking = self.env['stock.picking'].browse(picking_id)
+            if picking.exists():
+                res['transfer_id'] = picking_id
+                # Tarih varsayılan olarak bugün
+                if 'teslimat_tarihi' in (fields_list or []) and not res.get('teslimat_tarihi'):
+                    res['teslimat_tarihi'] = fields.Date.today()
+                # Müşteri bilgisini context'ten al
+                if ctx.get('default_musteri_id') and 'musteri_id' in (fields_list or []):
+                    res['musteri_id'] = ctx.get('default_musteri_id')
+
         return res
 
     @api.onchange('transfer_id')
     def _onchange_transfer_id(self):
+        """Transfer seçildiğinde müşteri bilgilerini otomatik doldur"""
         picking = self.transfer_id
         if picking:
             # 1. Transfer durumu kontrolü (iptal ve taslak durumları için uyarı)

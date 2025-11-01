@@ -17,14 +17,17 @@
                     <group>
                         <group>
                             <field name="teslimat_tarihi" readonly="1"/>
-                            <field name="arac_id" readonly="1"/>
-                            <field name="ilce_id" readonly="1"/>
+                            <field name="arac_id"/>
+                            <field name="ilce_id"/>
                         </group>
                     </group>
                     
                     <!-- Transfer No -->
                     <group>
-                        <field name="transfer_id" options="{'no_create': True}" placeholder="DEPO/OUT/00085 yazarak arayın"/>
+                        <field name="transfer_id" 
+                               options="{'no_create': True}" 
+                               placeholder="DEPO/OUT/00085 yazarak arayın"
+                               readonly="transfer_id != False"/>
                     </group>
                     
                     <!-- Müşteri ve Adres (otomatik) -->

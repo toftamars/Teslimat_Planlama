@@ -2,7 +2,7 @@
 <odoo>
     <!-- Ana Menu Action (Yetkiye göre yönlendirme) -->
     <record id="action_teslimat_planlama_root" model="ir.actions.server">
-        <field name="name">Teslimat Ana Sayfa</field>
+        <field name="name">🚛 Teslimat</field>
         <field name="model_id" ref="model_teslimat_ana_sayfa"/>
         <field name="state">code</field>
         <field name="code">
@@ -24,7 +24,7 @@ action['target'] = 'current'
 
     <!-- Ana Menu -->
     <menuitem id="menu_teslimat_planlama_root" 
-              name="🚚 Teslimat" 
+              name="Teslimat" 
               action="action_teslimat_planlama_root"
               sequence="50"/>
 

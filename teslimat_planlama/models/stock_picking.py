@@ -79,3 +79,23 @@ class StockPicking(models.Model):
     def action_teslimat_gecikti(self):
         """Teslimat gecikti olarak işaretle"""
         self.write({'teslimat_durumu': 'gecikti'})
+    
+    def action_teslimat_sihirbazi_ac(self):
+        """Transfer belgesinden teslimat sihirbazını aç"""
+        self.ensure_one()
+        
+        # Context hazırla - wizard'a bilgileri gönder
+        context = {
+            'default_transfer_id': self.id,
+            'default_musteri_id': self.partner_id.id if self.partner_id else False,
+        }
+        
+        # Teslimat Belgesi Wizard'ını aç
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Teslimat Belgesi Oluştur',
+            'res_model': 'teslimat.belgesi.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': context,
+        }

@@ -184,6 +184,19 @@
                     <field name="teslimat_belgesi_count" widget="statinfo" string="Teslimatlar"/>
                 </button>
             </xpath>
+            <!-- Etiketler alanının hemen altına küçük kamyon ikonu butonu ekle -->
+            <!-- category_id field'ından sonra butonu ekle -->
+            <xpath expr="//field[@name='category_id']" position="after">
+                <div style="margin-top: 5px;">
+                    <button name="action_teslimat_sihirbazi_ac" 
+                            type="object" 
+                            class="oe_link"
+                            icon="fa-truck"
+                            string="🚚 Teslimat Oluştur"
+                            title="Teslimat Belgesi Oluşturma Sihirbazını Aç"
+                            style="font-size: 12px; padding: 3px 8px;"/>
+                </div>
+            </xpath>
         </field>
     </record>
 
@@ -482,8 +495,8 @@
                     <field name="sure_siz"/>
                 </group>
                 <group>
-                    <field name="kapatma_baslangic" invisible="sure_siz"/>
-                    <field name="kapatma_bitis" invisible="sure_siz"/>
+                    <field name="kapatma_baslangic" attrs="{'invisible': [('sure_siz', '=', True)]}"/>
+                    <field name="kapatma_bitis" attrs="{'invisible': [('sure_siz', '=', True)]}"/>
                 </group>
                 <group>
                     <field name="kapatma_sebebi"/>
