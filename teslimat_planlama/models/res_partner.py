@@ -22,8 +22,10 @@ class ResPartner(models.Model):
     # teslimat_notlari = fields.Text(string="Teslimat Notları")
 
     # Konum bilgileri
-    enlem = fields.Float(string="Enlem")
-    boylam = fields.Float(string="Boylam")
+    # NOT: Bu field'lar geçici olarak devre dışı bırakıldı.
+    # Modül upgrade edildikten sonra aşağıdaki satırları aktif edin:
+    # enlem = fields.Float(string="Enlem")
+    # boylam = fields.Float(string="Boylam")
 
     # Teslimat tercihleri
     tercih_edilen_teslimat_gunu = fields.Selection(
@@ -76,18 +78,20 @@ class ResPartner(models.Model):
     )
 
     # Hesaplanan alanlar
-    konum_bilgisi = fields.Char(
-        string="Konum Bilgisi",
-        compute="_compute_konum_bilgisi",
-        store=True,
-    )
-
-    @api.depends("enlem", "boylam")
-    def _compute_konum_bilgisi(self) -> None:
-        """Konum bilgisini hesapla."""
-        for partner in self:
-            if partner.enlem and partner.boylam:
-                partner.konum_bilgisi = f"{partner.enlem}, {partner.boylam}"
-            else:
-                partner.konum_bilgisi = "Konum bilgisi yok"
+    # NOT: konum_bilgisi field'ı geçici olarak devre dışı bırakıldı.
+    # Modül upgrade edildikten sonra aşağıdaki satırları aktif edin:
+    # konum_bilgisi = fields.Char(
+    #     string="Konum Bilgisi",
+    #     compute="_compute_konum_bilgisi",
+    #     store=True,
+    # )
+    #
+    # @api.depends("enlem", "boylam")
+    # def _compute_konum_bilgisi(self) -> None:
+    #     """Konum bilgisini hesapla."""
+    #     for partner in self:
+    #         if partner.enlem and partner.boylam:
+    #             partner.konum_bilgisi = f"{partner.enlem}, {partner.boylam}"
+    #         else:
+    #             partner.konum_bilgisi = "Konum bilgisi yok"
 

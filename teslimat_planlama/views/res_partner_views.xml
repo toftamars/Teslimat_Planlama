@@ -21,9 +21,11 @@
                             <field name="tercih_edilen_teslimat_saati"/>
                         </group>
                         <group>
-                            <field name="enlem"/>
-                            <field name="boylam"/>
-                            <field name="konum_bilgisi" readonly="1"/>
+                            <!-- Konum bilgileri geçici olarak kaldırıldı -->
+                            <!-- Modül upgrade edildikten sonra aşağıdaki satırları aktif edin: -->
+                            <!-- <field name="enlem"/> -->
+                            <!-- <field name="boylam"/> -->
+                            <!-- <field name="konum_bilgisi" readonly="1"/> -->
                             <!-- is_driver field'ı geçici olarak kaldırıldı -->
                             <!-- Modül upgrade edildikten sonra aşağıdaki satırı aktif edin: -->
                             <!-- <field name="is_driver"/> -->
