@@ -57,7 +57,7 @@ class TeslimatBelgesi(models.Model):
     surucu_id = fields.Many2one(
         "res.partner",
         string="Sürücü",
-        domain=[("is_driver", "=", True)],
+        # domain=[("is_driver", "=", True)],  # Geçici olarak kaldırıldı - modül upgrade edildikten sonra aktif edilebilir
         tracking=True,
     )
 

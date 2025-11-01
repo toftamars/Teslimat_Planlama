@@ -22,7 +22,9 @@
                             <field name="enlem"/>
                             <field name="boylam"/>
                             <field name="konum_bilgisi" readonly="1"/>
-                            <field name="is_driver"/>
+                            <!-- is_driver field'ı geçici olarak kaldırıldı -->
+                            <!-- Modül upgrade edildikten sonra aşağıdaki satırı aktif edin: -->
+                            <!-- <field name="is_driver"/> -->
                         </group>
                     </group>
                     <group string="Notlar">
