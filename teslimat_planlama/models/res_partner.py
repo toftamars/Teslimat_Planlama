@@ -15,7 +15,9 @@ class ResPartner(models.Model):
     _inherit = "res.partner"
 
     # Teslimat planlama alanları
-    teslimat_bolgesi = fields.Char(string="Teslimat Bölgesi")
+    # NOT: teslimat_bolgesi field'ı geçici olarak devre dışı bırakıldı.
+    # Modül upgrade edildikten sonra aşağıdaki satırı aktif edin:
+    # teslimat_bolgesi = fields.Char(string="Teslimat Bölgesi")
     teslimat_suresi = fields.Integer(string="Teslimat Süresi (Gün)", default=1)
     teslimat_notlari = fields.Text(string="Teslimat Notları")
 
