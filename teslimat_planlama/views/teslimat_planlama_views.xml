@@ -482,8 +482,8 @@
                     <field name="sure_siz"/>
                 </group>
                 <group>
-                    <field name="kapatma_baslangic" invisible="sure_siz == True"/>
-                    <field name="kapatma_bitis" invisible="sure_siz == True"/>
+                    <field name="kapatma_baslangic" invisible="sure_siz"/>
+                    <field name="kapatma_bitis" invisible="sure_siz"/>
                 </group>
                 <group>
                     <field name="kapatma_sebebi"/>
