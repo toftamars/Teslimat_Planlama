@@ -35,9 +35,14 @@ class IrModel(models.Model):
     _inherit = "ir.model"
 
     def _process_ondelete(self):
-        """Override: Eski model referanslarını handle et."""
+        """Override: Eski model referanslarını handle et.
+        
+        Odoo'nun base _process_ondelete metodu selection field'ları kontrol ederken
+        model registry'ye erişmeye çalışır. Eğer model registry'de yoksa KeyError verir.
+        Bu metod, eski teslimat.planlama.akilli modeli ve diğer silinmiş modeller için
+        bu hatayı önler.
+        """
         # Eski teslimat.planlama.akilli modeli için özel handling
-        # Bu model kayıtları için _process_ondelete çalıştırma (model registry'de yok)
         records_to_skip = self.filtered(lambda r: r.model == "teslimat.planlama.akilli")
         if records_to_skip:
             _logger.warning(
@@ -50,51 +55,86 @@ class IrModel(models.Model):
         if not records_to_process:
             return None
         
-        # Her kayıt için ayrı ayrı işlem yap - selection field kontrolü sırasında hata olabilir
+        # Base metod selection field kontrolü yaparken model registry'ye erişir
+        # Eğer model yoksa KeyError verir. Bu durumu handle etmek için
+        # her kayıt için ayrı ayrı deneme yapıyoruz
+        processed_count = 0
+        skipped_count = 0
+        
         for record in records_to_process:
             try:
-                # Selection field'ları kontrol et - model registry'de olmayan modeller için hata olabilir
+                # Selection field'ları kontrol et - sadece registry'de olan modeller için
                 selection_fields = record.field_id.filtered(lambda f: f.ttype == 'selection')
+                skip_record = False
+                
                 for field in selection_fields:
-                    if field.selection_field_id and field.selection_field_id.model:
-                        model_name = field.selection_field_id.model
-                        # Model registry'de yoksa atla
-                        if model_name not in self.env.registry:
-                            _logger.warning(
-                                "Selection field model'i registry'de yok, atlanıyor: %s (field: %s)",
-                                model_name,
-                                field.name,
-                            )
-                            continue
-            except Exception as field_error:
-                _logger.warning(
-                    "Field kontrolü sırasında hata (ignored): %s", field_error
-                )
+                    try:
+                        # selection_field_id kontrolü - model registry'de yoksa hata verebilir
+                        if hasattr(field, 'selection_field_id') and field.selection_field_id:
+                            model_name = field.selection_field_id.model
+                            # Model registry'de yoksa bu kaydı atla
+                            if model_name and model_name not in self.env.registry:
+                                _logger.warning(
+                                    "Selection field model'i registry'de yok, kayıt atlanıyor: %s (field: %s, record: %s)",
+                                    model_name,
+                                    field.name,
+                                    record.model,
+                                )
+                                skip_record = True
+                                break
+                    except (KeyError, AttributeError) as field_error:
+                        # Model registry hatası veya field yok
+                        _logger.warning(
+                            "Selection field kontrolü sırasında hata (ignored): %s (record: %s)",
+                            field_error,
+                            record.model,
+                        )
+                        skip_record = True
+                        break
+                
+                if skip_record:
+                    skipped_count += 1
+                    continue
+                
+                # Kayıt güvenli görünüyor, tek kayıt için base metodu çağır
+                try:
+                    super(IrModel, record)._process_ondelete()
+                    processed_count += 1
+                except KeyError as ke:
+                    # Model registry hatası - bu kaydı atla
+                    _logger.warning(
+                        "Model registry hatası, kayıt atlanıyor: %s (model: %s)",
+                        ke,
+                        record.model,
+                    )
+                    skipped_count += 1
+                    continue
+                    
+            except Exception as e:
+                # Beklenmeyen hatalar için log'la ama devam et
+                error_str = str(e)
+                if "teslimat.planlama.akilli" in error_str:
+                    _logger.warning(
+                        "teslimat.planlama.akilli hatası, kayıt atlanıyor: %s",
+                        error_str,
+                    )
+                    skipped_count += 1
+                else:
+                    _logger.error(
+                        "_process_ondelete sırasında beklenmeyen hata (kayıt atlanıyor): %s (model: %s)",
+                        e,
+                        record.model,
+                    )
+                    skipped_count += 1
         
-        # Selection field kontrolü sırasında model registry hatası olabilir
-        # Bu durumda KeyError yakalayıp ignore et
-        try:
-            return super(IrModel, records_to_process)._process_ondelete()
-        except KeyError as e:
-            # Model registry'de bulunamayan modeller için KeyError
-            # Eski teslimat.planlama.akilli veya selection field referansları için
-            error_str = str(e)
-            _logger.warning(
-                "Model registry hatası (KeyError), kayıtlar güvenli şekilde atlanıyor: %s",
-                error_str,
+        if processed_count > 0:
+            _logger.info(
+                "_process_ondelete tamamlandı: %s kayıt işlendi, %s kayıt atlandı",
+                processed_count,
+                skipped_count,
             )
-            return None
-        except Exception as e:
-            # Diğer beklenmeyen hatalar için tekrar fırlat
-            error_str = str(e)
-            if "teslimat.planlama.akilli" in error_str:
-                _logger.warning(
-                    "teslimat.planlama.akilli hatası, kayıtlar güvenli şekilde atlanıyor: %s",
-                    error_str,
-                )
-                return None
-            _logger.error("_process_ondelete sırasında beklenmeyen hata: %s", e)
-            raise
+        
+        return None
 
     @api.model
     def _cleanup_old_teslimat_planlama_akilli(self) -> None:
