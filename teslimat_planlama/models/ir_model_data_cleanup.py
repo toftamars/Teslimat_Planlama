@@ -14,15 +14,19 @@ class IrModelData(models.Model):
     def _process_ondelete(self):
         """Override: Eski model referanslarını handle et."""
         # Eski teslimat.planlama.akilli modeli için özel handling
-        for record in self:
-            if record.model == "teslimat.planlama.akilli":
-                # Model yoksa, sadece kaydı sil, model kontrolü yapma
-                _logger.warning(
-                    "Eski teslimat.planlama.akilli model referansı atlanıyor: %s", record.name
-                )
-                continue
-        # Diğer kayıtlar için normal işlem
-        return super(IrModelData, self)._process_ondelete()
+        # Bu model kayıtları için _process_ondelete çalıştırma (model yok)
+        records_to_skip = self.filtered(lambda r: r.model == "teslimat.planlama.akilli")
+        if records_to_skip:
+            _logger.warning(
+                "Eski teslimat.planlama.akilli model referansları atlanıyor: %s kayıt",
+                len(records_to_skip),
+            )
+        
+        # Sadece diğer kayıtlar için normal işlem yap
+        records_to_process = self - records_to_skip
+        if records_to_process:
+            return super(IrModelData, records_to_process)._process_ondelete()
+        return None
 
     @api.model
     def _cleanup_old_teslimat_planlama_akilli(self) -> None:
