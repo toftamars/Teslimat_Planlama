@@ -28,33 +28,35 @@ class ResPartner(models.Model):
     # boylam = fields.Float(string="Boylam")
 
     # Teslimat tercihleri
-    tercih_edilen_teslimat_gunu = fields.Selection(
-        [
-            ("pazartesi", "Pazartesi"),
-            ("sali", "Salı"),
-            ("carsamba", "Çarşamba"),
-            ("persembe", "Perşembe"),
-            ("cuma", "Cuma"),
-            ("cumartesi", "Cumartesi"),
-            ("pazar", "Pazar"),
-        ],
-        string="Tercih Edilen Teslimat Günü",
-    )
-
-    tercih_edilen_teslimat_saati = fields.Selection(
-        [
-            ("09:00", "09:00"),
-            ("10:00", "10:00"),
-            ("11:00", "11:00"),
-            ("12:00", "12:00"),
-            ("13:00", "13:00"),
-            ("14:00", "14:00"),
-            ("15:00", "15:00"),
-            ("16:00", "16:00"),
-            ("17:00", "17:00"),
-        ],
-        string="Tercih Edilen Teslimat Saati",
-    )
+    # NOT: Bu field'lar geçici olarak devre dışı bırakıldı.
+    # Modül upgrade edildikten sonra aşağıdaki satırları aktif edin:
+    # tercih_edilen_teslimat_gunu = fields.Selection(
+    #     [
+    #         ("pazartesi", "Pazartesi"),
+    #         ("sali", "Salı"),
+    #         ("carsamba", "Çarşamba"),
+    #         ("persembe", "Perşembe"),
+    #         ("cuma", "Cuma"),
+    #         ("cumartesi", "Cumartesi"),
+    #         ("pazar", "Pazar"),
+    #     ],
+    #     string="Tercih Edilen Teslimat Günü",
+    # )
+    #
+    # tercih_edilen_teslimat_saati = fields.Selection(
+    #     [
+    #         ("09:00", "09:00"),
+    #         ("10:00", "10:00"),
+    #         ("11:00", "11:00"),
+    #         ("12:00", "12:00"),
+    #         ("13:00", "13:00"),
+    #         ("14:00", "14:00"),
+    #         ("15:00", "15:00"),
+    #         ("16:00", "16:00"),
+    #         ("17:00", "17:00"),
+    #     ],
+    #     string="Tercih Edilen Teslimat Saati",
+    # )
 
     # Sürücü kontrolü
     # NOT: Bu field geçici olarak devre dışı bırakıldı.
