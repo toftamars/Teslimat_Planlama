@@ -28,6 +28,53 @@ action['target'] = 'current'
               action="action_teslimat_planlama_root"
               sequence="50"/>
 
+    <!-- ⚙️ Yapılandırma Menüsü (Sadece Yöneticiler - En Üstte) -->
+    <menuitem id="menu_teslimat_yapilandirma" 
+              name="⚙️ Yapılandırma" 
+              parent="menu_teslimat_planlama_root" 
+              sequence="1"
+              groups="teslimat_planlama.group_teslimat_manager,stock.group_stock_manager"/>
+
+    <!-- 🚗 Teslimat Araçları -->
+    <menuitem id="menu_action_teslimat_arac" 
+              name="🚗 Teslimat Araçları" 
+              parent="menu_teslimat_yapilandirma" 
+              action="action_teslimat_arac" 
+              sequence="10"
+              groups="teslimat_planlama.group_teslimat_manager,stock.group_stock_manager"/>
+
+    <!-- 📅 Teslimat Günleri -->
+    <menuitem id="menu_action_teslimat_gun" 
+              name="📅 Teslimat Günleri" 
+              parent="menu_teslimat_yapilandirma" 
+              action="action_teslimat_gun" 
+              sequence="20"
+              groups="teslimat_planlama.group_teslimat_manager,stock.group_stock_manager"/>
+
+    <!-- ⚙️ Teslimat Programı Kurulumu -->
+    <menuitem id="menu_action_teslimat_program_kurulum" 
+              name="⚙️ Teslimat Programı Kurulumu" 
+              parent="menu_teslimat_yapilandirma" 
+              action="action_teslimat_program_kurulum" 
+              sequence="30"
+              groups="teslimat_planlama.group_teslimat_manager,stock.group_stock_manager"/>
+
+    <!-- 🏙️ Şehirler -->
+    <menuitem id="menu_action_teslimat_sehir" 
+              name="🏙️ Şehirler" 
+              parent="menu_teslimat_yapilandirma" 
+              action="action_teslimat_sehir" 
+              sequence="40"
+              groups="teslimat_planlama.group_teslimat_manager,stock.group_stock_manager"/>
+    
+    <!-- 🏘️ İlçeler -->
+    <menuitem id="menu_action_teslimat_ilce" 
+              name="🏘️ İlçeler" 
+              parent="menu_teslimat_yapilandirma" 
+              action="action_teslimat_ilce" 
+              sequence="50"
+              groups="teslimat_planlama.group_teslimat_manager,stock.group_stock_manager"/>
+
     <!-- 📋 Teslimat Ana Menüleri -->
     
     <!-- 🏠 Ana Sayfa (Normal kullanıcılar için) -->
@@ -35,13 +82,13 @@ action['target'] = 'current'
               name="🏠 Ana Sayfa" 
               parent="menu_teslimat_planlama_root" 
               action="action_teslimat_ana_sayfa" 
-              sequence="5"/>
+              sequence="10"/>
     
     <!-- 📄 Teslimat Belgeleri (Normal kullanıcılar için) -->
     <menuitem id="menu_teslimat_belgeleri" 
               name="📄 Teslimat Belgeleri" 
               parent="menu_teslimat_planlama_root" 
-              sequence="10"/>
+              sequence="20"/>
     
     <menuitem id="menu_action_teslimat_belgesi" 
               name="📄 Teslimat Belgeleri" 
@@ -49,96 +96,11 @@ action['target'] = 'current'
               action="action_teslimat_belgesi" 
               sequence="10"/>
 
-
-    <!-- 🔧 Yönetici Menüleri (Sadece Yöneticiler) -->
-    <menuitem id="menu_teslimat_yonetici" 
-              name="🔧 Yönetici Menüleri" 
-              parent="menu_teslimat_planlama_root" 
-              sequence="20"
-              groups="teslimat_planlama.group_teslimat_manager,stock.group_stock_manager"/>
-
-    <!-- 🚗 Teslimat Araçları -->
-    <menuitem id="menu_teslimat_araclar" 
-              name="🚗 Teslimat Araçları" 
-              parent="menu_teslimat_yonetici" 
-              sequence="10"
-              groups="teslimat_planlama.group_teslimat_manager,stock.group_stock_manager"/>
-    
-    <menuitem id="menu_action_teslimat_arac" 
-              name="🚗 Teslimat Araçları" 
-              parent="menu_teslimat_araclar" 
-              action="action_teslimat_arac" 
-              sequence="10"
-              groups="teslimat_planlama.group_teslimat_manager,stock.group_stock_manager"/>
-
-    <!-- 📅 Teslimat Günleri -->
-    <menuitem id="menu_teslimat_gunler" 
-              name="📅 Teslimat Günleri" 
-              parent="menu_teslimat_yonetici" 
-              sequence="20"
-              groups="teslimat_planlama.group_teslimat_manager,stock.group_stock_manager"/>
-    
-    <menuitem id="menu_action_teslimat_gun" 
-              name="📅 Teslimat Günleri" 
-              parent="menu_teslimat_gunler" 
-              action="action_teslimat_gun" 
-              sequence="10"
-              groups="teslimat_planlama.group_teslimat_manager,stock.group_stock_manager"/>
-
-    <!-- ⚙️ Teslimat Programı Kurulumu -->
-    <menuitem id="menu_teslimat_program_kurulum" 
-              name="⚙️ Teslimat Programı Kurulumu" 
-              parent="menu_teslimat_yonetici" 
-              sequence="30"
-              groups="teslimat_planlama.group_teslimat_manager,stock.group_stock_manager"/>
-    
-    <menuitem id="menu_action_teslimat_program_kurulum" 
-              name="⚙️ Teslimat Programı Kurulumu" 
-              parent="menu_teslimat_program_kurulum" 
-              action="action_teslimat_program_kurulum" 
-              sequence="10"
-              groups="teslimat_planlama.group_teslimat_manager,stock.group_stock_manager"/>
-
-    <!-- 🔧 Konfigürasyon -->
-    <menuitem id="menu_teslimat_konfigurasyon" 
-              name="🔧 Konfigürasyon" 
-              parent="menu_teslimat_yonetici" 
-              sequence="40"
-              groups="teslimat_planlama.group_teslimat_manager,stock.group_stock_manager"/>
-    
-    <!-- 🏙️ Şehirler -->
-    <menuitem id="menu_teslimat_sehirler" 
-              name="🏙️ Şehirler" 
-              parent="menu_teslimat_konfigurasyon" 
-              sequence="10"
-              groups="teslimat_planlama.group_teslimat_manager,stock.group_stock_manager"/>
-    
-    <menuitem id="menu_action_teslimat_sehir" 
-              name="🏙️ Şehirler" 
-              parent="menu_teslimat_sehirler" 
-              action="action_teslimat_sehir" 
-              sequence="10"
-              groups="teslimat_planlama.group_teslimat_manager,stock.group_stock_manager"/>
-    
-    <!-- 🏘️ İlçeler -->
-    <menuitem id="menu_teslimat_ilceler" 
-              name="🏘️ İlçeler" 
-              parent="menu_teslimat_konfigurasyon" 
-              sequence="20"
-              groups="teslimat_planlama.group_teslimat_manager,stock.group_stock_manager"/>
-    
-    <menuitem id="menu_action_teslimat_ilce" 
-              name="🏘️ İlçeler" 
-              parent="menu_teslimat_ilceler" 
-              action="action_teslimat_ilce" 
-              sequence="10"
-              groups="teslimat_planlama.group_teslimat_manager,stock.group_stock_manager"/>
-
-    <!-- 📊 Raporlama ve Analiz -->
+    <!-- 📊 Raporlama ve Analiz (Yöneticiler için) -->
     <menuitem id="menu_teslimat_raporlama" 
               name="📊 Raporlama" 
-              parent="menu_teslimat_yonetici" 
-              sequence="50"
+              parent="menu_teslimat_planlama_root" 
+              sequence="30"
               groups="teslimat_planlama.group_teslimat_manager,stock.group_stock_manager"/>
     
     <menuitem id="menu_action_teslimat_planlama_akilli" 
@@ -155,11 +117,11 @@ action['target'] = 'current'
               sequence="20"
               groups="teslimat_planlama.group_teslimat_manager,stock.group_stock_manager"/>
 
-    <!-- 🔄 Eski Menüler (Geriye Uyumluluk) -->
+    <!-- 📋 Planlamalar (Yöneticiler için) -->
     <menuitem id="menu_teslimat_planlama" 
               name="📋 Planlamalar" 
-              parent="menu_teslimat_yonetici" 
-              sequence="60"
+              parent="menu_teslimat_planlama_root" 
+              sequence="40"
               groups="teslimat_planlama.group_teslimat_manager,stock.group_stock_manager"/>
     
     <menuitem id="menu_action_teslimat_planlama" 
