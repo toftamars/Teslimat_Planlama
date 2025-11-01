@@ -29,9 +29,13 @@
                             <!-- <field name="is_driver"/> -->
                         </group>
                     </group>
+                    <!-- teslimat_notlari field'ı geçici olarak kaldırıldı -->
+                    <!-- Modül upgrade edildikten sonra aşağıdaki group'u aktif edin: -->
+                    <!--
                     <group string="Notlar">
                         <field name="teslimat_notlari" nolabel="1"/>
                     </group>
+                    -->
                     <notebook>
                         <page string="Teslimat Belgeleri">
                             <field name="teslimat_belgesi_ids" readonly="1">

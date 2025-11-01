@@ -19,7 +19,7 @@ class ResPartner(models.Model):
     # Modül upgrade edildikten sonra aşağıdaki satırları aktif edin:
     # teslimat_bolgesi = fields.Char(string="Teslimat Bölgesi")
     # teslimat_suresi = fields.Integer(string="Teslimat Süresi (Gün)", default=1)
-    teslimat_notlari = fields.Text(string="Teslimat Notları")
+    # teslimat_notlari = fields.Text(string="Teslimat Notları")
 
     # Konum bilgileri
     enlem = fields.Float(string="Enlem")
