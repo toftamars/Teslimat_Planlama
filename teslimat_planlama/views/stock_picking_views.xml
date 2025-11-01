@@ -8,16 +8,18 @@
         <field name="model">stock.picking</field>
         <field name="inherit_id" ref="stock.view_picking_form"/>
         <field name="arch" type="xml">
-            <!-- Smart Button Ekle -->
-            <xpath expr="//button[@name='action_view_move_lines']" position="after">
-                <button name="action_view_teslimat_belgeleri" 
-                        string="Teslimatlar" 
-                        type="object" 
-                        class="oe_stat_button" 
-                        icon="fa-truck"
-                        invisible="not teslimat_belgesi_count">
-                    <field name="teslimat_belgesi_count" widget="statinfo" string="Teslimat"/>
-                </button>
+            <!-- Smart Button - Sheet başına ekle -->
+            <xpath expr="//sheet" position="inside">
+                <div class="oe_button_box" name="button_box">
+                    <button name="action_view_teslimat_belgeleri" 
+                            string="Teslimatlar" 
+                            type="object" 
+                            class="oe_stat_button" 
+                            icon="fa-truck"
+                            invisible="not teslimat_belgesi_count">
+                        <field name="teslimat_belgesi_count" widget="statinfo" string="Teslimat"/>
+                    </button>
+                </div>
             </xpath>
             
             <!-- Kısayol Butonu - Header'a Ekle -->
