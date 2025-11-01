@@ -156,7 +156,10 @@ class TeslimatAnaSayfa(models.TransientModel):
 
     @api.depends("ilce_id", "arac_id", "ilce_uygun_mu")
     def _compute_tarih_listesi(self) -> None:
-        """Seçilen ilçe ve araç için uygun tarihleri hesapla."""
+        """Seçilen ilçe ve araç için uygun tarihleri hesapla (Optimized).
+        
+        Performans optimizasyonu: Batch sorgulama ile 90+ sorgu → ~10 sorgu.
+        """
         for record in self:
             small_vehicle = record.arac_kucuk_mu
             if record.arac_id and (
@@ -164,23 +167,90 @@ class TeslimatAnaSayfa(models.TransientModel):
             ):
                 # Sonraki 30 günü kontrol et
                 bugun = fields.Date.today()
+                bitis_tarihi = bugun + timedelta(days=30)
                 tarihler = []
 
+                # PERFORMANS OPTİMİZASYONU: Batch sorgulama
+                # 1. Tüm günler için teslimat sayılarını tek sorguda çek
+                teslimat_domain = [
+                    ("teslimat_tarihi", ">=", bugun),
+                    ("teslimat_tarihi", "<=", bitis_tarihi),
+                    ("arac_id", "=", record.arac_id.id),
+                    ("durum", "in", ["taslak", "bekliyor", "hazir", "yolda"]),
+                ]
+                if record.ilce_id:
+                    teslimat_domain.append(("ilce_id", "=", record.ilce_id.id))
+                else:
+                    teslimat_domain.append(("ilce_id", "=", False))
+
+                # Batch: Tüm teslimatları tek sorguda çek
+                tum_teslimatlar = self.env["teslimat.belgesi"].search(
+                    teslimat_domain, fields=["teslimat_tarihi"]
+                )
+                
+                # Python tarafında tarih bazlı grupla
+                teslimat_sayisi_dict = {}
+                for teslimat in tum_teslimatlar:
+                    tarih = teslimat.teslimat_tarihi
+                    teslimat_sayisi_dict[tarih] = (
+                        teslimat_sayisi_dict.get(tarih, 0) + 1
+                    )
+
+                # 2. Gün kodları için mapping (sabit)
+                gun_kodu_map = {
+                    0: "pazartesi",
+                    1: "sali",
+                    2: "carsamba",
+                    3: "persembe",
+                    4: "cuma",
+                    5: "cumartesi",
+                    6: "pazar",
+                }
+
+                # Türkçe gün adları mapping
+                gun_eslesmesi = {
+                    "Monday": "Pazartesi",
+                    "Tuesday": "Salı",
+                    "Wednesday": "Çarşamba",
+                    "Thursday": "Perşembe",
+                    "Friday": "Cuma",
+                    "Saturday": "Cumartesi",
+                    "Sunday": "Pazar",
+                }
+
+                # 3. Tüm günleri önceden çek (haftanın 7 günü için sadece 1 sorgu)
+                gun_kodlari = list(gun_kodu_map.values())
+                gunler = self.env["teslimat.gun"].search(
+                    [("gun_kodu", "in", gun_kodlari)]
+                )
+                gun_dict = {gun.gun_kodu: gun for gun in gunler}
+
+                # 4. İlçe-gün eşleşmelerini batch olarak çek (eğer ilçe varsa)
+                gun_ilce_dict = {}
+                if record.ilce_id:
+                    # Tüm ilçe-gün eşleşmelerini çek (tarih bazlı ve genel)
+                    gun_ilce_kayitlari = self.env["teslimat.gun.ilce"].search(
+                        [
+                            ("ilce_id", "=", record.ilce_id.id),
+                            ("gun_id", "in", gunler.ids),
+                        ]
+                    )
+                    # Tarih bazlı eşleşmeler için dict oluştur
+                    for gun_ilce in gun_ilce_kayitlari:
+                        key = (gun_ilce.gun_id.id, gun_ilce.ilce_id.id, gun_ilce.tarih)
+                        gun_ilce_dict[key] = gun_ilce
+                    # Genel eşleşmeler için de (tarih olmadan)
+                    for gun_ilce in gun_ilce_kayitlari.filtered(
+                        lambda g: not g.tarih or g.tarih == bugun
+                    ):
+                        key_genel = (gun_ilce.gun_id.id, gun_ilce.ilce_id.id)
+                        if key_genel not in gun_ilce_dict:
+                            gun_ilce_dict[key_genel] = gun_ilce
+
+                # Şimdi 30 günü loop et (sorgu yok, sadece hesaplama)
                 for i in range(30):
                     tarih = bugun + timedelta(days=i)
-                    gun_adi = tarih.strftime("%A")  # İngilizce gün adı
-
-                    # Türkçe gün adlarını eşleştir
-                    gun_eslesmesi = {
-                        "Monday": "Pazartesi",
-                        "Tuesday": "Salı",
-                        "Wednesday": "Çarşamba",
-                        "Thursday": "Perşembe",
-                        "Friday": "Cuma",
-                        "Saturday": "Cumartesi",
-                        "Sunday": "Pazar",
-                    }
-
+                    gun_adi = tarih.strftime("%A")
                     gun_adi_tr = gun_eslesmesi.get(gun_adi, gun_adi)
 
                     # İlçe-gün uygunluğunu kontrol et (küçük araçlar için kısıt yok)
@@ -192,114 +262,85 @@ class TeslimatAnaSayfa(models.TransientModel):
 
                     # Sadece uygun günleri ekle
                     if ilce_uygun_mu:
-                        # Bu tarih için teslimat sayısını hesapla
-                        teslimat_sayisi = self.env["teslimat.belgesi"].search_count(
-                            [
-                                ("teslimat_tarihi", "=", tarih),
-                                ("arac_id", "=", record.arac_id.id),
-                                ("ilce_id", "=", record.ilce_id.id if record.ilce_id else False),
-                                ("durum", "in", ["taslak", "bekliyor", "hazir", "yolda"]),
-                            ]
-                        )
+                        # Bu tarih için teslimat sayısını dict'ten al
+                        teslimat_sayisi = teslimat_sayisi_dict.get(tarih, 0)
 
                         # Araç kapasitesi kontrolü - Dolu ise atla
                         if teslimat_sayisi >= record.arac_id.gunluk_teslimat_limiti:
                             continue  # Bu tarih kapasitesi dolu, listeye ekleme
 
-                        # Gün ve ilçe kapasitesini hesapla (dinamik - database'den)
-                        gun_kodu_map = {
-                            0: "pazartesi",
-                            1: "sali",
-                            2: "carsamba",
-                            3: "persembe",
-                            4: "cuma",
-                            5: "cumartesi",
-                            6: "pazar",
-                        }
+                        # Gün bilgisini dict'ten al
                         gun_kodu = gun_kodu_map.get(tarih.weekday())
+                        if not gun_kodu:
+                            continue
 
-                        if gun_kodu:
-                            gun = self.env["teslimat.gun"].search(
-                                [("gun_kodu", "=", gun_kodu)], limit=1
-                            )
+                        gun = gun_dict.get(gun_kodu)
+                        if not gun:
+                            continue
 
-                            if not gun:
-                                continue
+                        # İlçe seçiliyse ilçe-gün eşleşmesi kontrol et
+                        if record.ilce_id:
+                            # Önce tarih bazlı eşleşmeyi kontrol et
+                            key_tarih = (gun.id, record.ilce_id.id, tarih)
+                            gun_ilce = gun_ilce_dict.get(key_tarih)
+                            
+                            # Eğer tarih bazlı eşleşme yoksa, genel eşleşmeyi kontrol et
+                            if not gun_ilce:
+                                key_genel = (gun.id, record.ilce_id.id)
+                                gun_ilce = gun_ilce_dict.get(key_genel)
 
-                            # İlçe seçiliyse ilçe-gün eşleşmesi kontrol et
-                            if record.ilce_id:
-                                # Database'den ilçe-gün eşleşmesi kontrol et (tarih bazlı)
-                                gun_ilce = self.env["teslimat.gun.ilce"].search(
-                                    [
-                                        ("gun_id", "=", gun.id),
-                                        ("ilce_id", "=", record.ilce_id.id),
-                                        ("tarih", "=", tarih),
-                                    ],
-                                    limit=1,
-                                )
-                                # Eğer tarih bazlı eşleşme yoksa, genel eşleşmeyi kontrol et
-                                if not gun_ilce:
-                                    gun_ilce = self.env["teslimat.gun.ilce"].search(
-                                        [
-                                            ("gun_id", "=", gun.id),
-                                            ("ilce_id", "=", record.ilce_id.id),
-                                        ],
-                                        limit=1,
-                                        order="tarih desc",
-                                    )
+                            if gun_ilce:
+                                toplam_kapasite = gun_ilce.maksimum_teslimat
+                                kalan_kapasite = gun_ilce.kalan_kapasite
 
-                                if gun_ilce:
-                                    toplam_kapasite = gun_ilce.maksimum_teslimat
-                                    kalan_kapasite = gun_ilce.kalan_kapasite
-
-                                    # İlçe-gün kapasitesi dolu ise atla
-                                    if kalan_kapasite <= 0:
-                                        continue  # Kapasitesi dolu, listeye ekleme
-                                else:
-                                    # Eşleşme yoksa gösterilmez
-                                    continue
-                            else:
-                                # Küçük araç için genel gün kapasitesi
-                                toplam_kapasite = gun.gunluk_maksimum_teslimat
-                                kalan_kapasite = gun.kalan_teslimat_kapasitesi
-
-                                # Genel gün kapasitesi dolu ise atla
+                                # İlçe-gün kapasitesi dolu ise atla
                                 if kalan_kapasite <= 0:
                                     continue  # Kapasitesi dolu, listeye ekleme
-
-                            # Durum hesaplama
-                            doluluk_orani = (
-                                (teslimat_sayisi / toplam_kapasite * 100)
-                                if toplam_kapasite > 0
-                                else 0
-                            )
-
-                            if kalan_kapasite > 5 and doluluk_orani < 50:
-                                durum = "bos"
-                                durum_text = "🟢 Boş"
-                                durum_icon = "fa-circle text-success"
-                            elif kalan_kapasite <= 5 or (50 <= doluluk_orani < 90):
-                                durum = "dolu_yakin"
-                                durum_text = "🟡 Dolu Yakın"
-                                durum_icon = "fa-circle text-warning"
                             else:
-                                durum = "dolu"
-                                durum_text = "🔴 Dolu"
-                                durum_icon = "fa-circle text-danger"
+                                # Eşleşme yoksa gösterilmez
+                                continue
+                        else:
+                            # Küçük araç için genel gün kapasitesi
+                            toplam_kapasite = gun.gunluk_maksimum_teslimat
+                            kalan_kapasite = gun.kalan_teslimat_kapasitesi
 
-                            tarihler.append(
-                                {
-                                    "ana_sayfa_id": record.id,
-                                    "tarih": tarih,
-                                    "gun_adi": gun_adi_tr,
-                                    "teslimat_sayisi": teslimat_sayisi,
-                                    "toplam_kapasite": toplam_kapasite,
-                                    "kalan_kapasite": kalan_kapasite,
-                                    "durum": durum,
-                                    "durum_text": durum_text,
-                                    "durum_icon": durum_icon,
-                                }
-                            )
+                            # Genel gün kapasitesi dolu ise atla
+                            if kalan_kapasite <= 0:
+                                continue  # Kapasitesi dolu, listeye ekleme
+
+                        # Durum hesaplama
+                        doluluk_orani = (
+                            (teslimat_sayisi / toplam_kapasite * 100)
+                            if toplam_kapasite > 0
+                            else 0
+                        )
+
+                        if kalan_kapasite > 5 and doluluk_orani < 50:
+                            durum = "bos"
+                            durum_text = "🟢 Boş"
+                            durum_icon = "fa-circle text-success"
+                        elif kalan_kapasite <= 5 or (50 <= doluluk_orani < 90):
+                            durum = "dolu_yakin"
+                            durum_text = "🟡 Dolu Yakın"
+                            durum_icon = "fa-circle text-warning"
+                        else:
+                            durum = "dolu"
+                            durum_text = "🔴 Dolu"
+                            durum_icon = "fa-circle text-danger"
+
+                        tarihler.append(
+                            {
+                                "ana_sayfa_id": record.id,
+                                "tarih": tarih,
+                                "gun_adi": gun_adi_tr,
+                                "teslimat_sayisi": teslimat_sayisi,
+                                "toplam_kapasite": toplam_kapasite,
+                                "kalan_kapasite": kalan_kapasite,
+                                "durum": durum,
+                                "durum_text": durum_text,
+                                "durum_icon": durum_icon,
+                            }
+                        )
 
                 # Tarih listesini güncelle
                 record.tarih_listesi = [(5, 0, 0)]  # Tümünü sil

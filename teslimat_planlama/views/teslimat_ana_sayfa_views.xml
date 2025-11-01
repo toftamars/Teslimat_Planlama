@@ -29,12 +29,12 @@
                             <field name="arac_kucuk_mu" invisible="1"/>
                         </group>
                     </group>
-                    <!-- Sorgula Butonu -->
-                    <group>
+                                               <!-- Sorgula Butonu -->
+                           <group>
                         <button name="action_sorgula" string="🔄 Yenile" type="object" 
-                                class="btn-primary"
+                                       class="btn-primary"
                                 attrs="{'invisible': [('arac_id','=', False)]}"/>
-                    </group>
+                           </group>
                     <!-- Sonuç Alanları -->
                     <notebook>
                         <page string="📅 Tarih Bazlı Kapasite" attrs="{'invisible': [('ilce_uygun_mu','=', False)]}">
