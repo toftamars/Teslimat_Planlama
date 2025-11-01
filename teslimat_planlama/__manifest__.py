@@ -34,9 +34,9 @@
         'security/security.xml',
         'security/ir.model.access.csv',
         
-        # Data
-        'data/ir_sequence_data.xml',
+        # Data - Cleanup en başta (eski model referanslarını temizle)
         'data/cleanup_old_model_data.xml',
+        'data/ir_sequence_data.xml',
         'data/teslimat_program_kurulum_data.xml',
         
         # Core Views

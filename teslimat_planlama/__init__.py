@@ -4,24 +4,27 @@ from . import wizards
 
 def post_init_hook(cr, registry):
     """Post-install/upgrade hook: Eski model referanslarını temizle."""
-    from odoo import api, SUPERUSER_ID
-    env = api.Environment(cr, SUPERUSER_ID, {})
-    # Eski teslimat.planlama.akilli model referanslarını temizle
+    import logging
+    _logger = logging.getLogger(__name__)
+    
     try:
-        old_data = env['ir.model.data'].search([
-            ('module', '=', 'teslimat_planlama'),
-            ('model', '=', 'teslimat.planlama.akilli')
-        ])
-        if old_data:
-            old_data.unlink()
-        # Eski model tanımını temizle
-        old_model = env['ir.model'].search([
-            ('model', '=', 'teslimat.planlama.akilli')
-        ])
-        if old_model:
-            old_model.unlink()
+        # SQL direkt ile temizle (ORM çalışmadan önce)
+        # Eski ir.model.data kayıtlarını sil
+        cr.execute("""
+            DELETE FROM ir_model_data 
+            WHERE module = 'teslimat_planlama' 
+            AND model = 'teslimat.planlama.akilli'
+        """)
+        
+        # Eski ir.model kayıtlarını sil
+        cr.execute("""
+            DELETE FROM ir_model 
+            WHERE model = 'teslimat.planlama.akilli'
+        """)
+        
         cr.commit()
-    except Exception:
-        # Model yoksa hata verme, sadece log
+        _logger.info("Eski teslimat.planlama.akilli model referansları temizlendi")
+    except Exception as e:
         cr.rollback()
+        _logger.warning("Eski model temizleme hatası (ignored): %s", e)
 
