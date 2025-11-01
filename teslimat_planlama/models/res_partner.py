@@ -55,6 +55,7 @@ class ResPartner(models.Model):
     # Sürücü kontrolü
     is_driver = fields.Boolean(
         string="Sürücü",
+        default=False,
         help="Bu kişi teslimat sürücüsü mü?",
     )
 
