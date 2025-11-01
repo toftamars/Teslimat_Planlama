@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Eski model referanslarını temizle -->
+        <!-- teslimat.planlama.akilli modeli artık kullanılmıyor -->
+        <delete model="ir.model.data" 
+                search="[('module', '=', 'teslimat_planlama'), ('model', '=', 'teslimat.planlama.akilli')]"/>
+        
+        <!-- Eski model tanımını temizle (eğer varsa) -->
+        <delete model="ir.model" 
+                search="[('model', '=', 'teslimat.planlama.akilli')]"/>
+    </data>
+</odoo>
+
