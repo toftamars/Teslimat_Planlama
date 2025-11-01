@@ -228,14 +228,25 @@ class TeslimatAnaSayfa(models.TransientModel):
 
                             # İlçe seçiliyse ilçe-gün eşleşmesi kontrol et
                             if record.ilce_id:
-                                # Database'den ilçe-gün eşleşmesi kontrol et
+                                # Database'den ilçe-gün eşleşmesi kontrol et (tarih bazlı)
                                 gun_ilce = self.env["teslimat.gun.ilce"].search(
                                     [
                                         ("gun_id", "=", gun.id),
                                         ("ilce_id", "=", record.ilce_id.id),
+                                        ("tarih", "=", tarih),
                                     ],
                                     limit=1,
                                 )
+                                # Eğer tarih bazlı eşleşme yoksa, genel eşleşmeyi kontrol et
+                                if not gun_ilce:
+                                    gun_ilce = self.env["teslimat.gun.ilce"].search(
+                                        [
+                                            ("gun_id", "=", gun.id),
+                                            ("ilce_id", "=", record.ilce_id.id),
+                                        ],
+                                        limit=1,
+                                        order="tarih desc",
+                                    )
 
                                 if gun_ilce:
                                     toplam_kapasite = gun_ilce.maksimum_teslimat
