@@ -50,6 +50,27 @@ class IrModel(models.Model):
         if not records_to_process:
             return None
         
+        # Her kayıt için ayrı ayrı işlem yap - selection field kontrolü sırasında hata olabilir
+        for record in records_to_process:
+            try:
+                # Selection field'ları kontrol et - model registry'de olmayan modeller için hata olabilir
+                selection_fields = record.field_id.filtered(lambda f: f.ttype == 'selection')
+                for field in selection_fields:
+                    if field.selection_field_id and field.selection_field_id.model:
+                        model_name = field.selection_field_id.model
+                        # Model registry'de yoksa atla
+                        if model_name not in self.env.registry:
+                            _logger.warning(
+                                "Selection field model'i registry'de yok, atlanıyor: %s (field: %s)",
+                                model_name,
+                                field.name,
+                            )
+                            continue
+            except Exception as field_error:
+                _logger.warning(
+                    "Field kontrolü sırasında hata (ignored): %s", field_error
+                )
+        
         # Selection field kontrolü sırasında model registry hatası olabilir
         # Bu durumda KeyError yakalayıp ignore et
         try:
@@ -58,20 +79,20 @@ class IrModel(models.Model):
             # Model registry'de bulunamayan modeller için KeyError
             # Eski teslimat.planlama.akilli veya selection field referansları için
             error_str = str(e)
-            if "teslimat.planlama.akilli" in error_str:
-                _logger.warning(
-                    "Model registry'de bulunamadı (teslimat.planlama.akilli), kayıt atlanıyor: %s",
-                    error_str,
-                )
-                return None
-            # Diğer KeyError'lar için de kontrol et (selection field referansları)
-            # Bu durumda da kayıtları güvenli şekilde atlayalım
             _logger.warning(
-                "Model registry hatası, kayıtlar güvenli şekilde atlanıyor: %s", error_str
+                "Model registry hatası (KeyError), kayıtlar güvenli şekilde atlanıyor: %s",
+                error_str,
             )
             return None
         except Exception as e:
             # Diğer beklenmeyen hatalar için tekrar fırlat
+            error_str = str(e)
+            if "teslimat.planlama.akilli" in error_str:
+                _logger.warning(
+                    "teslimat.planlama.akilli hatası, kayıtlar güvenli şekilde atlanıyor: %s",
+                    error_str,
+                )
+                return None
             _logger.error("_process_ondelete sırasında beklenmeyen hata: %s", e)
             raise
 
