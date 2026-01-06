@@ -7,7 +7,7 @@ access_teslimat_gun_user,teslimat.gun.user,model_teslimat_gun,base.group_user,1,
 access_teslimat_gun_manager,teslimat.gun.manager,model_teslimat_gun,teslimat_planlama.group_teslimat_manager,1,1,1,1
 access_teslimat_gun_ilce_user,teslimat.gun.ilce.user,model_teslimat_gun_ilce,base.group_user,1,0,0,0
 access_teslimat_gun_ilce_manager,teslimat.gun.ilce.manager,model_teslimat_gun_ilce,teslimat_planlama.group_teslimat_manager,1,1,1,1
-access_teslimat_arac_user,teslimat.arac.user,model_teslimat_arac,base.group_user,1,0,0,0
+access_teslimat_arac_user,teslimat.arac.user,model_teslimat_arac,base.group_user,1,1,1,0
 access_teslimat_arac_manager,teslimat.arac.manager,model_teslimat_arac,teslimat_planlama.group_teslimat_manager,1,1,1,1
 access_teslimat_planlama_user,teslimat.planlama.user,model_teslimat_planlama,base.group_user,1,1,1,0
 access_teslimat_planlama_manager,teslimat.planlama.manager,model_teslimat_planlama,teslimat_planlama.group_teslimat_manager,1,1,1,1
