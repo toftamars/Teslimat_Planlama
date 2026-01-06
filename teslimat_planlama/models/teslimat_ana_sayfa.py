@@ -203,27 +203,11 @@ class TeslimatAnaSayfa(models.TransientModel):
                         teslimat_sayisi_dict.get(tarih, 0) + 1
                     )
 
-                # 2. Gün kodları için mapping (sabit)
-                gun_kodu_map = {
-                    0: "pazartesi",
-                    1: "sali",
-                    2: "carsamba",
-                    3: "persembe",
-                    4: "cuma",
-                    5: "cumartesi",
-                    6: "pazar",
-                }
-
-                # Türkçe gün adları mapping
-                gun_eslesmesi = {
-                    "Monday": "Pazartesi",
-                    "Tuesday": "Salı",
-                    "Wednesday": "Çarşamba",
-                    "Thursday": "Perşembe",
-                    "Friday": "Cuma",
-                    "Saturday": "Cumartesi",
-                    "Sunday": "Pazar",
-                }
+                # 2. Gün kodları için mapping (utility'den al)
+                from .teslimat_utils import GUN_KODU_MAP, GUN_ESLESMESI
+                
+                gun_kodu_map = GUN_KODU_MAP
+                gun_eslesmesi = GUN_ESLESMESI
 
                 # 3. Tüm günleri önceden çek (haftanın 7 günü için sadece 1 sorgu)
                 gun_kodlari = list(gun_kodu_map.values())
@@ -258,8 +242,10 @@ class TeslimatAnaSayfa(models.TransientModel):
                 for i in range(30):
                     tarih = bugun + timedelta(days=i)
                     
-                    # Pazar gününü atla (weekday() == 6) - Tüm araçlar pazar günü kapalıdır
-                    if tarih.weekday() == 6:
+                    # Pazar gününü atla - Tüm araçlar pazar günü kapalıdır
+                    from .teslimat_utils import is_pazar_gunu
+                    
+                    if is_pazar_gunu(tarih):
                         continue
                     
                     gun_adi = tarih.strftime("%A")
@@ -378,16 +364,9 @@ class TeslimatAnaSayfa(models.TransientModel):
             return False
 
         # Gün kodunu belirle
-        gun_kodu_map = {
-            0: "pazartesi",
-            1: "sali",
-            2: "carsamba",
-            3: "persembe",
-            4: "cuma",
-            5: "cumartesi",
-            6: "pazar",
-        }
-        gun_kodu = gun_kodu_map.get(tarih.weekday())
+        from .teslimat_utils import get_gun_kodu
+        
+        gun_kodu = get_gun_kodu(tarih)
 
         if not gun_kodu:
             return False

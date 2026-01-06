@@ -180,18 +180,10 @@ class TeslimatGun(models.Model):
         if not date:
             return {"available": False, "reason": "Tarih belirtilmedi"}
 
-        # Haftanın gününü belirle (0=Pazartesi, 1=Salı, vs.)
-        day_mapping = {
-            0: "pazartesi",
-            1: "sali",
-            2: "carsamba",
-            3: "persembe",
-            4: "cuma",
-            5: "cumartesi",
-            6: "pazar",
-        }
-
-        day_of_week = day_mapping.get(date.weekday())
+        # Haftanın gününü belirle (utility'den al)
+        from .teslimat_utils import get_gun_kodu
+        
+        day_of_week = get_gun_kodu(date)
         if not day_of_week:
             return {"available": False, "reason": "Geçersiz gün"}
 

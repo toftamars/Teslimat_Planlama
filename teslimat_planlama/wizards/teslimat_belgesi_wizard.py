@@ -218,24 +218,9 @@ class TeslimatBelgesiWizard(models.TransientModel):
             raise UserError(_("Müşteri seçimi zorunludur."))
 
         # Pazar günü kontrolü - Tüm araçlar pazar günü kapalıdır
-        gun_kodu_map = {
-            0: "pazartesi",
-            1: "sali",
-            2: "carsamba",
-            3: "persembe",
-            4: "cuma",
-            5: "cumartesi",
-            6: "pazar",
-        }
-        teslimat_gun_kodu = gun_kodu_map.get(self.teslimat_tarihi.weekday())
-        if teslimat_gun_kodu == "pazar":
-            raise UserError(
-                _(
-                    "Pazar günü teslimat yapılamaz! "
-                    "Tüm araçlar pazar günü kapalıdır. "
-                    "Lütfen başka bir tarih seçin."
-                )
-            )
+        from ..models.teslimat_utils import check_pazar_gunu_validation
+        
+        check_pazar_gunu_validation(self.teslimat_tarihi)
 
         # Kapasite kontrolü - Araç (Günlük maksimum 7 teslimat)
         bugun_teslimatlar = self.env["teslimat.belgesi"].search_count(
@@ -255,16 +240,9 @@ class TeslimatBelgesiWizard(models.TransientModel):
 
         # Kapasite kontrolü - İlçe-Gün (eğer ilçe seçiliyse)
         if self.ilce_id:
-            gun_kodu_map = {
-                0: "pazartesi",
-                1: "sali",
-                2: "carsamba",
-                3: "persembe",
-                4: "cuma",
-                5: "cumartesi",
-                6: "pazar",
-            }
-            gun_kodu = gun_kodu_map.get(self.teslimat_tarihi.weekday())
+            from ..models.teslimat_utils import get_gun_kodu
+            
+            gun_kodu = get_gun_kodu(self.teslimat_tarihi)
             if gun_kodu:
                 gun = self.env["teslimat.gun"].search(
                     [("gun_kodu", "=", gun_kodu)], limit=1
@@ -303,16 +281,9 @@ class TeslimatBelgesiWizard(models.TransientModel):
 
         # İlçe-Gün uyumluluğu kontrolü (küçük araçlar hariç)
         if not small_vehicle and self.ilce_id:
-            gun_kodu_map = {
-                0: "pazartesi",
-                1: "sali",
-                2: "carsamba",
-                3: "persembe",
-                4: "cuma",
-                5: "cumartesi",
-                6: "pazar",
-            }
-            gun_kodu = gun_kodu_map.get(self.teslimat_tarihi.weekday())
+            from ..models.teslimat_utils import get_gun_kodu
+            
+            gun_kodu = get_gun_kodu(self.teslimat_tarihi)
             if gun_kodu:
                 gun = self.env["teslimat.gun"].search(
                     [("gun_kodu", "=", gun_kodu)], limit=1
