@@ -52,23 +52,26 @@ class TeslimatAnaSayfa(models.TransientModel):
                 uygun_ilce_ids = tum_ilceler.ids
             elif arac_tipi == "anadolu_yakasi":
                 # Sadece Anadolu Yakası ilçeleri
-                # Önce tüm aktif ilçeleri al, sonra yaka_tipi'ne göre filtrele
+                # İlçe adına göre doğrudan filtreleme yap (yaka_tipi compute field olabilir)
+                from odoo.addons.teslimat_planlama.models.teslimat_ilce import ANADOLU_ILCELERI
                 tum_aktif_ilceler = self.env["teslimat.ilce"].search(
                     [("aktif", "=", True), ("teslimat_aktif", "=", True)]
                 )
-                # yaka_tipi compute field olduğu için doğrudan filtreleme yapamayabiliriz
-                # Bu yüzden tüm ilçeleri alıp Python'da filtreleyelim
+                # Önce yaka_tipi'ne göre filtrele, yoksa isim listesine göre filtrele
                 anadolu_ilceler = tum_aktif_ilceler.filtered(
-                    lambda i: i.yaka_tipi == "anadolu"
+                    lambda i: i.yaka_tipi == "anadolu" or 
+                    any(ilce.lower() in i.name.lower() for ilce in ANADOLU_ILCELERI)
                 )
                 uygun_ilce_ids = anadolu_ilceler.ids
             elif arac_tipi == "avrupa_yakasi":
                 # Sadece Avrupa Yakası ilçeleri
+                from odoo.addons.teslimat_planlama.models.teslimat_ilce import AVRUPA_ILCELERI
                 tum_aktif_ilceler = self.env["teslimat.ilce"].search(
                     [("aktif", "=", True), ("teslimat_aktif", "=", True)]
                 )
                 avrupa_ilceler = tum_aktif_ilceler.filtered(
-                    lambda i: i.yaka_tipi == "avrupa"
+                    lambda i: i.yaka_tipi == "avrupa" or 
+                    any(ilce.lower() in i.name.lower() for ilce in AVRUPA_ILCELERI)
                 )
                 uygun_ilce_ids = avrupa_ilceler.ids
             
