@@ -125,11 +125,13 @@ class TeslimatBelgesiWizard(models.TransientModel):
             # Eğer araç için uygun ilçeler henüz eşleştirilmemişse, otomatik eşleştir
             if not self.arac_id.uygun_ilceler:
                 self.arac_id._update_uygun_ilceler()
-                # Recordset'i yeniden yükle
-                self.arac_id = self.env['teslimat.arac'].browse(self.arac_id.id)
+                # Cache'i temizle
+                self.arac_id.invalidate_cache()
             
             # Araç seçildiğinde, sadece o araca uygun ilçeleri göster
-            uygun_ilce_ids = self.arac_id.uygun_ilceler.ids if self.arac_id.uygun_ilceler else []
+            # Recordset'i yeniden yüklemeden doğrudan oku
+            arac_record = self.env['teslimat.arac'].browse(self.arac_id.id)
+            uygun_ilce_ids = arac_record.uygun_ilceler.ids if arac_record.uygun_ilceler else []
             
             if uygun_ilce_ids:
                 return {
