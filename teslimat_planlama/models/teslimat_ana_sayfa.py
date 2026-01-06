@@ -40,7 +40,12 @@ class TeslimatAnaSayfa(models.TransientModel):
             if not self.arac_id.uygun_ilceler:
                 self.arac_id._update_uygun_ilceler()
             
-            # Araç tipine göre doğrudan ilçe ID'lerini hesapla
+            # _update_uygun_ilceler() metodundaki mantığı kullan
+            # Önce eşleştirmeyi yap, sonra uygun ilçe ID'lerini al
+            if not self.arac_id.uygun_ilceler:
+                self.arac_id._update_uygun_ilceler()
+            
+            # Araç tipine göre doğrudan ilçe ID'lerini hesapla (_update_uygun_ilceler mantığı)
             uygun_ilce_ids = []
             arac_tipi = self.arac_id.arac_tipi
             
@@ -52,26 +57,23 @@ class TeslimatAnaSayfa(models.TransientModel):
                 uygun_ilce_ids = tum_ilceler.ids
             elif arac_tipi == "anadolu_yakasi":
                 # Sadece Anadolu Yakası ilçeleri
-                # İlçe adına göre doğrudan filtreleme yap (yaka_tipi compute field olabilir)
-                from odoo.addons.teslimat_planlama.models.teslimat_ilce import ANADOLU_ILCELERI
+                # _update_uygun_ilceler() metodundaki mantık: yaka_tipi="anadolu" ile search
+                # Ama yaka_tipi compute field olduğu için Python'da filtreleme yap
                 tum_aktif_ilceler = self.env["teslimat.ilce"].search(
                     [("aktif", "=", True), ("teslimat_aktif", "=", True)]
                 )
-                # Önce yaka_tipi'ne göre filtrele, yoksa isim listesine göre filtrele
                 anadolu_ilceler = tum_aktif_ilceler.filtered(
-                    lambda i: i.yaka_tipi == "anadolu" or 
-                    any(ilce.lower() in i.name.lower() for ilce in ANADOLU_ILCELERI)
+                    lambda i: i.yaka_tipi == "anadolu"
                 )
                 uygun_ilce_ids = anadolu_ilceler.ids
             elif arac_tipi == "avrupa_yakasi":
                 # Sadece Avrupa Yakası ilçeleri
-                from odoo.addons.teslimat_planlama.models.teslimat_ilce import AVRUPA_ILCELERI
+                # _update_uygun_ilceler() metodundaki mantık: yaka_tipi="avrupa" ile search
                 tum_aktif_ilceler = self.env["teslimat.ilce"].search(
                     [("aktif", "=", True), ("teslimat_aktif", "=", True)]
                 )
                 avrupa_ilceler = tum_aktif_ilceler.filtered(
-                    lambda i: i.yaka_tipi == "avrupa" or 
-                    any(ilce.lower() in i.name.lower() for ilce in AVRUPA_ILCELERI)
+                    lambda i: i.yaka_tipi == "avrupa"
                 )
                 uygun_ilce_ids = avrupa_ilceler.ids
             
