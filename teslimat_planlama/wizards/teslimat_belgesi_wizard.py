@@ -125,13 +125,37 @@ class TeslimatBelgesiWizard(models.TransientModel):
             # Eğer araç için uygun ilçeler henüz eşleştirilmemişse, otomatik eşleştir
             if not self.arac_id.uygun_ilceler:
                 self.arac_id._update_uygun_ilceler()
-                # Cache'i temizle
-                self.arac_id.invalidate_cache()
             
-            # Araç seçildiğinde, sadece o araca uygun ilçeleri göster
-            # Recordset'i yeniden yüklemeden doğrudan oku
-            arac_record = self.env['teslimat.arac'].browse(self.arac_id.id)
-            uygun_ilce_ids = arac_record.uygun_ilceler.ids if arac_record.uygun_ilceler else []
+            # Araç tipine göre doğrudan ilçe ID'lerini hesapla
+            uygun_ilce_ids = []
+            arac_tipi = self.arac_id.arac_tipi
+            
+            if arac_tipi in ["kucuk_arac_1", "kucuk_arac_2", "ek_arac"]:
+                # Küçük araçlar ve ek araç tüm ilçelere gidebilir
+                tum_ilceler = self.env["teslimat.ilce"].search(
+                    [("aktif", "=", True), ("teslimat_aktif", "=", True)]
+                )
+                uygun_ilce_ids = tum_ilceler.ids
+            elif arac_tipi == "anadolu_yakasi":
+                # Sadece Anadolu Yakası ilçeleri
+                anadolu_ilceler = self.env["teslimat.ilce"].search(
+                    [
+                        ("yaka_tipi", "=", "anadolu"),
+                        ("aktif", "=", True),
+                        ("teslimat_aktif", "=", True),
+                    ]
+                )
+                uygun_ilce_ids = anadolu_ilceler.ids
+            elif arac_tipi == "avrupa_yakasi":
+                # Sadece Avrupa Yakası ilçeleri
+                avrupa_ilceler = self.env["teslimat.ilce"].search(
+                    [
+                        ("yaka_tipi", "=", "avrupa"),
+                        ("aktif", "=", True),
+                        ("teslimat_aktif", "=", True),
+                    ]
+                )
+                uygun_ilce_ids = avrupa_ilceler.ids
             
             if uygun_ilce_ids:
                 return {
