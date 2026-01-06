@@ -52,22 +52,23 @@ class TeslimatAnaSayfa(models.TransientModel):
                 uygun_ilce_ids = tum_ilceler.ids
             elif arac_tipi == "anadolu_yakasi":
                 # Sadece Anadolu Yakası ilçeleri
-                anadolu_ilceler = self.env["teslimat.ilce"].search(
-                    [
-                        ("yaka_tipi", "=", "anadolu"),
-                        ("aktif", "=", True),
-                        ("teslimat_aktif", "=", True),
-                    ]
+                # Önce tüm aktif ilçeleri al, sonra yaka_tipi'ne göre filtrele
+                tum_aktif_ilceler = self.env["teslimat.ilce"].search(
+                    [("aktif", "=", True), ("teslimat_aktif", "=", True)]
+                )
+                # yaka_tipi compute field olduğu için doğrudan filtreleme yapamayabiliriz
+                # Bu yüzden tüm ilçeleri alıp Python'da filtreleyelim
+                anadolu_ilceler = tum_aktif_ilceler.filtered(
+                    lambda i: i.yaka_tipi == "anadolu"
                 )
                 uygun_ilce_ids = anadolu_ilceler.ids
             elif arac_tipi == "avrupa_yakasi":
                 # Sadece Avrupa Yakası ilçeleri
-                avrupa_ilceler = self.env["teslimat.ilce"].search(
-                    [
-                        ("yaka_tipi", "=", "avrupa"),
-                        ("aktif", "=", True),
-                        ("teslimat_aktif", "=", True),
-                    ]
+                tum_aktif_ilceler = self.env["teslimat.ilce"].search(
+                    [("aktif", "=", True), ("teslimat_aktif", "=", True)]
+                )
+                avrupa_ilceler = tum_aktif_ilceler.filtered(
+                    lambda i: i.yaka_tipi == "avrupa"
                 )
                 uygun_ilce_ids = avrupa_ilceler.ids
             
