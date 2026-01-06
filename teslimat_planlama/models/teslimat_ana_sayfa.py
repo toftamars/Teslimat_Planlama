@@ -26,7 +26,7 @@ class TeslimatAnaSayfa(models.TransientModel):
     ilce_id = fields.Many2one(
         "teslimat.ilce",
         string="İlçe",
-        domain=[("aktif", "=", True), ("teslimat_aktif", "=", True)],
+        # Domain onchange ile dinamik olarak güncelleniyor
     )
 
     @api.onchange("arac_id")
