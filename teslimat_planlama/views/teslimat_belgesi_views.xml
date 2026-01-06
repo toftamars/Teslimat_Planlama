@@ -65,7 +65,7 @@
                 <header>
                     <button name="action_teslimat_tamamla" string="✅ Teslimatı Tamamla" type="object" 
                             class="oe_highlight" icon="fa-check"
-                            invisible="durum not in ['hazir', 'yolda']"
+                            attrs="{'invisible': [('durum', 'not in', ['hazir', 'yolda'])]}"
                             groups="teslimat_planlama.group_teslimat_driver"/>
                     <button name="action_yol_tarifi" string="🗺️ Yol Tarifi" type="object" 
                             class="btn-primary" icon="fa-map-marker"/>
@@ -111,7 +111,7 @@
                             </tree>
                         </field>
                     </group>
-                    <group string="Teslim Bilgileri" invisible="durum != 'teslim_edildi'">
+                    <group string="Teslim Bilgileri" attrs="{'invisible': [('durum', '!=', 'teslim_edildi')]}">
                         <group>
                             <field name="teslim_alan_kisi" readonly="1"/>
                             <field name="gercek_teslimat_saati" readonly="1"/>

@@ -31,16 +31,28 @@ class TeslimatAnaSayfa(models.TransientModel):
 
     @api.onchange("arac_id")
     def _onchange_arac_id(self):
-        """Araç seçildiğinde ilçe domain'ini güncelle."""
+        """Araç seçildiğinde ilçe domain'ini güncelle ve ilçe seçimini temizle."""
+        # Araç değiştiğinde ilçe seçimini temizle
+        self.ilce_id = False
+        
         if self.arac_id:
+            # Eğer araç için uygun ilçeler henüz eşleştirilmemişse, otomatik eşleştir
+            if not self.arac_id.uygun_ilceler:
+                self.arac_id._update_uygun_ilceler()
+                # Invalidate cache to get updated uygun_ilceler
+                self.arac_id.invalidate_recordset(["uygun_ilceler"])
+            
             # Araç seçildiğinde, sadece o araca uygun ilçeleri göster
-            if self.arac_id.uygun_ilceler:
+            # uygun_ilceler alanını tekrar oku
+            uygun_ilce_ids = self.arac_id.uygun_ilceler.ids if self.arac_id.uygun_ilceler else []
+            
+            if uygun_ilce_ids:
                 return {
                     "domain": {
                         "ilce_id": [
                             ("aktif", "=", True),
                             ("teslimat_aktif", "=", True),
-                            ("id", "in", self.arac_id.uygun_ilceler.ids),
+                            ("id", "in", uygun_ilce_ids),
                         ]
                     }
                 }

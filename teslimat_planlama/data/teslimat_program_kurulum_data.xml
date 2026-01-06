@@ -65,45 +65,24 @@
             <field name="gunluk_maksimum_teslimat">0</field>
         </record>
 
-        <!-- Varsayılan Araçlar -->
-        <record id="teslimat_arac_anadolu_1" model="teslimat.arac">
-            <field name="name">Anadolu Yakası Araç 1</field>
+        <!-- Varsayılan Araçlar - Her araç tipinden 1 adet -->
+        <record id="teslimat_arac_anadolu" model="teslimat.arac">
+            <field name="name">Anadolu Yakası Araç</field>
             <field name="arac_tipi">anadolu_yakasi</field>
             <field name="gunluk_teslimat_limiti">7</field>
             <field name="aktif">True</field>
         </record>
 
-        <record id="teslimat_arac_anadolu_2" model="teslimat.arac">
-            <field name="name">Anadolu Yakası Araç 2</field>
-            <field name="arac_tipi">anadolu_yakasi</field>
-            <field name="gunluk_teslimat_limiti">7</field>
-            <field name="aktif">True</field>
-        </record>
-
-        <record id="teslimat_arac_avrupa_1" model="teslimat.arac">
-            <field name="name">Avrupa Yakası Araç 1</field>
+        <record id="teslimat_arac_avrupa" model="teslimat.arac">
+            <field name="name">Avrupa Yakası Araç</field>
             <field name="arac_tipi">avrupa_yakasi</field>
             <field name="gunluk_teslimat_limiti">7</field>
             <field name="aktif">True</field>
         </record>
 
-        <record id="teslimat_arac_avrupa_2" model="teslimat.arac">
-            <field name="name">Avrupa Yakası Araç 2</field>
-            <field name="arac_tipi">avrupa_yakasi</field>
-            <field name="gunluk_teslimat_limiti">7</field>
-            <field name="aktif">True</field>
-        </record>
-
-        <record id="teslimat_arac_kucuk_1" model="teslimat.arac">
-            <field name="name">Küçük Araç 1</field>
+        <record id="teslimat_arac_kucuk" model="teslimat.arac">
+            <field name="name">Küçük Araç</field>
             <field name="arac_tipi">kucuk_arac_1</field>
-            <field name="gunluk_teslimat_limiti">7</field>
-            <field name="aktif">True</field>
-        </record>
-
-        <record id="teslimat_arac_kucuk_2" model="teslimat.arac">
-            <field name="name">Küçük Araç 2</field>
-            <field name="arac_tipi">kucuk_arac_2</field>
             <field name="gunluk_teslimat_limiti">7</field>
             <field name="aktif">True</field>
         </record>

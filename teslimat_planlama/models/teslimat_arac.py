@@ -111,18 +111,28 @@ class TeslimatArac(models.Model):
             # Küçük araçlar ve ek araç tüm ilçelere gidebilir
             if record.arac_tipi in ["kucuk_arac_1", "kucuk_arac_2", "ek_arac"]:
                 # Tüm aktif ilçeleri al
-                tum_ilceler = self.env["teslimat.ilce"].search([("aktif", "=", True)])
+                tum_ilceler = self.env["teslimat.ilce"].search(
+                    [("aktif", "=", True), ("teslimat_aktif", "=", True)]
+                )
                 record.uygun_ilceler = [(6, 0, tum_ilceler.ids)]
             elif record.arac_tipi == "anadolu_yakasi":
                 # Sadece Anadolu Yakası ilçeleri
                 anadolu_ilceler = self.env["teslimat.ilce"].search(
-                    [("yaka_tipi", "=", "anadolu"), ("aktif", "=", True)]
+                    [
+                        ("yaka_tipi", "=", "anadolu"),
+                        ("aktif", "=", True),
+                        ("teslimat_aktif", "=", True),
+                    ]
                 )
                 record.uygun_ilceler = [(6, 0, anadolu_ilceler.ids)]
             elif record.arac_tipi == "avrupa_yakasi":
                 # Sadece Avrupa Yakası ilçeleri
                 avrupa_ilceler = self.env["teslimat.ilce"].search(
-                    [("yaka_tipi", "=", "avrupa"), ("aktif", "=", True)]
+                    [
+                        ("yaka_tipi", "=", "avrupa"),
+                        ("aktif", "=", True),
+                        ("teslimat_aktif", "=", True),
+                    ]
                 )
                 record.uygun_ilceler = [(6, 0, avrupa_ilceler.ids)]
 
