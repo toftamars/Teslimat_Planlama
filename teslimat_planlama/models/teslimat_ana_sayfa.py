@@ -39,11 +39,11 @@ class TeslimatAnaSayfa(models.TransientModel):
             # Eğer araç için uygun ilçeler henüz eşleştirilmemişse, otomatik eşleştir
             if not self.arac_id.uygun_ilceler:
                 self.arac_id._update_uygun_ilceler()
-                # Invalidate cache to get updated uygun_ilceler
-                self.arac_id.invalidate_recordset(["uygun_ilceler"])
+                # Cache'i temizle
+                self.arac_id.invalidate_cache(["uygun_ilceler"])
             
             # Araç seçildiğinde, sadece o araca uygun ilçeleri göster
-            # uygun_ilceler alanını tekrar oku
+            # uygun_ilceler alanını tekrar oku (cache temizlendikten sonra)
             uygun_ilce_ids = self.arac_id.uygun_ilceler.ids if self.arac_id.uygun_ilceler else []
             
             if uygun_ilce_ids:
