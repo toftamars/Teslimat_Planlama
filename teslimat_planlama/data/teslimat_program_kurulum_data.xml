@@ -8,7 +8,7 @@
             <field name="sequence">1</field>
             <field name="yaka_tipi">her_ikisi</field>
             <field name="aktif">True</field>
-            <field name="gunluk_maksimum_teslimat">50</field>
+            <field name="gunluk_maksimum_teslimat">7</field>
         </record>
 
         <record id="teslimat_gun_sali" model="teslimat.gun">
@@ -17,7 +17,7 @@
             <field name="sequence">2</field>
             <field name="yaka_tipi">her_ikisi</field>
             <field name="aktif">True</field>
-            <field name="gunluk_maksimum_teslimat">50</field>
+            <field name="gunluk_maksimum_teslimat">7</field>
         </record>
 
         <record id="teslimat_gun_carsamba" model="teslimat.gun">
@@ -26,7 +26,7 @@
             <field name="sequence">3</field>
             <field name="yaka_tipi">her_ikisi</field>
             <field name="aktif">True</field>
-            <field name="gunluk_maksimum_teslimat">50</field>
+            <field name="gunluk_maksimum_teslimat">7</field>
         </record>
 
         <record id="teslimat_gun_persembe" model="teslimat.gun">
@@ -35,7 +35,7 @@
             <field name="sequence">4</field>
             <field name="yaka_tipi">her_ikisi</field>
             <field name="aktif">True</field>
-            <field name="gunluk_maksimum_teslimat">50</field>
+            <field name="gunluk_maksimum_teslimat">7</field>
         </record>
 
         <record id="teslimat_gun_cuma" model="teslimat.gun">
@@ -44,7 +44,7 @@
             <field name="sequence">5</field>
             <field name="yaka_tipi">her_ikisi</field>
             <field name="aktif">True</field>
-            <field name="gunluk_maksimum_teslimat">50</field>
+            <field name="gunluk_maksimum_teslimat">7</field>
         </record>
 
         <record id="teslimat_gun_cumartesi" model="teslimat.gun">
@@ -53,7 +53,7 @@
             <field name="sequence">6</field>
             <field name="yaka_tipi">her_ikisi</field>
             <field name="aktif">True</field>
-            <field name="gunluk_maksimum_teslimat">50</field>
+            <field name="gunluk_maksimum_teslimat">7</field>
         </record>
 
         <record id="teslimat_gun_pazar" model="teslimat.gun">

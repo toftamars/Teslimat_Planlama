@@ -20,7 +20,6 @@
                                    domain="[('aktif','=',True),('gecici_kapatma','=',False)]"
                                    options="{'no_create': True, 'no_edit': True}"/>
                             <field name="ilce_id" 
-                                   domain="[('aktif','=',True),('teslimat_aktif','=',True)]"
                                    options="{'no_create': True, 'no_edit': True}"
                                    attrs="{'required': ['&amp;', ('arac_id','!=', False), ('arac_kucuk_mu','=', False)]}"/>
                         </group>

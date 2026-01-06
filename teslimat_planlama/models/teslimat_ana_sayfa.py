@@ -29,6 +29,40 @@ class TeslimatAnaSayfa(models.TransientModel):
         domain=[("aktif", "=", True), ("teslimat_aktif", "=", True)],
     )
 
+    @api.onchange("arac_id")
+    def _onchange_arac_id(self):
+        """Araç seçildiğinde ilçe domain'ini güncelle."""
+        if self.arac_id:
+            # Araç seçildiğinde, sadece o araca uygun ilçeleri göster
+            if self.arac_id.uygun_ilceler:
+                return {
+                    "domain": {
+                        "ilce_id": [
+                            ("aktif", "=", True),
+                            ("teslimat_aktif", "=", True),
+                            ("id", "in", self.arac_id.uygun_ilceler.ids),
+                        ]
+                    }
+                }
+            else:
+                # Eğer araç için uygun ilçe yoksa, hiçbir ilçe gösterilmez
+                return {
+                    "domain": {
+                        "ilce_id": [
+                            ("aktif", "=", True),
+                            ("teslimat_aktif", "=", True),
+                            ("id", "in", []),
+                        ]
+                    }
+                }
+        else:
+            # Araç seçilmediğinde, tüm aktif ilçeleri göster
+            return {
+                "domain": {
+                    "ilce_id": [("aktif", "=", True), ("teslimat_aktif", "=", True)]
+                }
+            }
+
     # Hesaplanan alanlar
     arac_kucuk_mu = fields.Boolean(
         string="Küçük Araç",
@@ -91,68 +125,41 @@ class TeslimatAnaSayfa(models.TransientModel):
 
     @api.depends("ilce_id", "arac_id")
     def _compute_ilce_uygunluk(self) -> None:
-        """İlçe-arac uygunluğunu kontrol et."""
+        """İlçe-arac uygunluğunu kontrol et (Many2many ilişkisini kullanarak)."""
         for record in self:
-            if record.arac_id and record.arac_kucuk_mu:
+            if not record.ilce_id or not record.arac_id:
+                record.ilce_uygun_mu = False
+                record.uygunluk_mesaji = "Lütfen araç ve ilçe seçin"
+                continue
+
+            # Many2many ilişkisini kullanarak kontrol et
+            if record.ilce_id in record.arac_id.uygun_ilceler:
                 record.ilce_uygun_mu = True
-                record.uygunluk_mesaji = (
-                    "✅ Küçük araç ile tüm ilçelere gün kısıtı olmadan "
-                    "teslimat yapılabilir"
-                )
-            elif record.ilce_id and record.arac_id:
-                # Araç tipine göre ilçe uygunluğunu kontrol et
-                arac_tipi = record.arac_id.arac_tipi
-                ilce_yaka = record.ilce_id.yaka_tipi
-
-                # Yaka bazlı araçlar için kısıtlama
-                if arac_tipi == "anadolu_yakasi":
-                    if ilce_yaka == "anadolu":
-                        record.ilce_uygun_mu = True
-                        record.uygunluk_mesaji = (
-                            f"✅ {record.ilce_id.name} ilçesine "
-                            f"{record.arac_id.name} ile teslimat yapılabilir "
-                            "(Anadolu Yakası)"
-                        )
-                    else:
-                        record.ilce_uygun_mu = False
-                        record.uygunluk_mesaji = (
-                            f"❌ {record.ilce_id.name} ilçesine "
-                            f"{record.arac_id.name} ile teslimat yapılamaz "
-                            "(Anadolu Yakası araç sadece Anadolu Yakası "
-                            "ilçelerine gidebilir)"
-                        )
-
-                elif arac_tipi == "avrupa_yakasi":
-                    if ilce_yaka == "avrupa":
-                        record.ilce_uygun_mu = True
-                        record.uygunluk_mesaji = (
-                            f"✅ {record.ilce_id.name} ilçesine "
-                            f"{record.arac_id.name} ile teslimat yapılabilir "
-                            "(Avrupa Yakası)"
-                        )
-                    else:
-                        record.ilce_uygun_mu = False
-                        record.uygunluk_mesaji = (
-                            f"❌ {record.ilce_id.name} ilçesine "
-                            f"{record.arac_id.name} ile teslimat yapılamaz "
-                            "(Avrupa Yakası araç sadece Avrupa Yakası "
-                            "ilçelerine gidebilir)"
-                        )
-
-                # Küçük araçlar ve ek araç için kısıtlama yok
-                elif arac_tipi in ["kucuk_arac_1", "kucuk_arac_2", "ek_arac"]:
-                    record.ilce_uygun_mu = True
+                if record.arac_kucuk_mu:
                     record.uygunluk_mesaji = (
                         f"✅ {record.ilce_id.name} ilçesine "
                         f"{record.arac_id.name} ile teslimat yapılabilir "
-                        "(Her iki yakaya da gidebilir)"
+                        "(Küçük araç - tüm ilçelere gidebilir)"
                     )
                 else:
-                    record.ilce_uygun_mu = False
-                    record.uygunluk_mesaji = f"❌ Bilinmeyen araç tipi: {arac_tipi}"
+                    arac_tipi_label = dict(record.arac_id._fields["arac_tipi"].selection).get(
+                        record.arac_id.arac_tipi, record.arac_id.arac_tipi
+                    )
+                    record.uygunluk_mesaji = (
+                        f"✅ {record.ilce_id.name} ilçesine "
+                        f"{record.arac_id.name} ile teslimat yapılabilir "
+                        f"({arac_tipi_label})"
+                    )
             else:
                 record.ilce_uygun_mu = False
-                record.uygunluk_mesaji = "Lütfen araç ve ilçe seçin"
+                arac_tipi_label = dict(record.arac_id._fields["arac_tipi"].selection).get(
+                    record.arac_id.arac_tipi, record.arac_id.arac_tipi
+                )
+                record.uygunluk_mesaji = (
+                    f"❌ {record.ilce_id.name} ilçesine "
+                    f"{record.arac_id.name} ile teslimat yapılamaz. "
+                    f"Bu araç ({arac_tipi_label}) bu ilçeye uygun değil."
+                )
 
     @api.depends("ilce_id", "arac_id", "ilce_uygun_mu")
     def _compute_tarih_listesi(self) -> None:
@@ -165,7 +172,7 @@ class TeslimatAnaSayfa(models.TransientModel):
             if record.arac_id and (
                 small_vehicle or (record.ilce_id and record.ilce_uygun_mu)
             ):
-                # Sonraki 30 günü kontrol et
+                # Sonraki 30 günü kontrol et (Pazar günleri hariç)
                 bugun = fields.Date.today()
                 bitis_tarihi = bugun + timedelta(days=30)
                 tarihler = []
@@ -247,9 +254,14 @@ class TeslimatAnaSayfa(models.TransientModel):
                         if key_genel not in gun_ilce_dict:
                             gun_ilce_dict[key_genel] = gun_ilce
 
-                # Şimdi 30 günü loop et (sorgu yok, sadece hesaplama)
+                # Şimdi 30 günü loop et (sorgu yok, sadece hesaplama) - Pazar günleri hariç
                 for i in range(30):
                     tarih = bugun + timedelta(days=i)
+                    
+                    # Pazar gününü atla (weekday() == 6) - Tüm araçlar pazar günü kapalıdır
+                    if tarih.weekday() == 6:
+                        continue
+                    
                     gun_adi = tarih.strftime("%A")
                     gun_adi_tr = gun_eslesmesi.get(gun_adi, gun_adi)
 

@@ -26,7 +26,12 @@ class TeslimatBelgesiWizard(models.TransientModel):
         readonly=True,
     )
     arac_id = fields.Many2one("teslimat.arac", string="Araç", required=True)
-    ilce_id = fields.Many2one("teslimat.ilce", string="İlçe", required=False)
+    ilce_id = fields.Many2one(
+        "teslimat.ilce",
+        string="İlçe",
+        required=False,
+        domain=[("aktif", "=", True), ("teslimat_aktif", "=", True)],
+    )
 
     # Transfer No (stock.picking)
     transfer_id = fields.Many2one(
@@ -110,6 +115,40 @@ class TeslimatBelgesiWizard(models.TransientModel):
                 in ["kucuk_arac_1", "kucuk_arac_2", "ek_arac"]
             )
 
+    @api.onchange("arac_id")
+    def _onchange_arac_id(self) -> None:
+        """Araç seçildiğinde ilçe domain'ini güncelle."""
+        if self.arac_id:
+            # Araç seçildiğinde, sadece o araca uygun ilçeleri göster
+            if self.arac_id.uygun_ilceler:
+                return {
+                    "domain": {
+                        "ilce_id": [
+                            ("aktif", "=", True),
+                            ("teslimat_aktif", "=", True),
+                            ("id", "in", self.arac_id.uygun_ilceler.ids),
+                        ]
+                    }
+                }
+            else:
+                # Eğer araç için uygun ilçe yoksa, hiçbir ilçe gösterilmez
+                return {
+                    "domain": {
+                        "ilce_id": [
+                            ("aktif", "=", True),
+                            ("teslimat_aktif", "=", True),
+                            ("id", "in", []),
+                        ]
+                    }
+                }
+        else:
+            # Araç seçilmediğinde, tüm aktif ilçeleri göster
+            return {
+                "domain": {
+                    "ilce_id": [("aktif", "=", True), ("teslimat_aktif", "=", True)]
+                }
+            }
+
     @api.onchange("transfer_id")
     def _onchange_transfer_id(self) -> None:
         """Transfer seçildiğinde müşteri bilgilerini otomatik doldur."""
@@ -178,7 +217,27 @@ class TeslimatBelgesiWizard(models.TransientModel):
         if not self.musteri_id:
             raise UserError(_("Müşteri seçimi zorunludur."))
 
-        # Kapasite kontrolü - Araç
+        # Pazar günü kontrolü - Tüm araçlar pazar günü kapalıdır
+        gun_kodu_map = {
+            0: "pazartesi",
+            1: "sali",
+            2: "carsamba",
+            3: "persembe",
+            4: "cuma",
+            5: "cumartesi",
+            6: "pazar",
+        }
+        teslimat_gun_kodu = gun_kodu_map.get(self.teslimat_tarihi.weekday())
+        if teslimat_gun_kodu == "pazar":
+            raise UserError(
+                _(
+                    "Pazar günü teslimat yapılamaz! "
+                    "Tüm araçlar pazar günü kapalıdır. "
+                    "Lütfen başka bir tarih seçin."
+                )
+            )
+
+        # Kapasite kontrolü - Araç (Günlük maksimum 7 teslimat)
         bugun_teslimatlar = self.env["teslimat.belgesi"].search_count(
             [
                 ("teslimat_tarihi", "=", self.teslimat_tarihi),
@@ -228,23 +287,17 @@ class TeslimatBelgesiWizard(models.TransientModel):
                             )
                         )
 
-        # İlçe-Araç uyumluluğu kontrolü
-        if not small_vehicle and self.ilce_id:
-            ilce_yaka = self.ilce_id.yaka_tipi
-            arac_tipi = self.arac_id.arac_tipi
-
-            if arac_tipi == "anadolu_yakasi" and ilce_yaka != "anadolu":
-                raise UserError(
-                    _(
-                        "Anadolu Yakası araç sadece Anadolu Yakası "
-                        "ilçelerine gidebilir!"
-                    )
+        # İlçe-Araç uyumluluğu kontrolü (Many2many ilişkisini kullanarak)
+        if not small_vehicle and self.ilce_id and self.arac_id:
+            if self.ilce_id not in self.arac_id.uygun_ilceler:
+                arac_tipi_label = dict(self.arac_id._fields["arac_tipi"].selection).get(
+                    self.arac_id.arac_tipi, self.arac_id.arac_tipi
                 )
-            elif arac_tipi == "avrupa_yakasi" and ilce_yaka != "avrupa":
                 raise UserError(
                     _(
-                        "Avrupa Yakası araç sadece Avrupa Yakası "
-                        "ilçelerine gidebilir!"
+                        f"{self.arac_id.name} ({arac_tipi_label}) "
+                        f"{self.ilce_id.name} ilçesine uygun değil! "
+                        "Lütfen uygun bir araç seçin."
                     )
                 )
 

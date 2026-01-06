@@ -44,7 +44,7 @@ class TeslimatGun(models.Model):
 
     # Kapasite Bilgileri (Dinamik - Modülden ayarlanabilir)
     gunluk_maksimum_teslimat = fields.Integer(
-        string="Günlük Maksimum Teslimat", default=50
+        string="Günlük Maksimum Teslimat", default=7
     )
     mevcut_teslimat_sayisi = fields.Integer(
         string="Mevcut Teslimat Sayısı",

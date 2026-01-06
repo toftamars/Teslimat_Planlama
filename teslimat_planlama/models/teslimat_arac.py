@@ -97,6 +97,90 @@ class TeslimatArac(models.Model):
                     _("Günlük teslimat limiti 0'dan büyük olmalıdır.")
                 )
 
+    def _update_uygun_ilceler(self) -> None:
+        """Araç tipine göre uygun ilçeleri otomatik eşleştir.
+        
+        - Anadolu Yakası araçları → Sadece Anadolu Yakası ilçeleri
+        - Avrupa Yakası araçları → Sadece Avrupa Yakası ilçeleri
+        - Küçük araçlar ve ek araç → Tüm ilçeler
+        """
+        for record in self:
+            if not record.arac_tipi:
+                continue
+
+            # Küçük araçlar ve ek araç tüm ilçelere gidebilir
+            if record.arac_tipi in ["kucuk_arac_1", "kucuk_arac_2", "ek_arac"]:
+                # Tüm aktif ilçeleri al
+                tum_ilceler = self.env["teslimat.ilce"].search([("aktif", "=", True)])
+                record.uygun_ilceler = [(6, 0, tum_ilceler.ids)]
+            elif record.arac_tipi == "anadolu_yakasi":
+                # Sadece Anadolu Yakası ilçeleri
+                anadolu_ilceler = self.env["teslimat.ilce"].search(
+                    [("yaka_tipi", "=", "anadolu"), ("aktif", "=", True)]
+                )
+                record.uygun_ilceler = [(6, 0, anadolu_ilceler.ids)]
+            elif record.arac_tipi == "avrupa_yakasi":
+                # Sadece Avrupa Yakası ilçeleri
+                avrupa_ilceler = self.env["teslimat.ilce"].search(
+                    [("yaka_tipi", "=", "avrupa"), ("aktif", "=", True)]
+                )
+                record.uygun_ilceler = [(6, 0, avrupa_ilceler.ids)]
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        """Araç oluşturulduğunda otomatik ilçe eşleştirmesi yap."""
+        records = super().create(vals_list)
+        for record in records:
+            record._update_uygun_ilceler()
+        return records
+
+    def write(self, vals):
+        """Araç tipi değiştiğinde otomatik ilçe eşleştirmesini güncelle."""
+        result = super().write(vals)
+        if "arac_tipi" in vals:
+            self._update_uygun_ilceler()
+        return result
+
+    @api.constrains("uygun_ilceler", "arac_tipi")
+    def _check_ilce_uygunlugu(self) -> None:
+        """Araç tipine göre ilçe uygunluğunu kontrol et.
+        
+        Yaka bazlı araçlar sadece kendi yakalarındaki ilçelere atanabilir.
+        """
+        for record in self:
+            if not record.arac_tipi or not record.uygun_ilceler:
+                continue
+
+            # Küçük araçlar ve ek araç için kontrol yok
+            if record.arac_tipi in ["kucuk_arac_1", "kucuk_arac_2", "ek_arac"]:
+                continue
+
+            # Yaka bazlı araçlar için kontrol
+            if record.arac_tipi == "anadolu_yakasi":
+                yanlis_ilceler = record.uygun_ilceler.filtered(
+                    lambda i: i.yaka_tipi != "anadolu"
+                )
+                if yanlis_ilceler:
+                    raise ValidationError(
+                        _(
+                            "Anadolu Yakası araç sadece Anadolu Yakası "
+                            "ilçelerine atanabilir! "
+                            f"Yanlış ilçeler: {', '.join(yanlis_ilceler.mapped('name'))}"
+                        )
+                    )
+            elif record.arac_tipi == "avrupa_yakasi":
+                yanlis_ilceler = record.uygun_ilceler.filtered(
+                    lambda i: i.yaka_tipi != "avrupa"
+                )
+                if yanlis_ilceler:
+                    raise ValidationError(
+                        _(
+                            "Avrupa Yakası araç sadece Avrupa Yakası "
+                            "ilçelerine atanabilir! "
+                            f"Yanlış ilçeler: {', '.join(yanlis_ilceler.mapped('name'))}"
+                        )
+                    )
+
     def action_gecici_kapat(self) -> dict:
         """Aracı geçici olarak kapatma wizard'ını aç (Yöneticiler için).
 
@@ -148,30 +232,12 @@ class TeslimatArac(models.Model):
             ("kalan_kapasite", ">=", teslimat_sayisi),
         ]
 
-        # İlçe uyumluluğu kontrolü
+        # İlçe uyumluluğu kontrolü (Many2many ilişkisini kullanarak)
         if ilce_id:
             ilce = self.env["teslimat.ilce"].browse(ilce_id)
             if ilce.exists():
-                ilce_yaka = ilce.yaka_tipi
-
-                # Küçük araçlar ve ek araç her ilçeye gidebilir
-                # Yaka bazlı araçlar sadece kendi yakalarına gidebilir
-                if ilce_yaka == "anadolu":
-                    domain.append(
-                        (
-                            "arac_tipi",
-                            "in",
-                            ["anadolu_yakasi", "kucuk_arac_1", "kucuk_arac_2", "ek_arac"],
-                        )
-                    )
-                elif ilce_yaka == "avrupa":
-                    domain.append(
-                        (
-                            "arac_tipi",
-                            "in",
-                            ["avrupa_yakasi", "kucuk_arac_1", "kucuk_arac_2", "ek_arac"],
-                        )
-                    )
+                # Bu ilçeyi uygun ilçeler listesinde bulunan araçları filtrele
+                domain.append(("uygun_ilceler", "in", [ilce_id]))
 
         # Kapatma tarihi kontrolü
         if tarih:
@@ -182,4 +248,28 @@ class TeslimatArac(models.Model):
             ]
 
         return self.search(domain, order="kalan_kapasite desc")
+
+    @api.model
+    def sync_all_arac_ilce_eslesmesi(self) -> dict:
+        """Tüm araçların ilçe eşleştirmelerini otomatik olarak güncelle.
+        
+        Bu metod kurulum sonrası veya manuel olarak çağrılabilir.
+        Tüm araçların uygun ilçelerini araç tipine göre otomatik eşleştirir.
+        
+        Returns:
+            dict: İşlem sonucu bilgisi
+        """
+        araclar = self.search([])
+        guncellenen_sayisi = 0
+        
+        for arac in araclar:
+            if arac.arac_tipi:
+                arac._update_uygun_ilceler()
+                guncellenen_sayisi += 1
+        
+        return {
+            "success": True,
+            "message": f"{guncellenen_sayisi} araç için ilçe eşleştirmesi güncellendi.",
+            "guncellenen_sayisi": guncellenen_sayisi,
+        }
 

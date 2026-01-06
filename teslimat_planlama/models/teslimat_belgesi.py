@@ -130,6 +130,27 @@ class TeslimatBelgesi(models.Model):
                 or _("Yeni")
             )
 
+        # Pazar günü kontrolü - Tüm araçlar pazar günü kapalıdır
+        teslimat_tarihi = vals.get("teslimat_tarihi", fields.Date.today())
+        gun_kodu_map = {
+            0: "pazartesi",
+            1: "sali",
+            2: "carsamba",
+            3: "persembe",
+            4: "cuma",
+            5: "cumartesi",
+            6: "pazar",
+        }
+        teslimat_gun_kodu = gun_kodu_map.get(teslimat_tarihi.weekday())
+        if teslimat_gun_kodu == "pazar":
+            raise UserError(
+                _(
+                    "Pazar günü teslimat yapılamaz! "
+                    "Tüm araçlar pazar günü kapalıdır. "
+                    "Lütfen başka bir tarih seçin."
+                )
+            )
+
         # Günlük teslimat limiti kontrolü (sadece user grubu için)
         user = self.env.user
         if not user.has_group("teslimat_planlama.group_teslimat_manager"):

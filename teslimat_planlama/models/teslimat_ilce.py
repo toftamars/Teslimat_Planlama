@@ -104,7 +104,24 @@ class TeslimatIlce(models.Model):
     gun_ids = fields.Many2many(
         "teslimat.gun", through="teslimat.gun.ilce", string="Teslimat Günleri"
     )
-    arac_ids = fields.Many2many("teslimat.arac", string="Uygun Araçlar")
+    # Uygun araçlar - Many2many ilişkisinin ters tarafı (otomatik hesaplanır)
+    # Bu alan araçların uygun_ilceler alanından otomatik olarak hesaplanır
+    arac_ids = fields.Many2many(
+        "teslimat.arac",
+        compute="_compute_arac_ids",
+        string="Uygun Araçlar",
+        store=False,
+    )
+
+    @api.depends("name", "yaka_tipi")
+    def _compute_arac_ids(self) -> None:
+        """Bu ilçeyi uygun ilçeler listesinde bulunan araçları hesapla."""
+        for record in self:
+            # Bu ilçeyi uygun_ilceler listesinde bulunan araçları bul
+            araclar = self.env["teslimat.arac"].search(
+                [("uygun_ilceler", "in", [record.id])]
+            )
+            record.arac_ids = araclar
 
     @api.depends("name")
     def _compute_yaka_tipi(self) -> None:
@@ -128,6 +145,33 @@ class TeslimatIlce(models.Model):
                 record.yaka_tipi = "avrupa"
             else:
                 record.yaka_tipi = "belirsiz"
+
+    def write(self, vals):
+        """İlçe yaka tipi değiştiğinde ilgili araçların eşleştirmesini güncelle."""
+        result = super().write(vals)
+        if "yaka_tipi" in vals:
+            # Bu ilçeyi uygun ilçeler listesinde bulunan araçları güncelle
+            self._update_arac_ilce_eslesmesi()
+        return result
+
+    def _update_arac_ilce_eslesmesi(self) -> None:
+        """İlçe yaka tipi değiştiğinde ilgili araçların eşleştirmesini güncelle.
+        
+        Yaka tipi değişen ilçe için, bu ilçeyi uygun ilçeler listesinde 
+        bulunan araçların eşleştirmelerini yeniden hesapla.
+        """
+        for ilce in self:
+            # Bu ilçeyi uygun ilçeler listesinde bulunan araçları bul
+            araclar = self.env["teslimat.arac"].search(
+                [("uygun_ilceler", "in", [ilce.id])]
+            )
+            
+            # Her araç için eşleştirmeyi yeniden hesapla
+            for arac in araclar:
+                # Eğer araç yaka bazlı ise (küçük araç değilse)
+                if arac.arac_tipi in ["anadolu_yakasi", "avrupa_yakasi"]:
+                    # Araç tipine göre uygun ilçeleri yeniden hesapla
+                    arac._update_uygun_ilceler()
 
     @api.model
     def create_istanbul_ilceleri(self) -> bool:

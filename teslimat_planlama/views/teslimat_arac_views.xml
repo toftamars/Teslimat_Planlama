@@ -71,10 +71,22 @@
                     </group>
                     <notebook>
                         <page string="Uygun İlçeler">
-                            <field name="uygun_ilceler" widget="many2many_tags"/>
+                            <field name="uygun_ilceler" widget="many2many_tags" 
+                                   readonly="1" 
+                                   groups="!teslimat_planlama.group_teslimat_manager"/>
+                            <field name="uygun_ilceler" widget="many2many_tags" 
+                                   groups="teslimat_planlama.group_teslimat_manager"/>
                             <p class="text-muted">
-                                Araç tipine göre uygun ilçeler otomatik olarak belirlenir.
-                                Küçük araçlar ve ek araç tüm ilçelere gidebilir.
+                                <strong>Otomatik Eşleştirme:</strong> Araç tipine göre uygun ilçeler otomatik olarak belirlenir.
+                                <br/>
+                                • <strong>Anadolu Yakası</strong> araçları → Sadece Anadolu Yakası ilçeleri
+                                <br/>
+                                • <strong>Avrupa Yakası</strong> araçları → Sadece Avrupa Yakası ilçeleri
+                                <br/>
+                                • <strong>Küçük araçlar ve ek araç</strong> → Tüm ilçelere gidebilir
+                                <br/>
+                                <br/>
+                                <em>Yöneticiler manuel olarak düzenleyebilir, ancak sistem constraint ile kontrol eder.</em>
                             </p>
                         </page>
                         <page string="Teslimatlar">
