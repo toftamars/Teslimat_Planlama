@@ -26,7 +26,7 @@ class TeslimatAnaSayfa(models.TransientModel):
     ilce_id = fields.Many2one(
         "teslimat.ilce",
         string="İlçe",
-        domain=[("aktif", "=", True), ("teslimat_aktif", "=", True)],
+        # Domain onchange ile dinamik olarak güncelleniyor
     )
 
     @api.onchange("arac_id")
@@ -35,79 +35,55 @@ class TeslimatAnaSayfa(models.TransientModel):
         # Araç değiştiğinde ilçe seçimini temizle
         self.ilce_id = False
         
-        if self.arac_id:
-            # Eğer araç için uygun ilçeler henüz eşleştirilmemişse, otomatik eşleştir
-            if not self.arac_id.uygun_ilceler:
-                self.arac_id._update_uygun_ilceler()
-            
-            # _update_uygun_ilceler() metodundaki mantığı kullan
-            # Önce eşleştirmeyi yap, sonra uygun ilçe ID'lerini al
-            if not self.arac_id.uygun_ilceler:
-                self.arac_id._update_uygun_ilceler()
-            
-            # Araç tipine göre doğrudan ilçe ID'lerini hesapla (_update_uygun_ilceler mantığı)
-            uygun_ilce_ids = []
-            arac_tipi = self.arac_id.arac_tipi
-            
-            if arac_tipi in ["kucuk_arac_1", "kucuk_arac_2", "ek_arac"]:
-                # Küçük araçlar ve ek araç tüm ilçelere gidebilir
-                tum_ilceler = self.env["teslimat.ilce"].search(
-                    [("aktif", "=", True), ("teslimat_aktif", "=", True)]
-                )
-                uygun_ilce_ids = tum_ilceler.ids
-            elif arac_tipi == "anadolu_yakasi":
-                # Sadece Anadolu Yakası ilçeleri
-                # İlçe adı listesine göre filtreleme yap (yaka_tipi compute field olabilir)
-                from odoo.addons.teslimat_planlama.models.teslimat_ilce import ANADOLU_ILCELERI
-                tum_aktif_ilceler = self.env["teslimat.ilce"].search(
-                    [("aktif", "=", True), ("teslimat_aktif", "=", True)]
-                )
-                # Anadolu Yakası ilçelerini filtrele (isim listesine göre)
-                anadolu_ilceler = tum_aktif_ilceler.filtered(
-                    lambda i: any(ilce.lower() in i.name.lower() for ilce in ANADOLU_ILCELERI)
-                )
-                uygun_ilce_ids = anadolu_ilceler.ids
-            elif arac_tipi == "avrupa_yakasi":
-                # Sadece Avrupa Yakası ilçeleri
-                # İlçe adı listesine göre filtreleme yap (yaka_tipi compute field olabilir)
-                from odoo.addons.teslimat_planlama.models.teslimat_ilce import AVRUPA_ILCELERI
-                tum_aktif_ilceler = self.env["teslimat.ilce"].search(
-                    [("aktif", "=", True), ("teslimat_aktif", "=", True)]
-                )
-                # Avrupa Yakası ilçelerini filtrele (isim listesine göre)
-                avrupa_ilceler = tum_aktif_ilceler.filtered(
-                    lambda i: any(ilce.lower() in i.name.lower() for ilce in AVRUPA_ILCELERI)
-                )
-                uygun_ilce_ids = avrupa_ilceler.ids
-            
-            if uygun_ilce_ids:
-                return {
-                    "domain": {
-                        "ilce_id": [
-                            ("aktif", "=", True),
-                            ("teslimat_aktif", "=", True),
-                            ("id", "in", uygun_ilce_ids),
-                        ]
-                    }
-                }
-            else:
-                # Eğer araç için uygun ilçe yoksa, hiçbir ilçe gösterilmez
-                return {
-                    "domain": {
-                        "ilce_id": [
-                            ("aktif", "=", True),
-                            ("teslimat_aktif", "=", True),
-                            ("id", "in", []),
-                        ]
-                    }
-                }
-        else:
+        if not self.arac_id:
             # Araç seçilmediğinde, tüm aktif ilçeleri göster
             return {
                 "domain": {
                     "ilce_id": [("aktif", "=", True), ("teslimat_aktif", "=", True)]
                 }
             }
+        
+        # Araç seçildiğinde
+        arac_tipi = self.arac_id.arac_tipi
+        uygun_ilce_ids = []
+        
+        if arac_tipi in ["kucuk_arac_1", "kucuk_arac_2", "ek_arac"]:
+            # Küçük araçlar ve ek araç tüm ilçelere gidebilir
+            tum_ilceler = self.env["teslimat.ilce"].search(
+                [("aktif", "=", True), ("teslimat_aktif", "=", True)]
+            )
+            uygun_ilce_ids = tum_ilceler.ids
+        elif arac_tipi == "anadolu_yakasi":
+            # Anadolu Yakası ilçeleri - isim listesine göre
+            from odoo.addons.teslimat_planlama.models.teslimat_ilce import ANADOLU_ILCELERI
+            tum_ilceler = self.env["teslimat.ilce"].search(
+                [("aktif", "=", True), ("teslimat_aktif", "=", True)]
+            )
+            anadolu_ilceler = tum_ilceler.filtered(
+                lambda i: any(ilce.lower() in i.name.lower() for ilce in ANADOLU_ILCELERI)
+            )
+            uygun_ilce_ids = anadolu_ilceler.ids
+        elif arac_tipi == "avrupa_yakasi":
+            # Avrupa Yakası ilçeleri - isim listesine göre
+            from odoo.addons.teslimat_planlama.models.teslimat_ilce import AVRUPA_ILCELERI
+            tum_ilceler = self.env["teslimat.ilce"].search(
+                [("aktif", "=", True), ("teslimat_aktif", "=", True)]
+            )
+            avrupa_ilceler = tum_ilceler.filtered(
+                lambda i: any(ilce.lower() in i.name.lower() for ilce in AVRUPA_ILCELERI)
+            )
+            uygun_ilce_ids = avrupa_ilceler.ids
+        
+        # Domain'i döndür
+        return {
+            "domain": {
+                "ilce_id": [
+                    ("aktif", "=", True),
+                    ("teslimat_aktif", "=", True),
+                    ("id", "in", uygun_ilce_ids),
+                ]
+            }
+        }
 
     # Hesaplanan alanlar
     arac_kucuk_mu = fields.Boolean(
