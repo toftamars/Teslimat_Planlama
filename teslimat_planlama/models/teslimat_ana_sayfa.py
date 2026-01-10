@@ -6,11 +6,6 @@ from typing import Optional
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
-from odoo.addons.teslimat_planlama.models.teslimat_ilce import (
-    ANADOLU_ILCELERI,
-    AVRUPA_ILCELERI,
-)
-
 _logger = logging.getLogger(__name__)
 
 

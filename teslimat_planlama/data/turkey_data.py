@@ -82,3 +82,17 @@ TURKEY_DISTRICTS = {
     "Osmaniye": ["Bahçe", "Düziçi", "Hasanbeyli", "Kadirli", "Merkez", "Sumbas", "Toprakkale"],
     "Düzce": ["Akçakoca", "Cumayeri", "Çilimli", "Gölyaka", "Gümüşova", "Kaynaşlı", "Merkez", "Yığılca"]
 }
+
+# İstanbul Yaka Bilgileri
+ANADOLU_ILCELERI = [
+    "Maltepe", "Kartal", "Pendik", "Tuzla", "Üsküdar", "Kadıköy", "Ataşehir", 
+    "Ümraniye", "Sancaktepe", "Çekmeköy", "Beykoz", "Şile", "Sultanbeyli"
+]
+
+AVRUPA_ILCELERI = [
+    "Beyoğlu", "Şişli", "Beşiktaş", "Kağıthane", "Sarıyer", "Bakırköy", 
+    "Bahçelievler", "Güngören", "Esenler", "Bağcılar", "Eyüpsultan", 
+    "Gaziosmanpaşa", "Küçükçekmece", "Avcılar", "Başakşehir", "Sultangazi", 
+    "Arnavutköy", "Fatih", "Zeytinburnu", "Bayrampaşa", "Esenyurt", 
+    "Beylikdüzü", "Silivri", "Çatalca", "Büyükçekmece"
+]

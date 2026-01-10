@@ -7,49 +7,7 @@ from odoo import api, fields, models
 _logger = logging.getLogger(__name__)
 
 # İlçe yaka tipi tanımları
-ANADOLU_ILCELERI = [
-    "Maltepe",
-    "Kartal",
-    "Pendik",
-    "Tuzla",
-    "Üsküdar",
-    "Kadıköy",
-    "Ataşehir",
-    "Ümraniye",
-    "Sancaktepe",
-    "Çekmeköy",
-    "Beykoz",
-    "Şile",
-    "Sultanbeyli",
-]
-
-AVRUPA_ILCELERI = [
-    "Beyoğlu",
-    "Şişli",
-    "Beşiktaş",
-    "Kağıthane",
-    "Sarıyer",
-    "Bakırköy",
-    "Bahçelievler",
-    "Güngören",
-    "Esenler",
-    "Bağcılar",
-    "Eyüpsultan",
-    "Gaziosmanpaşa",
-    "Küçükçekmece",
-    "Avcılar",
-    "Başakşehir",
-    "Sultangazi",
-    "Arnavutköy",
-    "Fatih",
-    "Zeytinburnu",
-    "Bayrampaşa",
-    "Esenyurt",
-    "Beylikdüzü",
-    "Silivri",
-    "Çatalca",
-    "Büyükçekmece",
-]
+from ..data.turkey_data import ANADOLU_ILCELERI, AVRUPA_ILCELERI
 
 
 class TeslimatIlce(models.Model):
