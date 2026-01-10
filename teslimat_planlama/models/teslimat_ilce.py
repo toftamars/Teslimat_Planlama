@@ -80,12 +80,30 @@ class TeslimatIlce(models.Model):
     def apply_weekly_schedule(self):
         """Kullanıcının verdiği haftalık teslimat programını uygula."""
         schedule = {
-            'pazartesi': ['MALTEPE', 'KARTAL', 'PENDİK', 'TUZLA', 'SULTANBEYLİ'],
-            'sali': ['ÜSKÜDAR', 'KADIKÖY', 'ÜMRANİYE', 'ATAŞEHİR'],
-            'carsamba': ['ÜSKÜDAR', 'KADIKÖY', 'ÜMRANİYE', 'ATAŞEHİR'],
-            'persembe': ['MALTEPE', 'KARTAL', 'PENDİK', 'TUZLA', 'SULTANBEYLİ'],
-            'cuma': ['ÜSKÜDAR', 'KADIKÖY', 'ÜMRANİYE', 'ATAŞEHİR'],
-            'cumartesi': ['BEYKOZ', 'ÇEKMEKÖY', 'SANCAKTEPE', 'ŞİLE']
+            'pazartesi': [
+                'MALTEPE', 'KARTAL', 'PENDİK', 'TUZLA', 'SULTANBEYLİ',
+                'ŞİŞLİ', 'BEŞİKTAŞ', 'BEYOĞLU', 'KAĞITHANE'
+            ],
+            'sali': [
+                'ÜSKÜDAR', 'KADIKÖY', 'ÜMRANİYE', 'ATAŞEHİR',
+                'ŞİŞLİ', 'BEŞİKTAŞ', 'BEYOĞLU', 'KAĞITHANE'
+            ],
+            'carsamba': [
+                'ÜSKÜDAR', 'KADIKÖY', 'ÜMRANİYE', 'ATAŞEHİR',
+                'BAĞCILAR', 'BAHÇELİEVLER', 'BAKIRKÖY', 'GÜNGÖREN', 'ESENLER', 'ZEYTİNBURNU', 'BAYRAMPAŞA', 'FATİH'
+            ],
+            'persembe': [
+                'MALTEPE', 'KARTAL', 'PENDİK', 'TUZLA', 'SULTANBEYLİ',
+                'BÜYÜKÇEKMECE', 'SİLİVRİ', 'ÇATALCA', 'ARNAVUTKÖY', 'BAKIRKÖY'
+            ],
+            'cuma': [
+                'ÜSKÜDAR', 'KADIKÖY', 'ÜMRANİYE', 'ATAŞEHİR',
+                'ŞİŞLİ', 'BEŞİKTAŞ', 'BEYOĞLU', 'KAĞITHANE'
+            ],
+            'cumartesi': [
+                'BEYKOZ', 'ÇEKMEKÖY', 'SANCAKTEPE', 'ŞİLE',
+                'BÜYÜKÇEKMECE', 'SİLİVRİ', 'ÇATALCA', 'ARNAVUTKÖY', 'BAKIRKÖY'
+            ]
         }
 
         for gun_kodu, ilce_isimleri in schedule.items():
