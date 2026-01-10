@@ -22,9 +22,6 @@
                             <field name="state_id"/>
                             <field name="arac_id" 
                                    options="{'no_create': True, 'no_edit': True}"/>
-                            <field name="ilce_id" 
-                                   options="{'no_create': True, 'no_edit': True}"
-                                   attrs="{'required': ['&amp;', ('arac_id','!=', False), ('arac_kucuk_mu','=', False)]}"/>
                         </group>
                         <group>
                             <field name="ilce_uygun_mu" readonly="1"/>
