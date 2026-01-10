@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- İstanbul İlçeleri - Sadece test için -->
+        <record id="ilce_adalar" model="teslimat.ilce">
+            <field name="name">Adalar</field>
+            <field name="state_id" ref="base.state_tr34"/>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="ilce_arnavutkoy" model="teslimat.ilce">
+            <field name="name">Arnavutköy</field>
+            <field name="state_id" ref="base.state_tr34"/>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="ilce_atasehir" model="teslimat.ilce">
+            <field name="name">Ataşehir</field>
+            <field name="state_id" ref="base.state_tr34"/>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="ilce_avcilar" model="teslimat.ilce">
+            <field name="name">Avcılar</field>
+            <field name="state_id" ref="base.state_tr34"/>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="ilce_bagcilar" model="teslimat.ilce">
+            <field name="name">Bağcılar</field>
+            <field name="state_id" ref="base.state_tr34"/>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="ilce_bahcelievler" model="teslimat.ilce">
+            <field name="name">Bahçelievler</field>
+            <field name="state_id" ref="base.state_tr34"/>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="ilce_bakirkoy" model="teslimat.ilce">
+            <field name="name">Bakırköy</field>
+            <field name="state_id" ref="base.state_tr34"/>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="ilce_basaksehir" model="teslimat.ilce">
+            <field name="name">Başakşehir</field>
+            <field name="state_id" ref="base.state_tr34"/>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="ilce_bayrampaşa" model="teslimat.ilce">
+            <field name="name">Bayrampaşa</field>
+            <field name="state_id" ref="base.state_tr34"/>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="ilce_besiktas" model="teslimat.ilce">
+            <field name="name">Beşiktaş</field>
+            <field name="state_id" ref="base.state_tr34"/>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="ilce_beykoz" model="teslimat.ilce">
+            <field name="name">Beykoz</field>
+            <field name="state_id" ref="base.state_tr34"/>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="ilce_beylikduzu" model="teslimat.ilce">
+            <field name="name">Beylikdüzü</field>
+            <field name="state_id" ref="base.state_tr34"/>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="ilce_beyoglu" model="teslimat.ilce">
+            <field name="name">Beyoğlu</field>
+            <field name="state_id" ref="base.state_tr34"/>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="ilce_buyukcekmece" model="teslimat.ilce">
+            <field name="name">Büyükçekmece</field>
+            <field name="state_id" ref="base.state_tr34"/>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="ilce_catalca" model="teslimat.ilce">
+            <field name="name">Çatalca</field>
+            <field name="state_id" ref="base.state_tr34"/>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="ilce_cekmekoy" model="teslimat.ilce">
+            <field name="name">Çekmeköy</field>
+            <field name="state_id" ref="base.state_tr34"/>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="ilce_esenler" model="teslimat.ilce">
+            <field name="name">Esenler</field>
+            <field name="state_id" ref="base.state_tr34"/>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="ilce_esenyurt" model="teslimat.ilce">
+            <field name="name">Esenyurt</field>
+            <field name="state_id" ref="base.state_tr34"/>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="ilce_eyupsultan" model="teslimat.ilce">
+            <field name="name">Eyüpsultan</field>
+            <field name="state_id" ref="base.state_tr34"/>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="ilce_fatih" model="teslimat.ilce">
+            <field name="name">Fatih</field>
+            <field name="state_id" ref="base.state_tr34"/>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="ilce_gaziosmanpasa" model="teslimat.ilce">
+            <field name="name">Gaziosmanpaşa</field>
+            <field name="state_id" ref="base.state_tr34"/>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="ilce_gungoren" model="teslimat.ilce">
+            <field name="name">Güngören</field>
+            <field name="state_id" ref="base.state_tr34"/>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="ilce_kadikoy" model="teslimat.ilce">
+            <field name="name">Kadıköy</field>
+            <field name="state_id" ref="base.state_tr34"/>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="ilce_kagithane" model="teslimat.ilce">
+            <field name="name">Kağıthane</field>
+            <field name="state_id" ref="base.state_tr34"/>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="ilce_kartal" model="teslimat.ilce">
+            <field name="name">Kartal</field>
+            <field name="state_id" ref="base.state_tr34"/>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="ilce_kucukcekmece" model="teslimat.ilce">
+            <field name="name">Küçükçekmece</field>
+            <field name="state_id" ref="base.state_tr34"/>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="ilce_maltepe" model="teslimat.ilce">
+            <field name="name">Maltepe</field>
+            <field name="state_id" ref="base.state_tr34"/>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="ilce_pendik" model="teslimat.ilce">
+            <field name="name">Pendik</field>
+            <field name="state_id" ref="base.state_tr34"/>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="ilce_sancaktepe" model="teslimat.ilce">
+            <field name="name">Sancaktepe</field>
+            <field name="state_id" ref="base.state_tr34"/>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="ilce_sariyer" model="teslimat.ilce">
+            <field name="name">Sarıyer</field>
+            <field name="state_id" ref="base.state_tr34"/>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="ilce_silivri" model="teslimat.ilce">
+            <field name="name">Silivri</field>
+            <field name="state_id" ref="base.state_tr34"/>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="ilce_sultanbeyli" model="teslimat.ilce">
+            <field name="name">Sultanbeyli</field>
+            <field name="state_id" ref="base.state_tr34"/>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="ilce_sultangazi" model="teslimat.ilce">
+            <field name="name">Sultangazi</field>
+            <field name="state_id" ref="base.state_tr34"/>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="ilce_sile" model="teslimat.ilce">
+            <field name="name">Şile</field>
+            <field name="state_id" ref="base.state_tr34"/>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="ilce_sisli" model="teslimat.ilce">
+            <field name="name">Şişli</field>
+            <field name="state_id" ref="base.state_tr34"/>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="ilce_tuzla" model="teslimat.ilce">
+            <field name="name">Tuzla</field>
+            <field name="state_id" ref="base.state_tr34"/>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="ilce_umraniye" model="teslimat.ilce">
+            <field name="name">Ümraniye</field>
+            <field name="state_id" ref="base.state_tr34"/>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="ilce_uskudar" model="teslimat.ilce">
+            <field name="name">Üsküdar</field>
+            <field name="state_id" ref="base.state_tr34"/>
+            <field name="teslimat_aktif">True</field>
+        </record>
+        
+        <record id="ilce_zeytinburnu" model="teslimat.ilce">
+            <field name="name">Zeytinburnu</field>
+            <field name="state_id" ref="base.state_tr34"/>
+            <field name="teslimat_aktif">True</field>
+        </record>
+    </data>
+</odoo>

@@ -1,6 +1,6 @@
 {
     'name': 'Teslimat Planlama',
-    'version': '15.0.2.0.4',
+    'version': '15.0.2.0.5',
     'category': 'Inventory',
     'summary': 'Teslimat planlaması ve rota optimizasyonu',
     'description': """
@@ -37,6 +37,7 @@
         # Data
         'data/ir_sequence_data.xml',
         'data/teslimat_program_kurulum_data.xml',
+        'data/istanbul_ilceleri_data.xml',
         
         # Core Views
         # 'views/teslimat_sehir_views.xml',  # Deprecated - using res.country.state
