@@ -206,7 +206,7 @@ class TeslimatAnaSayfa(models.TransientModel):
 
                 # Batch: Tüm teslimatları tek sorguda çek
                 tum_teslimatlar = self.env["teslimat.belgesi"].search(
-                    teslimat_domain, fields=["teslimat_tarihi"]
+                    teslimat_domain
                 )
                 
                 # Python tarafında tarih bazlı grupla
