@@ -210,3 +210,41 @@ class TeslimatIlce(models.Model):
         ilceler = self.search([("state_id", "=", istanbul.id)])
         for ilce in ilceler:
             ilce._compute_yaka_tipi()
+
+    @api.model
+    def create_istanbul_districts_simple(self):
+        """İstanbul ilçelerini basit yöntemle oluştur."""
+        # İstanbul'u bul
+        istanbul = self.env["res.country.state"].search([
+            ("country_id.code", "=", "TR"),
+            ("name", "ilike", "istanbul")
+        ], limit=1)
+        
+        if not istanbul:
+            _logger.error("İstanbul ili bulunamadı!")
+            return
+            
+        from ..data.turkey_data import TURKEY_DISTRICTS
+        
+        # İstanbul ilçelerini al
+        istanbul_districts = TURKEY_DISTRICTS.get("İstanbul", [])
+        
+        count = 0
+        for district_name in istanbul_districts:
+            existing = self.search([
+                ("name", "=", district_name),
+                ("state_id", "=", istanbul.id)
+            ], limit=1)
+            
+            if not existing:
+                self.create({
+                    "name": district_name,
+                    "state_id": istanbul.id,
+                    "teslimat_aktif": True,
+                })
+                count += 1
+        
+        if count > 0:
+            _logger.info("%s adet İstanbul ilçesi oluşturuldu.", count)
+            self._update_istanbul_yaka_tipleri()
+

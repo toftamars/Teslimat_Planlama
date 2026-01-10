@@ -480,13 +480,13 @@ class TeslimatAnaSayfa(models.TransientModel):
 
     def action_load_districts(self):
         """İlçeleri veritabanına yükle (Manuel tetikleme)."""
-        self.env["teslimat.ilce"].create_districts()
+        self.env["teslimat.ilce"].create_istanbul_districts_simple()
         return {
             'type': 'ir.actions.client',
             'tag': 'display_notification',
             'params': {
                 'title': _('Başarılı'),
-                'message': _('İl ve İlçe verileri güncellendi.'),
+                'message': _('İstanbul ilçeleri yüklendi.'),
                 'type': 'success',
                 'sticky': False,
             }
