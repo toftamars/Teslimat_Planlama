@@ -342,7 +342,6 @@ class TeslimatAnaSayfa(models.TransientModel):
 
                         tarihler.append(
                             {
-                                "ana_sayfa_id": record.id,
                                 "tarih": tarih,
                                 "gun_adi": gun_adi_tr,
                                 "teslimat_sayisi": teslimat_sayisi,
@@ -355,9 +354,8 @@ class TeslimatAnaSayfa(models.TransientModel):
                         )
 
                 # Tarih listesini güncelle
-                record.tarih_listesi = [(5, 0, 0)]  # Tümünü sil
-                for tarih_data in tarihler:
-                    self.env["teslimat.ana.sayfa.tarih"].create(tarih_data)
+                tarih_komutlari = [(0, 0, data) for data in tarihler]
+                record.tarih_listesi = [(5, 0, 0)] + tarih_komutlari
 
             else:
                 record.tarih_listesi = [(5, 0, 0)]  # Tümünü sil
