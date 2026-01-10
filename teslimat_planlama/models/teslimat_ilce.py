@@ -106,6 +106,10 @@ class TeslimatIlce(models.Model):
             ]
         }
 
+        # Tüm araçların ve günlerin limitlerini 7 yap
+        self.env['teslimat.arac'].search([]).write({'gunluk_teslimat_limiti': 7})
+        self.env['teslimat.gun'].search([('aktif', '=', True)]).write({'gunluk_maksimum_teslimat': 7})
+
         for gun_kodu, ilce_isimleri in schedule.items():
             gun = self.env['teslimat.gun'].search([('gun_kodu', '=', gun_kodu)], limit=1)
             if not gun:
@@ -133,9 +137,11 @@ class TeslimatIlce(models.Model):
                         self.env['teslimat.gun.ilce'].create({
                             'gun_id': gun.id,
                             'ilce_id': ilce.id,
-                            'maksimum_teslimat': 10,  # Varsayılan
+                            'maksimum_teslimat': 7,  # Kullanıcı isteği: 7
                             'tarih': fields.Date.today(), # Bugünden başla
                         })
+                    else:
+                        existing_rel.write({'maksimum_teslimat': 7})
         return True
 
     @api.depends("name", "yaka_tipi")
