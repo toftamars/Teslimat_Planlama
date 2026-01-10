@@ -478,3 +478,17 @@ class TeslimatAnaSayfa(models.TransientModel):
         # Compute field'lar otomatik yenilenecek
         return True
 
+    def action_load_districts(self):
+        """İlçeleri veritabanına yükle (Manuel tetikleme)."""
+        self.env["teslimat.ilce"].create_districts()
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _('Başarılı'),
+                'message': _('İl ve İlçe verileri güncellendi.'),
+                'type': 'success',
+                'sticky': False,
+            }
+        }
+
