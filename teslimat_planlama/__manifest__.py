@@ -34,8 +34,7 @@
         'security/security.xml',
         'security/ir.model.access.csv',
         
-        # Data - Cleanup en başta (eski model referanslarını temizle)
-        'data/cleanup_old_model_data.xml',
+        # Data
         'data/ir_sequence_data.xml',
         'data/teslimat_program_kurulum_data.xml',
         
