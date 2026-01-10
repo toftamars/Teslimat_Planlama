@@ -1,5 +1,6 @@
 from . import models
 from . import wizards
+from odoo import api, SUPERUSER_ID
 
 
 def post_init_hook(cr, registry):
@@ -38,19 +39,40 @@ def post_init_hook(cr, registry):
             _logger.info("Eski ir_model_fields kayıtları silindi: %s", deleted_fields)
         
         # Selection field'larındaki referansları temizle
-        # ir_model_fields tablosunda selection tipindeki field'ları kontrol et
+        
+        # 1. Eski stil (column 'selection' in ir_model_fields) - Odoo 14 öncesi veya bazı migration durumları
+        cr.execute("SELECT 1 FROM information_schema.columns WHERE table_name='ir_model_fields' AND column_name='selection'")
+        if cr.fetchone():
+            cr.execute("""
+                UPDATE ir_model_fields 
+                SET selection = REPLACE(selection, 'teslimat.planlama.akilli,', '')
+                WHERE ttype = 'selection' 
+                AND selection LIKE '%teslimat.planlama.akilli%'
+            """)
+            updated_fields = cr.rowcount
+            if updated_fields:
+                _logger.info("Selection field'ları güncellendi (legacy): %s", updated_fields)
+
+        # 2. Yeni stil (table 'ir_model_fields_selection') - Odoo 15 ve sonrası
+        # Selection değerlerini içeren kayıtları sil
         cr.execute("""
-            UPDATE ir_model_fields 
-            SET selection = REPLACE(selection, 'teslimat.planlama.akilli,', '')
-            WHERE ttype = 'selection' 
-            AND selection LIKE '%teslimat.planlama.akilli%'
+            DELETE FROM ir_model_fields_selection 
+            WHERE value LIKE '%teslimat.planlama.akilli%'
         """)
-        updated_fields = cr.rowcount
-        if updated_fields:
-            _logger.info("Selection field'ları güncellendi: %s", updated_fields)
+        deleted_selections = cr.rowcount
+        if deleted_selections:
+             _logger.info("ir_model_fields_selection kayıtları silindi: %s", deleted_selections)
         
         cr.commit()
         _logger.info("Eski teslimat.planlama.akilli model referansları temizlendi")
+        
+        # Türkiye ilçelerini otomatik oluştur
+        try:
+             env = api.Environment(cr, registry.SUPERUSER_ID, {})
+             env["teslimat.ilce"].create_districts()
+        except Exception as e:
+             _logger.warning("İlçe oluşturma hook hatası (ignored): %s", e)
+             
     except Exception as e:
         cr.rollback()
         _logger.warning("Eski model temizleme hatası (ignored): %s", e)

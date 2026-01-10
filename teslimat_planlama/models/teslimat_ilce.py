@@ -60,10 +60,11 @@ class TeslimatIlce(models.Model):
 
     _name = "teslimat.ilce"
     _description = "Teslimat İlçe Yönetimi"
-    _order = "sehir_id, name"
+    _order = "state_id, name"
 
     name = fields.Char(string="İlçe Adı", required=True)
-    sehir_id = fields.Many2one("teslimat.sehir", string="Şehir", required=True)
+    state_id = fields.Many2one("res.country.state", string="Şehir (İl)", required=True, domain=[("country_id.code", "=", "TR")])
+    # sehir_id field removed
     aktif = fields.Boolean(string="Aktif", default=True)
 
     # Yaka Belirleme
@@ -174,72 +175,68 @@ class TeslimatIlce(models.Model):
                     arac._update_uygun_ilceler()
 
     @api.model
-    def create_istanbul_ilceleri(self) -> bool:
-        """İstanbul ilçelerini otomatik oluştur.
+    def create_districts(self) -> None:
+        """Türkiye ilçelerini data dosyasından oluştur."""
+        try:
+            from ..data.turkey_data import TURKEY_DISTRICTS
+            
+            # Türkiye kaydını bul
+            turkey = self.env["res.country"].search([("code", "=", "TR")], limit=1)
+            if not turkey:
+                _logger.warning("Türkiye (TR) ülkesi bulunamadı, ilçeler oluşturulmadı.")
+                return
 
-        Returns:
-            bool: İşlem başarılı ise True
-        """
-        istanbul = self.env["teslimat.sehir"].get_istanbul()
-
-        ilce_listesi = [
-            # Anadolu Yakası (13 ilçe)
-            {"name": "Maltepe", "yaka_tipi": "anadolu"},
-            {"name": "Kartal", "yaka_tipi": "anadolu"},
-            {"name": "Pendik", "yaka_tipi": "anadolu"},
-            {"name": "Tuzla", "yaka_tipi": "anadolu"},
-            {"name": "Üsküdar", "yaka_tipi": "anadolu"},
-            {"name": "Kadıköy", "yaka_tipi": "anadolu"},
-            {"name": "Ataşehir", "yaka_tipi": "anadolu"},
-            {"name": "Ümraniye", "yaka_tipi": "anadolu"},
-            {"name": "Sancaktepe", "yaka_tipi": "anadolu"},
-            {"name": "Çekmeköy", "yaka_tipi": "anadolu"},
-            {"name": "Beykoz", "yaka_tipi": "anadolu"},
-            {"name": "Şile", "yaka_tipi": "anadolu"},
-            {"name": "Sultanbeyli", "yaka_tipi": "anadolu"},
-            # Avrupa Yakası (23 ilçe)
-            {"name": "Beyoğlu", "yaka_tipi": "avrupa"},
-            {"name": "Şişli", "yaka_tipi": "avrupa"},
-            {"name": "Beşiktaş", "yaka_tipi": "avrupa"},
-            {"name": "Kağıthane", "yaka_tipi": "avrupa"},
-            {"name": "Sarıyer", "yaka_tipi": "avrupa"},
-            {"name": "Bakırköy", "yaka_tipi": "avrupa"},
-            {"name": "Bahçelievler", "yaka_tipi": "avrupa"},
-            {"name": "Güngören", "yaka_tipi": "avrupa"},
-            {"name": "Esenler", "yaka_tipi": "avrupa"},
-            {"name": "Bağcılar", "yaka_tipi": "avrupa"},
-            {"name": "Eyüpsultan", "yaka_tipi": "avrupa"},
-            {"name": "Gaziosmanpaşa", "yaka_tipi": "avrupa"},
-            {"name": "Küçükçekmece", "yaka_tipi": "avrupa"},
-            {"name": "Avcılar", "yaka_tipi": "avrupa"},
-            {"name": "Başakşehir", "yaka_tipi": "avrupa"},
-            {"name": "Sultangazi", "yaka_tipi": "avrupa"},
-            {"name": "Arnavutköy", "yaka_tipi": "avrupa"},
-            {"name": "Fatih", "yaka_tipi": "avrupa"},
-            {"name": "Zeytinburnu", "yaka_tipi": "avrupa"},
-            {"name": "Bayrampaşa", "yaka_tipi": "avrupa"},
-            {"name": "Esenyurt", "yaka_tipi": "avrupa"},
-            {"name": "Beylikdüzü", "yaka_tipi": "avrupa"},
-            {"name": "Silivri", "yaka_tipi": "avrupa"},
-            {"name": "Çatalca", "yaka_tipi": "avrupa"},
-            {"name": "Büyükçekmece", "yaka_tipi": "avrupa"},
-        ]
-
-        for ilce_data in ilce_listesi:
-            existing = self.search(
-                [("name", "=", ilce_data["name"]), ("sehir_id", "=", istanbul.id)],
-                limit=1,
-            )
-            if not existing:
-                self.create(
-                    {
-                        "name": ilce_data["name"],
-                        "sehir_id": istanbul.id,
-                        "yaka_tipi": ilce_data["yaka_tipi"],
-                        "teslimat_aktif": True,
-                        "teslimat_suresi": 1,
-                    }
+            count = 0
+            for city_name, districts in TURKEY_DISTRICTS.items():
+                # Şehri (State) bul
+                state = self.env["res.country.state"].search(
+                    [("country_id", "=", turkey.id), ("name", "=", city_name)], 
+                    limit=1
                 )
+                
+                # Eğer tam eşleşme yoksa, case-insensitive veya 'İ'/'I' sorunlarını dene
+                if not state:
+                    # Basit bir normalizasyon denemesi
+                    state = self.env["res.country.state"].search(
+                        [("country_id", "=", turkey.id), ("name", "ilike", city_name)], 
+                        limit=1
+                    )
+                
+                if not state:
+                    _logger.warning("Şehir bulunamadı: %s", city_name)
+                    continue
 
-        return True
+                for district_name in districts:
+                    # İlçe var mı kontrol et
+                    existing = self.search(
+                        [("name", "=", district_name), ("state_id", "=", state.id)],
+                        limit=1
+                    )
+                    
+                    if not existing:
+                        self.create({
+                            "name": district_name,
+                            "state_id": state.id,
+                            "teslimat_aktif": True,
+                            "yaka_tipi": "belirsiz",  # Default
+                        })
+                        count += 1
+                        
+            if count > 0:
+                _logger.info("%s adet ilçe oluşturuldu.", count)
+                
+            # İstanbul özelinde yaka tiplerini güncelle
+            self._update_istanbul_yaka_tipleri()
+            
+        except Exception as e:
+            _logger.error("İlçe oluşturma hatası: %s", e)
 
+    def _update_istanbul_yaka_tipleri(self):
+        """İstanbul ilçelerinin yaka tiplerini güncelle."""
+        istanbul = self.env["res.country.state"].search([("name", "ilike", "İstanbul")], limit=1)
+        if not istanbul:
+            return
+
+        ilceler = self.search([("state_id", "=", istanbul.id)])
+        for ilce in ilceler:
+            ilce._compute_yaka_tipi()

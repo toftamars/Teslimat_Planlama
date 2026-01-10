@@ -39,18 +39,7 @@
                             <field name="varsayilan_teslimat_suresi"/>
                         </group>
                     </group>
-                    <notebook>
-                        <page string="İlçeler">
-                            <field name="ilce_ids">
-                                <tree>
-                                    <field name="name"/>
-                                    <field name="yaka_tipi"/>
-                                    <field name="aktif"/>
-                                    <field name="teslimat_aktif"/>
-                                </tree>
-                            </field>
-                        </page>
-                    </notebook>
+                    <!-- ilce_ids tab removed -->
                 </sheet>
             </form>
         </field>

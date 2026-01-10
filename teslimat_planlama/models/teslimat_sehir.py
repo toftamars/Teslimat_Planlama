@@ -26,7 +26,8 @@ class TeslimatSehir(models.Model):
     aktif = fields.Boolean(string="Aktif", default=True)
 
     # İlçe İlişkisi
-    ilce_ids = fields.One2many("teslimat.ilce", "sehir_id", string="İlçeler")
+    # İlçe İlişkisi
+    # ilce_ids = fields.One2many("teslimat.ilce", "sehir_id", string="İlçeler")
 
     # Teslimat Bilgileri
     teslimat_aktif = fields.Boolean(string="Teslimat Aktif", default=True)

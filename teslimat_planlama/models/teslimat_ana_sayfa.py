@@ -28,54 +28,59 @@ class TeslimatAnaSayfa(models.TransientModel):
         string="Araç",
         domain=[("aktif", "=", True), ("gecici_kapatma", "=", False)],
     )
+    state_id = fields.Many2one(
+        "res.country.state",
+        string="İl",
+        domain=[("country_id.code", "=", "TR")],
+    )
     ilce_id = fields.Many2one(
         "teslimat.ilce",
         string="İlçe",
         # Domain onchange ile dinamik olarak güncelleniyor
     )
 
-    @api.onchange("arac_id")
-    def _onchange_arac_id(self):
-        """Araç seçildiğinde ilçe domain'ini güncelle."""
+    @api.onchange("state_id", "arac_id")
+    def _onchange_filters(self):
+        """İl veya Araç seçildiğinde ilçe domain'ini güncelle."""
         self.ilce_id = False
         
-        if not self.arac_id:
-            return {
-                "domain": {
-                    "ilce_id": [("aktif", "=", True), ("teslimat_aktif", "=", True)]
-                }
-            }
+        domain = [("aktif", "=", True), ("teslimat_aktif", "=", True)]
         
-        # Tüm aktif ilçeleri al
-        tum_ilceler = self.env["teslimat.ilce"].search(
-            [("aktif", "=", True), ("teslimat_aktif", "=", True)]
-        )
-        
-        arac_tipi = self.arac_id.arac_tipi
-        
-        # Araç tipine göre filtrele
-        if arac_tipi in ["kucuk_arac_1", "kucuk_arac_2", "ek_arac"]:
-            uygun_ilce_ids = tum_ilceler.ids
-        elif arac_tipi == "anadolu_yakasi":
-            uygun_ilce_ids = tum_ilceler.filtered(
-                lambda i: any(ilce.lower() in i.name.lower() for ilce in ANADOLU_ILCELERI)
-            ).ids
-        elif arac_tipi == "avrupa_yakasi":
-            uygun_ilce_ids = tum_ilceler.filtered(
-                lambda i: any(ilce.lower() in i.name.lower() for ilce in AVRUPA_ILCELERI)
-            ).ids
-        else:
+        # İl filtresi
+        if self.state_id:
+            domain.append(("state_id", "=", self.state_id.id))
+            
+        # Araç filtresi
+        if self.arac_id:
+            arac_tipi = self.arac_id.arac_tipi
+            
+            # Tüm aktif ilçeleri domain ile filtrele
+            tum_ilceler = self.env["teslimat.ilce"].search(domain)
+            
             uygun_ilce_ids = []
+            if arac_tipi in ["kucuk_arac_1", "kucuk_arac_2", "ek_arac"]:
+                uygun_ilce_ids = tum_ilceler.ids
+            elif arac_tipi == "anadolu_yakasi":
+                # Sadece İstanbul Anadolu
+                uygun_ilce_ids = tum_ilceler.filtered(
+                    lambda i: i.state_id.name == 'İstanbul' and i.yaka_tipi == 'anadolu'
+                ).ids
+            elif arac_tipi == "avrupa_yakasi":
+                 # Sadece İstanbul Avrupa
+                uygun_ilce_ids = tum_ilceler.filtered(
+                    lambda i: i.state_id.name == 'İstanbul' and i.yaka_tipi == 'avrupa'
+                ).ids
+            else:
+                 # Diğer araçlar için uygun_ilceler alanına bakılabilir veya hepsi
+                 # Şimdilik hepsi diyelim veya boş
+                 uygun_ilce_ids = tum_ilceler.ids
+
+            domain.append(("id", "in", uygun_ilce_ids))
         
-        return {
-            "domain": {
-                "ilce_id": [
-                    ("aktif", "=", True),
-                    ("teslimat_aktif", "=", True),
-                    ("id", "in", uygun_ilce_ids),
-                ]
-            }
-        }
+        return {"domain": {"ilce_id": domain}}
+
+    # Eski metot yerine yenisini kullanıyoruz
+
 
     # Hesaplanan alanlar
     arac_kucuk_mu = fields.Boolean(
