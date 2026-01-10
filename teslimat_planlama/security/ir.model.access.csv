@@ -18,8 +18,8 @@ access_teslimat_belgesi_urun_user,teslimat.belgesi.urun.user,model_teslimat_belg
 access_teslimat_belgesi_urun_manager,teslimat.belgesi.urun.manager,model_teslimat_belgesi_urun,teslimat_planlama.group_teslimat_manager,1,1,1,1
 access_teslimat_ana_sayfa_user,teslimat.ana.sayfa.user,model_teslimat_ana_sayfa,base.group_user,1,1,1,0
 access_teslimat_ana_sayfa_manager,teslimat.ana.sayfa.manager,model_teslimat_ana_sayfa,teslimat_planlama.group_teslimat_manager,1,1,1,1
-access_teslimat_ana_sayfa_tarih_user,teslimat.ana.sayfa.tarih.user,model_teslimat_ana_sayfa_tarih,base.group_user,1,0,0,0
-access_teslimat_ana_sayfa_tarih_manager,teslimat.ana.sayfa.tarih.manager,model_teslimat_ana_sayfa_tarih,teslimat_planlama.group_teslimat_manager,1,0,0,0
+access_teslimat_ana_sayfa_tarih_user,teslimat.ana.sayfa.tarih.user,model_teslimat_ana_sayfa_tarih,base.group_user,1,1,1,1
+access_teslimat_ana_sayfa_tarih_manager,teslimat.ana.sayfa.tarih.manager,model_teslimat_ana_sayfa_tarih,teslimat_planlama.group_teslimat_manager,1,1,1,1
 access_teslimat_belgesi_wizard_user,teslimat.belgesi.wizard.user,model_teslimat_belgesi_wizard,base.group_user,1,1,1,0
 access_teslimat_belgesi_wizard_manager,teslimat.belgesi.wizard.manager,model_teslimat_belgesi_wizard,teslimat_planlama.group_teslimat_manager,1,1,1,1
 access_teslimat_gun_kapatma_wizard_user,teslimat.gun.kapatma.wizard.user,model_teslimat_gun_kapatma_wizard,base.group_user,1,1,1,0
