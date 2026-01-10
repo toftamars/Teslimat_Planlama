@@ -22,6 +22,9 @@
                             <field name="state_id"/>
                             <field name="arac_id" 
                                    options="{'no_create': True, 'no_edit': True}"/>
+                            <field name="ilce_id" 
+                                   options="{'no_create': True, 'no_edit': True}"
+                                   attrs="{'invisible': [('state_id', '=', False)], 'required': [('state_id', '!=', False)]}"/>
                         </group>
                         <group>
                             <field name="ilce_uygun_mu" readonly="1"/>
