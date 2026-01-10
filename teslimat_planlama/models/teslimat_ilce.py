@@ -146,22 +146,34 @@ class TeslimatIlce(models.Model):
 
             count = 0
             for city_name, districts in TURKEY_DISTRICTS.items():
-                # Şehri (State) bul
+                # Şehir ismini normalize et (Odoo'da genelde düzgün kayıtlıdır ama biz garantileyelim)
+                # Odoo'da 'İstanbul' veya 'Istanbul' olabilir.
+                
+                # 1. Tam eşleşme
                 state = self.env["res.country.state"].search(
                     [("country_id", "=", turkey.id), ("name", "=", city_name)], 
                     limit=1
                 )
                 
-                # Eğer tam eşleşme yoksa, case-insensitive veya 'İ'/'I' sorunlarını dene
+                # 2. Case-insensitive eşleşme
                 if not state:
-                    # Basit bir normalizasyon denemesi
                     state = self.env["res.country.state"].search(
-                        [("country_id", "=", turkey.id), ("name", "ilike", city_name)], 
+                        [("country_id", "=", turkey.id), ("name", "=ilike", city_name)], 
                         limit=1
                     )
                 
+                # 3. Özel durumlar (İstanbul, İzmir, vb. Türkçe karakter sorunu)
                 if not state:
-                    _logger.warning("Şehir bulunamadı: %s", city_name)
+                    search_name = city_name
+                    if "İ" in search_name:
+                        search_name = search_name.replace("İ", "I") # İstanbul -> Istanbul
+                        state = self.env["res.country.state"].search(
+                            [("country_id", "=", turkey.id), ("name", "=ilike", search_name)], 
+                            limit=1
+                        )
+
+                if not state:
+                    _logger.warning("Şehir bulunamadı, atlanıyor: %s", city_name)
                     continue
 
                 for district_name in districts:
@@ -176,7 +188,7 @@ class TeslimatIlce(models.Model):
                             "name": district_name,
                             "state_id": state.id,
                             "teslimat_aktif": True,
-                            "yaka_tipi": "belirsiz",  # Default
+                            "yaka_tipi": "belirsiz",
                         })
                         count += 1
                         
