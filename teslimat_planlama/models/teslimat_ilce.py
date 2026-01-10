@@ -61,7 +61,11 @@ class TeslimatIlce(models.Model):
 
     # İlişkiler
     gun_ids = fields.Many2many(
-        "teslimat.gun", through="teslimat.gun.ilce", string="Teslimat Günleri"
+        "teslimat.gun", 
+        "teslimat_ilce_gun_rel", 
+        "ilce_id", 
+        "gun_id", 
+        string="Teslimat Günleri"
     )
     # Uygun araçlar - Many2many ilişkisinin ters tarafı (otomatik hesaplanır)
     # Bu alan araçların uygun_ilceler alanından otomatik olarak hesaplanır
@@ -71,6 +75,50 @@ class TeslimatIlce(models.Model):
         string="Uygun Araçlar",
         store=False,
     )
+
+    @api.model
+    def apply_weekly_schedule(self):
+        """Kullanıcının verdiği haftalık teslimat programını uygula."""
+        schedule = {
+            'pazartesi': ['MALTEPE', 'KARTAL', 'PENDİK', 'TUZLA', 'SULTANBEYLİ'],
+            'sali': ['ÜSKÜDAR', 'KADIKÖY', 'ÜMRANİYE', 'ATAŞEHİR'],
+            'carsamba': ['ÜSKÜDAR', 'KADIKÖY', 'ÜMRANİYE', 'ATAŞEHİR'],
+            'persembe': ['MALTEPE', 'KARTAL', 'PENDİK', 'TUZLA', 'SULTANBEYLİ'],
+            'cuma': ['ÜSKÜDAR', 'KADIKÖY', 'ÜMRANİYE', 'ATAŞEHİR'],
+            'cumartesi': ['BEYKOZ', 'ÇEKMEKÖY', 'SANCAKTEPE', 'ŞİLE']
+        }
+
+        for gun_kodu, ilce_isimleri in schedule.items():
+            gun = self.env['teslimat.gun'].search([('gun_kodu', '=', gun_kodu)], limit=1)
+            if not gun:
+                continue
+            
+            for isim in ilce_isimleri:
+                ilce = self.search([
+                    ('name', '=ilike', isim),
+                    ('state_id.name', 'ilike', 'İstanbul')
+                ], limit=1)
+                
+                if ilce:
+                    # İlçeye o günü ekle (eğer yoksa)
+                    if gun.id not in ilce.gun_ids.ids:
+                        ilce.write({'gun_ids': [(4, gun.id)]})
+                    
+                    # Ayrıca dinamik kapasite tablosunu (teslimat.gun.ilce) da doldur 
+                    # (Bu tablo ana sayfa sorgusu için kritik)
+                    existing_rel = self.env['teslimat.gun.ilce'].search([
+                        ('gun_id', '=', gun.id),
+                        ('ilce_id', '=', ilce.id)
+                    ], limit=1)
+                    
+                    if not existing_rel:
+                        self.env['teslimat.gun.ilce'].create({
+                            'gun_id': gun.id,
+                            'ilce_id': ilce.id,
+                            'maksimum_teslimat': 10,  # Varsayılan
+                            'tarih': fields.Date.today(), # Bugünden başla
+                        })
+        return True
 
     @api.depends("name", "yaka_tipi")
     def _compute_arac_ids(self) -> None:

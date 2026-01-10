@@ -479,14 +479,15 @@ class TeslimatAnaSayfa(models.TransientModel):
         return True
 
     def action_load_districts(self):
-        """İlçeleri veritabanına yükle (Manuel tetikleme)."""
+        """İlçeleri veritabanına yükle ve haftalık programı uygula."""
         self.env["teslimat.ilce"].create_istanbul_districts_simple()
+        self.env["teslimat.ilce"].apply_weekly_schedule()
         return {
             'type': 'ir.actions.client',
             'tag': 'display_notification',
             'params': {
                 'title': _('Başarılı'),
-                'message': _('İstanbul ilçeleri yüklendi.'),
+                'message': _('İlçeler yüklendi ve haftalık program uygulandı.'),
                 'type': 'success',
                 'sticky': False,
             }
