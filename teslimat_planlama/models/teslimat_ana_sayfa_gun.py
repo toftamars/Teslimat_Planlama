@@ -17,11 +17,21 @@ class TeslimatAnaSayfaGun(models.TransientModel):
         "teslimat.ana.sayfa", string="Ana Sayfa", required=True, ondelete="cascade"
     )
     tarih = fields.Date(string="Tarih", required=True)
+    tarih_button = fields.Char(string="📅 Tarih", compute="_compute_tarih_button")
     gun_adi = fields.Char(string="Gün Adı", required=True)
     teslimat_sayisi = fields.Integer(string="Teslimat Sayısı", default=0)
     toplam_kapasite = fields.Integer(string="Toplam Kapasite", default=0)
     kalan_kapasite = fields.Integer(string="Kalan Kapasite", default=0)
     durum_text = fields.Char(string="Durum")
+
+    @api.depends("tarih")
+    def _compute_tarih_button(self):
+        """Tarih buton label'ı oluştur."""
+        for record in self:
+            if record.tarih:
+                record.tarih_button = record.tarih.strftime("%d.%m.%Y")
+            else:
+                record.tarih_button = ""
 
     @api.model
     def default_get(self, fields_list):
