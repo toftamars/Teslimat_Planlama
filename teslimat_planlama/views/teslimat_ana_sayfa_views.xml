@@ -160,8 +160,8 @@
                                               create="false"
                                               edit="false"
                                               delete="false"
-                                              open="0"
                                               default_order="tarih"
+                                              open="action_teslimat_olustur"
                                               sample="1">
                                             <button name="action_teslimat_olustur" string="Oluştur"
                                                     type="object" class="btn-success btn-sm"
