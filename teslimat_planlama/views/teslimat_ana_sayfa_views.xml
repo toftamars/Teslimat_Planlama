@@ -159,8 +159,10 @@
                                               decoration-danger="kalan_kapasite &lt;= 0"
                                               create="false" 
                                               edit="false" 
-                                              delete="false">
-                                            <field name="tarih" readonly="1"/>
+                                              delete="false"
+                                              default_order="tarih"
+                                              sample="1">
+                                            <field name="tarih" readonly="1" widget="date"/>
                                             <field name="gun_adi" readonly="1"/>
                                             <field name="teslimat_sayisi" readonly="1"/>
                                             <field name="toplam_kapasite" readonly="1"/>
@@ -184,6 +186,33 @@
                 <footer>
                     <button string="Kapat" class="btn-secondary" special="cancel"/>
                 </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Transient Model Form View - Sadece tree view'da tıklamayı engellemek için -->
+    <record id="view_teslimat_ana_sayfa_gun_form" model="ir.ui.view">
+        <field name="name">teslimat.ana.sayfa.gun.form</field>
+        <field name="model">teslimat.ana.sayfa.gun</field>
+        <field name="arch" type="xml">
+            <form string="Gün Bilgisi" create="false" edit="false" delete="false">
+                <sheet>
+                    <div class="alert alert-info">
+                        <strong>Sadece görüntüleme amaçlıdır.</strong><br/>
+                        Bu liste sadece uygun günleri gösterir. Teslimat oluşturmak için "Teslimat Oluştur" butonunu kullanın.
+                    </div>
+                    <group>
+                        <group>
+                            <field name="tarih" readonly="1"/>
+                            <field name="gun_adi" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="teslimat_sayisi" readonly="1"/>
+                            <field name="toplam_kapasite" readonly="1"/>
+                            <field name="kalan_kapasite" readonly="1"/>
+                        </group>
+                    </group>
+                </sheet>
             </form>
         </field>
     </record>
