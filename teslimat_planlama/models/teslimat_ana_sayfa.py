@@ -491,3 +491,4 @@ class TeslimatAnaSayfa(models.TransientModel):
             }
         }
 
+# Sürüm 15.0.2.1.0 - Kod temizliği ve kapasite sorgulama kararlı hale getirildi.
