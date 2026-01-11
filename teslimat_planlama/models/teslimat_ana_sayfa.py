@@ -768,4 +768,35 @@ class TeslimatAnaSayfa(models.TransientModel):
             }
         }
 
+    def action_open_teslimat_wizard_from_tarih(self, gun_record_id, tarih):
+        """Tarih ile teslimat wizard'ını aç - Tree view'dan çağrılır."""
+        self.ensure_one()
+        
+        if not self.arac_id:
+            raise UserError(_("Araç seçimi gereklidir."))
+
+        if not self.ilce_id:
+            raise UserError(_("İlçe seçimi gereklidir."))
+
+        # Tarih string'den date'e çevir
+        from datetime import datetime
+        if isinstance(tarih, str):
+            tarih = datetime.strptime(tarih, '%Y-%m-%d').date()
+
+        # Wizard'ı aç
+        context = {
+            "default_teslimat_tarihi": tarih,
+            "default_arac_id": self.arac_id.id,
+            "default_ilce_id": self.ilce_id.id,
+        }
+
+        return {
+            "name": _("Teslimat Belgesi Oluştur"),
+            "type": "ir.actions.act_window",
+            "res_model": "teslimat.belgesi.wizard",
+            "view_mode": "form",
+            "target": "new",
+            "context": context,
+        }
+
 # Sürüm 15.0.2.1.0 - Kod temizliği ve kapasite sorgulama kararlı hale getirildi.
