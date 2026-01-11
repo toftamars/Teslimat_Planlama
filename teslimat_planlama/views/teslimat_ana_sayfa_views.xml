@@ -160,6 +160,7 @@
                                               create="false"
                                               edit="false"
                                               delete="false"
+                                              open="0"
                                               default_order="tarih"
                                               sample="1">
                                             <button name="action_teslimat_olustur" string="Teslimat Oluştur"
