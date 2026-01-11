@@ -221,28 +221,24 @@ class TeslimatBelgesi(models.Model):
             _logger.error("Müşteri onchange hatası: %s", e)
 
     def _update_transfer_urunleri(self, picking: "stock.picking") -> None:
-        """Transfer belgesindeki ürünleri güncelle.
-
-        Args:
-            picking: Stock picking kaydı
+        """Transfer belgesindeki ürünleri güncelle (Bellek içi komutlar kullanarak).
+        
+        Onchange içinde veritabanına create/unlink işlemi yapmak işlemi kilitler.
+        O yüzden Odoo komutlarını kullanıyoruz.
         """
-        # Mevcut ürünleri sil
-        self.transfer_urun_ids.unlink()
-
-        # Yeni ürünleri ekle
+        lines = []
         sequence = 1
         for move in picking.move_ids_without_package:
-            self.env["teslimat.belgesi.urun"].create(
-                {
-                    "teslimat_belgesi_id": self.id,
-                    "sequence": sequence,
-                    "urun_id": move.product_id.id,
-                    "miktar": move.quantity_done or move.product_uom_qty,
-                    "birim": move.product_uom.id,
-                    "stock_move_id": move.id,
-                }
-            )
+            lines.append((0, 0, {
+                "sequence": sequence,
+                "urun_id": move.product_id.id,
+                "miktar": move.quantity_done or move.product_uom_qty,
+                "birim": move.product_uom.id,
+                "stock_move_id": move.id,
+            }))
             sequence += 1
+        
+        self.transfer_urun_ids = [(5, 0, 0)] + lines
 
     def action_teslimat_tamamla(self) -> None:
         """Teslimatı tamamla."""
