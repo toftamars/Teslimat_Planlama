@@ -66,27 +66,8 @@ def post_init_hook(cr, registry):
         cr.commit()
         _logger.info("Eski teslimat.planlama.akilli model referansları temizlendi")
         
-        # Türkiye ilçelerini otomatik oluştur
-        try:
-             env = api.Environment(cr, SUPERUSER_ID, {})
-             env["teslimat.ilce"].create_districts()
-             _logger.info("İlçeler otomatik oluşturuldu")
-        except Exception as e:
-             _logger.warning("İlçe oluşturma hook hatası (ignored): %s", e)
-        
-        # Araç-İlçe eşleştirmelerini otomatik senkronize et
-        try:
-            env = api.Environment(cr, SUPERUSER_ID, {})
-            araclar = env["teslimat.arac"].search([])
-            if araclar:
-                for arac in araclar:
-                    arac._update_uygun_ilceler()
-                cr.commit()
-                _logger.info("✓ %s araç için ilçe eşleştirmeleri otomatik güncellendi", len(araclar))
-            else:
-                _logger.info("Henüz araç kaydı yok, eşleştirme atlandı")
-        except Exception as e:
-            _logger.warning("Araç-ilçe senkronizasyon hook hatası (ignored): %s", e)
+        # NOT: İlçe ve araç eşleştirmeleri artık kod seviyesinde (create/write) yapılıyor
+        # Otomatik hook'lara gerek yok
              
     except Exception as e:
         cr.rollback()

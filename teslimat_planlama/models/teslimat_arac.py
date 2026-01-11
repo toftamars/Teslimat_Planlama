@@ -96,6 +96,29 @@ class TeslimatArac(models.Model):
                 raise ValidationError(
                     _("Günlük teslimat limiti 0'dan büyük olmalıdır.")
                 )
+    
+    @api.constrains("arac_tipi", "uygun_ilceler")
+    def _check_uygun_ilceler_dolu(self) -> None:
+        """Araç tipine göre uygun ilçeler ZORUNLU olarak dolu olmalı.
+        
+        Bu constraint kod seviyesinde garanti eder ki:
+        - Her araç mutlaka ilçe eşleştirmesine sahip olsun
+        - Yanlış eşleştirme yapılmasın
+        """
+        for record in self:
+            if not record.arac_tipi:
+                continue
+                
+            # Uygun ilçeler boş olamaz
+            if not record.uygun_ilceler:
+                raise ValidationError(
+                    _(
+                        f"Araç '{record.name}' için uygun ilçeler tanımlanmalıdır!\n\n"
+                        f"Araç Tipi: {dict(record._fields['arac_tipi'].selection).get(record.arac_tipi)}\n\n"
+                        f"Bu hata, araç kaydedilirken otomatik eşleştirme yapılmadığı anlamına gelir.\n"
+                        f"Lütfen aracı tekrar kaydedin veya yöneticiye başvurun."
+                    )
+                )
 
     def _update_uygun_ilceler(self) -> None:
         """Araç tipine göre uygun ilçeleri otomatik eşleştir.
@@ -138,11 +161,38 @@ class TeslimatArac(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
-        """Araç oluşturulduğunda otomatik ilçe eşleştirmesi yap."""
+        """Araç oluşturulduğunda ZORUNLU ilçe eşleştirmesi yap.
+        
+        Bu method kod seviyesinde garanti eder ki:
+        - Her yeni araç mutlaka ilçe eşleştirmesine sahip olsun
+        - Eşleştirme başarısız olursa kayıt oluşturulmasın
+        """
         records = super().create(vals_list)
         for record in records:
+            if not record.arac_tipi:
+                raise ValidationError(
+                    _(
+                        f"Araç '{record.name}' için araç tipi tanımlanmalıdır!\n"
+                        f"Lütfen araç tipini seçin."
+                    )
+                )
+            
             # Otomatik ilçe eşleştirmesi - ZORUNLU
             record._update_uygun_ilceler()
+            
+            # Eşleştirme kontrolü
+            if not record.uygun_ilceler:
+                raise ValidationError(
+                    _(
+                        f"Araç '{record.name}' için ilçe eşleştirmesi yapılamadı!\n\n"
+                        f"Araç Tipi: {dict(record._fields['arac_tipi'].selection).get(record.arac_tipi)}\n\n"
+                        f"Olası sebepler:\n"
+                        f"- İlçe kayıtları eksik olabilir\n"
+                        f"- Yaka tipleri tanımlı olmayabilir\n\n"
+                        f"Lütfen yöneticiye başvurun."
+                    )
+                )
+            
             _logger.info(
                 "✓ Araç oluşturuldu: %s (%s) - %s ilçe eşleştirildi",
                 record.name,
@@ -279,9 +329,10 @@ class TeslimatArac(models.Model):
 
     @api.model
     def sync_all_arac_ilce_eslesmesi(self) -> dict:
-        """Tüm araçların ilçe eşleştirmelerini otomatik olarak güncelle.
+        """Tüm araçların ilçe eşleştirmelerini MANUEL olarak güncelle.
         
-        Bu metod kurulum sonrası, manuel olarak veya cron job ile çağrılabilir.
+        Bu metod SADECE manuel olarak (wizard veya kod ile) çağrılır.
+        Otomatik cron job veya hook kullanılmaz.
         Tüm araçların uygun ilçelerini araç tipine göre otomatik eşleştirir.
         
         Returns:

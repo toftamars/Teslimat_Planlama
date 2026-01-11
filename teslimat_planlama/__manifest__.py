@@ -38,7 +38,6 @@
         'data/ir_sequence_data.xml',
         'data/teslimat_program_kurulum_data.xml',
         'data/istanbul_ilceleri_data.xml',
-        'data/ir_cron_data.xml',
         
         # Core Views
         # 'views/teslimat_sehir_views.xml',  # Deprecated - using res.country.state

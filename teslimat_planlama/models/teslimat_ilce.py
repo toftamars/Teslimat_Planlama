@@ -167,6 +167,8 @@ class TeslimatIlce(models.Model):
 
         İlçe adına göre Anadolu veya Avrupa yakası olarak
         otomatik olarak atar.
+        
+        Bu compute method her zaman çalışır ve yaka tipini garanti eder.
         """
         for record in self:
             if not record.name:
@@ -183,20 +185,58 @@ class TeslimatIlce(models.Model):
                 record.yaka_tipi = "avrupa"
             else:
                 record.yaka_tipi = "belirsiz"
+    
+    @api.constrains("name", "yaka_tipi", "state_id")
+    def _check_yaka_tipi_gecerli(self) -> None:
+        """İstanbul ilçeleri için yaka tipi ZORUNLU kontrol.
+        
+        Bu constraint kod seviyesinde garanti eder ki:
+        - İstanbul ilçeleri mutlaka anadolu veya avrupa yakası olsun
+        - Belirsiz yaka tipi kabul edilmesin
+        """
+        for record in self:
+            # Sadece İstanbul ilçeleri için kontrol
+            if record.state_id and 'istanbul' in record.state_id.name.lower():
+                if record.yaka_tipi == "belirsiz":
+                    raise ValidationError(
+                        _(
+                            f"İstanbul ilçesi '{record.name}' için yaka tipi belirsiz olamaz!\n\n"
+                            f"Lütfen ilçe adını kontrol edin veya yöneticiye başvurun.\n\n"
+                            f"Anadolu Yakası İlçeleri: {', '.join(ANADOLU_ILCELERI[:5])}...\n"
+                            f"Avrupa Yakası İlçeleri: {', '.join(AVRUPA_ILCELERI[:5])}..."
+                        )
+                    )
 
     @api.model_create_multi
     def create(self, vals_list):
-        """İlçe oluşturulduğunda yaka tipini hesapla ve araçları güncelle."""
+        """İlçe oluşturulduğunda ZORUNLU yaka tipini hesapla ve araçları güncelle.
+        
+        Bu method kod seviyesinde garanti eder ki:
+        - Her yeni ilçe mutlaka yaka tipine sahip olsun
+        - İlgili araçlar otomatik güncellensin
+        """
         records = super().create(vals_list)
         for record in records:
-            # Yaka tipini hesapla
+            # Yaka tipini hesapla - compute method otomatik çalışır
+            # Ama yine de force edelim
             record._compute_yaka_tipi()
+            
+            # İstanbul ilçeleri için yaka tipi kontrolü
+            if record.state_id and 'istanbul' in record.state_id.name.lower():
+                if record.yaka_tipi == "belirsiz":
+                    _logger.warning(
+                        "⚠ İstanbul ilçesi '%s' için yaka tipi belirsiz! "
+                        "Constraint tarafından engellenecek.",
+                        record.name
+                    )
+            
             # İlgili araçların eşleştirmesini güncelle
             record._update_arac_ilce_eslesmesi()
+            
             _logger.info(
                 "✓ İlçe oluşturuldu: %s (%s) - Yaka: %s",
                 record.name,
-                record.state_id.name,
+                record.state_id.name if record.state_id else "N/A",
                 record.yaka_tipi
             )
         return records
