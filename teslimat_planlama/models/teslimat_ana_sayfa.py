@@ -510,8 +510,26 @@ class TeslimatAnaSayfa(models.TransientModel):
                 record.uygun_arac_ids = False
 
     def action_sorgula(self) -> None:
-        """Kapasite sorgulamasını yenile."""
+        """Kapasite sorgulamasını yenile.
+        
+        İlçe yaka tipini kontrol eder ve gerekirse düzeltir.
+        Araç eşleştirmelerini otomatik günceller.
+        """
         self.ensure_one()
+        
+        # İlçe seçildiyse yaka tipini kontrol et ve düzelt
+        if self.ilce_id:
+            # Yaka tipini yeniden hesapla
+            self.ilce_id._compute_yaka_tipi()
+            
+            # Eğer yaka tipi değiştiyse ilgili araçları güncelle
+            self.ilce_id._update_arac_ilce_eslesmesi()
+        
+        # Araç seçildiyse uygun ilçelerini kontrol et ve güncelle
+        if self.arac_id:
+            # Uygun ilçeleri yeniden hesapla
+            self.arac_id._update_uygun_ilceler()
+        
         # Compute field'lar otomatik yenilenecek
         return True
 
