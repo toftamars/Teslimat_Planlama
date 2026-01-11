@@ -191,37 +191,6 @@
         </field>
     </record>
 
-    <!-- Minimal Form View - Otomatik kapanan uyarı -->
-    <record id="view_teslimat_ana_sayfa_gun_form" model="ir.ui.view">
-        <field name="name">teslimat.ana.sayfa.gun.form</field>
-        <field name="model">teslimat.ana.sayfa.gun</field>
-        <field name="arch" type="xml">
-            <form string="Uyarı" create="false" edit="false" delete="false">
-                <sheet>
-                    <!-- Otomatik kapatma scripti -->
-                    <script>
-                        <![CDATA[
-                            setTimeout(function() {
-                                // Dialog'u kapat
-                                var closeButton = document.querySelector('button.btn-close, button[special="cancel"]');
-                                if (closeButton) {
-                                    closeButton.click();
-                                }
-                            }, 100);
-                        ]]>
-                    </script>
-                    <div class="alert alert-info text-center" style="margin: 50px;">
-                        <h4>💡 İpucu</h4>
-                        <p style="font-size: 14px;">
-                            Teslimat oluşturmak için yeşil<br/>
-                            <strong>"Teslimat Oluştur"</strong> butonunu kullanın.
-                        </p>
-                    </div>
-                </sheet>
-            </form>
-        </field>
-    </record>
-
     <!-- Action -->
     <record id="action_teslimat_ana_sayfa" model="ir.actions.act_window">
         <field name="name">Ana Sayfa</field>
