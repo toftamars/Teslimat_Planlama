@@ -65,17 +65,42 @@ odoo.define('teslimat_planlama.uygun_gunler_click', function (require) {
                 var arac = parent.state.data.arac_id;
                 var ilce = parent.state.data.ilce_id;
 
-                if (!arac || !ilce) {
-                    Dialog.alert(this, 'Araç ve ilçe seçimi gereklidir.');
+                console.log('Parent data:', parent.state.data);
+                console.log('Araç raw:', arac);
+                console.log('İlçe raw:', ilce);
+
+                if (!arac) {
+                    Dialog.alert(this, 'Araç seçimi gereklidir.');
                     return;
                 }
 
-                var arac_id = arac.res_id || (arac.data && arac.data.id);
-                var ilce_id = ilce.res_id || (ilce.data && ilce.data.id);
+                // Araç ID'sini al
+                var arac_id = arac.res_id || (arac.data && arac.data.id) || arac;
 
-                if (!arac_id || !ilce_id) {
+                // İlçe ID'sini al (opsiyonel olabilir)
+                var ilce_id = null;
+                if (ilce) {
+                    ilce_id = ilce.res_id || (ilce.data && ilce.data.id) || ilce;
+                }
+
+                console.log('Araç ID:', arac_id);
+                console.log('İlçe ID:', ilce_id);
+
+                if (!arac_id) {
                     return;
                 }
+
+                // Context oluştur
+                var ctx = {
+                    default_teslimat_tarihi: tarih,
+                    default_arac_id: arac_id,
+                };
+
+                if (ilce_id) {
+                    ctx.default_ilce_id = ilce_id;
+                }
+
+                console.log('Context:', ctx);
 
                 // Wizard'ı aç
                 this.do_action({
@@ -85,11 +110,7 @@ odoo.define('teslimat_planlama.uygun_gunler_click', function (require) {
                     view_mode: 'form',
                     views: [[false, 'form']],
                     target: 'new',
-                    context: {
-                        default_teslimat_tarihi: tarih,
-                        default_arac_id: arac_id,
-                        default_ilce_id: ilce_id,
-                    },
+                    context: ctx,
                 });
                 return;
             }
