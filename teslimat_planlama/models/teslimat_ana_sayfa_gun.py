@@ -23,6 +23,17 @@ class TeslimatAnaSayfaGun(models.TransientModel):
     kalan_kapasite = fields.Integer(string="Kalan Kapasite", default=0)
     durum_text = fields.Char(string="Durum")
 
+    @api.model
+    def default_get(self, fields_list):
+        """Form view açıldığında context'ten ana_sayfa_id al."""
+        res = super().default_get(fields_list)
+        
+        # Context'ten ana_sayfa_id al
+        if 'default_ana_sayfa_id' in self.env.context:
+            res['ana_sayfa_id'] = self.env.context['default_ana_sayfa_id']
+        
+        return res
+
     def action_teslimat_olustur(self) -> dict:
         """Seçilen gün için teslimat belgesi wizard'ını aç."""
         self.ensure_one()

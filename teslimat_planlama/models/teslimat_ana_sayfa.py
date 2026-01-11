@@ -400,6 +400,7 @@ class TeslimatAnaSayfa(models.TransientModel):
 
                         tarihler.append(
                             {
+                                "ana_sayfa_id": record.id,  # Ana sayfa ID'si ekle
                                 "tarih": tarih,
                                 "gun_adi": gun_adi_tr,
                                 "teslimat_sayisi": teslimat_sayisi,
@@ -413,10 +414,10 @@ class TeslimatAnaSayfa(models.TransientModel):
 
                 # Tarih listesini güncelle
                 tarih_komutlari = [(0, 0, data) for data in tarihler]
-                record.tarih_listesi = [(5, 0, 0)] + tarih_komutlari
+                record.uygun_gunler = [(5, 0, 0)] + tarih_komutlari
 
             else:
-                record.tarih_listesi = [(5, 0, 0)]  # Tümünü sil
+                record.uygun_gunler = [(5, 0, 0)]  # Tümünü sil
 
     def _check_ilce_gun_uygunlugu(
         self, ilce: Optional[models.Model], tarih: fields.Date
@@ -716,6 +717,7 @@ class TeslimatAnaSayfa(models.TransientModel):
                             durum_text = "🔴 Dolu"
 
                         uygun_gunler.append({
+                            "ana_sayfa_id": record.id,  # Ana sayfa ID'si ekle
                             "tarih": tarih,
                             "gun_adi": gun_adi_tr,
                             "teslimat_sayisi": teslimat_sayisi,
