@@ -141,14 +141,32 @@ class TeslimatArac(models.Model):
         """Araç oluşturulduğunda otomatik ilçe eşleştirmesi yap."""
         records = super().create(vals_list)
         for record in records:
+            # Otomatik ilçe eşleştirmesi - ZORUNLU
             record._update_uygun_ilceler()
+            _logger.info(
+                "✓ Araç oluşturuldu: %s (%s) - %s ilçe eşleştirildi",
+                record.name,
+                record.arac_tipi,
+                len(record.uygun_ilceler)
+            )
         return records
 
     def write(self, vals):
         """Araç tipi değiştiğinde otomatik ilçe eşleştirmesini güncelle."""
         result = super().write(vals)
         if "arac_tipi" in vals:
-            self._update_uygun_ilceler()
+            # Araç tipi değiştiğinde ZORUNLU yeniden eşleştirme
+            for record in self:
+                eski_ilce_sayisi = len(record.uygun_ilceler)
+                record._update_uygun_ilceler()
+                yeni_ilce_sayisi = len(record.uygun_ilceler)
+                _logger.info(
+                    "✓ Araç güncellendi: %s (%s) - İlçe eşleştirmesi: %s → %s",
+                    record.name,
+                    record.arac_tipi,
+                    eski_ilce_sayisi,
+                    yeni_ilce_sayisi
+                )
         return result
 
     @api.constrains("uygun_ilceler", "arac_tipi")
@@ -263,7 +281,7 @@ class TeslimatArac(models.Model):
     def sync_all_arac_ilce_eslesmesi(self) -> dict:
         """Tüm araçların ilçe eşleştirmelerini otomatik olarak güncelle.
         
-        Bu metod kurulum sonrası veya manuel olarak çağrılabilir.
+        Bu metod kurulum sonrası, manuel olarak veya cron job ile çağrılabilir.
         Tüm araçların uygun ilçelerini araç tipine göre otomatik eşleştirir.
         
         Returns:
@@ -271,15 +289,49 @@ class TeslimatArac(models.Model):
         """
         araclar = self.search([])
         guncellenen_sayisi = 0
+        hata_sayisi = 0
+        detaylar = []
+        
+        _logger.info("=" * 60)
+        _logger.info("Araç-İlçe Eşleştirme Senkronizasyonu Başlatıldı")
+        _logger.info("=" * 60)
         
         for arac in araclar:
-            if arac.arac_tipi:
-                arac._update_uygun_ilceler()
-                guncellenen_sayisi += 1
+            try:
+                if arac.arac_tipi:
+                    eski_sayisi = len(arac.uygun_ilceler)
+                    arac._update_uygun_ilceler()
+                    yeni_sayisi = len(arac.uygun_ilceler)
+                    
+                    if eski_sayisi != yeni_sayisi:
+                        detaylar.append(
+                            f"✓ {arac.name} ({arac.arac_tipi}): {eski_sayisi} → {yeni_sayisi} ilçe"
+                        )
+                        _logger.info(
+                            "✓ %s (%s): %s → %s ilçe",
+                            arac.name,
+                            arac.arac_tipi,
+                            eski_sayisi,
+                            yeni_sayisi
+                        )
+                    guncellenen_sayisi += 1
+                else:
+                    _logger.warning("⚠ %s: Araç tipi tanımlı değil, atlandı", arac.name)
+            except Exception as e:
+                hata_sayisi += 1
+                _logger.error("❌ %s: Hata - %s", arac.name, str(e))
+        
+        _logger.info("=" * 60)
+        _logger.info("✓ Senkronizasyon Tamamlandı")
+        _logger.info("  - Güncellenen: %s araç", guncellenen_sayisi)
+        _logger.info("  - Hata: %s araç", hata_sayisi)
+        _logger.info("=" * 60)
         
         return {
             "success": True,
             "message": f"{guncellenen_sayisi} araç için ilçe eşleştirmesi güncellendi.",
             "guncellenen_sayisi": guncellenen_sayisi,
+            "hata_sayisi": hata_sayisi,
+            "detaylar": detaylar,
         }
 

@@ -146,6 +146,11 @@ class TeslimatAnaSayfa(models.TransientModel):
                 record.uygunluk_mesaji = "Lütfen araç ve ilçe seçin"
                 continue
 
+            # Validasyon fonksiyonunu kullan
+            from .teslimat_utils import validate_arac_ilce_eslesmesi
+            
+            gecerli, mesaj = validate_arac_ilce_eslesmesi(record.arac_id, record.ilce_id)
+            
             # Many2many ilişkisini kullanarak kontrol et
             if record.ilce_id in record.arac_id.uygun_ilceler:
                 record.ilce_uygun_mu = True
@@ -169,11 +174,24 @@ class TeslimatAnaSayfa(models.TransientModel):
                 arac_tipi_label = dict(record.arac_id._fields["arac_tipi"].selection).get(
                     record.arac_id.arac_tipi, record.arac_id.arac_tipi
                 )
-                record.uygunluk_mesaji = (
-                    f"❌ {record.ilce_id.name} ilçesine "
-                    f"{record.arac_id.name} ile teslimat yapılamaz. "
-                    f"Bu araç ({arac_tipi_label}) bu ilçeye uygun değil."
-                )
+                
+                # Detaylı hata mesajı
+                if not gecerli:
+                    record.uygunluk_mesaji = (
+                        f"❌ {record.ilce_id.name} ilçesine "
+                        f"{record.arac_id.name} ile teslimat yapılamaz.\n\n"
+                        f"Sebep: {mesaj}\n\n"
+                        f"İlçe Yaka Tipi: {record.ilce_id.yaka_tipi}\n"
+                        f"Araç Tipi: {arac_tipi_label}\n\n"
+                        f"💡 Çözüm: Lütfen '🔄 Araç-İlçe Senkronizasyonu' menüsünden "
+                        f"eşleştirmeleri güncelleyin."
+                    )
+                else:
+                    record.uygunluk_mesaji = (
+                        f"❌ {record.ilce_id.name} ilçesine "
+                        f"{record.arac_id.name} ile teslimat yapılamaz. "
+                        f"Bu araç ({arac_tipi_label}) bu ilçeye uygun değil."
+                    )
 
     @api.depends("ilce_id", "arac_id", "ilce_uygun_mu")
     def _compute_tarih_listesi(self) -> None:

@@ -1,12 +1,8 @@
-"""Teslimat Planlama Utility Fonksiyonları."""
-import logging
-from typing import Dict, Optional
+"""Teslimat Yardımcı Fonksiyonlar ve Sabitler."""
+from datetime import date
+from typing import Optional
 
-from odoo import fields
-
-_logger = logging.getLogger(__name__)
-
-# Gün kodu mapping'i (weekday() → gun_kodu)
+# Gün kodları mapping
 GUN_KODU_MAP = {
     0: "pazartesi",
     1: "sali",
@@ -17,7 +13,7 @@ GUN_KODU_MAP = {
     6: "pazar",
 }
 
-# Türkçe gün adları mapping'i
+# Gün isimleri eşleşmesi (İngilizce -> Türkçe)
 GUN_ESLESMESI = {
     "Monday": "Pazartesi",
     "Tuesday": "Salı",
@@ -29,66 +25,62 @@ GUN_ESLESMESI = {
 }
 
 
-def get_gun_kodu(tarih: fields.Date) -> Optional[str]:
-    """Tarihten gün kodunu döndür.
+def get_gun_kodu(tarih: date) -> Optional[str]:
+    """Tarih için gün kodunu döndür.
     
     Args:
         tarih: Kontrol edilecek tarih
         
     Returns:
-        Optional[str]: Gün kodu (pazartesi, sali, vs.) veya None
+        str: Gün kodu (pazartesi, sali, vb.) veya None
     """
     if not tarih:
         return None
-    date_obj = fields.Date.to_date(tarih)
-    return GUN_KODU_MAP.get(date_obj.weekday())
+    return GUN_KODU_MAP.get(tarih.weekday())
 
 
-def is_pazar_gunu(tarih: fields.Date) -> bool:
-    """Tarihin pazar günü olup olmadığını kontrol et.
+def is_pazar_gunu(tarih: date) -> bool:
+    """Tarih pazar günü mü kontrol et.
     
     Args:
         tarih: Kontrol edilecek tarih
         
     Returns:
-        bool: Pazar günü ise True, değilse False
+        bool: Pazar günü ise True
     """
     if not tarih:
         return False
-    date_obj = fields.Date.to_date(tarih)
-    return date_obj.weekday() == 6
+    return tarih.weekday() == 6  # 6 = Pazar
 
 
-def check_pazar_gunu_validation(tarih: fields.Date) -> None:
-    """Pazar günü kontrolü yap, pazar ise hata fırlat.
+def validate_arac_ilce_eslesmesi(arac, ilce) -> tuple[bool, str]:
+    """Araç-ilçe eşleştirmesini doğrula.
     
     Args:
-        tarih: Kontrol edilecek tarih
-        
-    Raises:
-        UserError: Tarih pazar günü ise
-    """
-    from odoo.exceptions import UserError
-    from odoo import _
-    
-    if is_pazar_gunu(tarih):
-        raise UserError(
-            _(
-                "Pazar günü teslimat yapılamaz! "
-                "Tüm araçlar pazar günü kapalıdır. "
-                "Lütfen başka bir tarih seçin."
-            )
-        )
-
-
-def get_turkce_gun_adi(ingilizce_gun: str) -> str:
-    """İngilizce gün adını Türkçe'ye çevir.
-    
-    Args:
-        ingilizce_gun: İngilizce gün adı (Monday, Tuesday, vs.)
+        arac: Araç kaydı
+        ilce: İlçe kaydı
         
     Returns:
-        str: Türkçe gün adı
+        tuple: (Geçerli mi?, Mesaj)
     """
-    return GUN_ESLESMESI.get(ingilizce_gun, ingilizce_gun)
-
+    if not arac or not ilce:
+        return False, "Araç veya ilçe bulunamadı"
+    
+    # Küçük araçlar her yere gidebilir
+    if arac.arac_tipi in ["kucuk_arac_1", "kucuk_arac_2", "ek_arac"]:
+        return True, "Küçük araç - tüm ilçelere gidebilir"
+    
+    # Yaka bazlı kontrol
+    if arac.arac_tipi == "anadolu_yakasi":
+        if ilce.yaka_tipi == "anadolu":
+            return True, "Anadolu Yakası araç - Anadolu Yakası ilçe ✓"
+        else:
+            return False, f"Anadolu Yakası araç sadece Anadolu Yakası ilçelerine gidebilir (İlçe: {ilce.yaka_tipi})"
+    
+    elif arac.arac_tipi == "avrupa_yakasi":
+        if ilce.yaka_tipi == "avrupa":
+            return True, "Avrupa Yakası araç - Avrupa Yakası ilçe ✓"
+        else:
+            return False, f"Avrupa Yakası araç sadece Avrupa Yakası ilçelerine gidebilir (İlçe: {ilce.yaka_tipi})"
+    
+    return False, "Bilinmeyen araç tipi"

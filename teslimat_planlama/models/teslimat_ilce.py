@@ -25,7 +25,7 @@ class TeslimatIlce(models.Model):
     # sehir_id field removed
     aktif = fields.Boolean(string="Aktif", default=True)
 
-    # Yaka Belirleme
+    # Yaka Belirleme - STORE=TRUE (Performans ve güvenilirlik için)
     yaka_tipi = fields.Selection(
         [
             ("anadolu", "Anadolu Yakası"),
@@ -35,6 +35,7 @@ class TeslimatIlce(models.Model):
         string="Yaka Tipi",
         compute="_compute_yaka_tipi",
         store=True,
+        readonly=False,  # Manuel düzeltme için
     )
 
     # Konum Bilgileri
@@ -183,12 +184,35 @@ class TeslimatIlce(models.Model):
             else:
                 record.yaka_tipi = "belirsiz"
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        """İlçe oluşturulduğunda yaka tipini hesapla ve araçları güncelle."""
+        records = super().create(vals_list)
+        for record in records:
+            # Yaka tipini hesapla
+            record._compute_yaka_tipi()
+            # İlgili araçların eşleştirmesini güncelle
+            record._update_arac_ilce_eslesmesi()
+            _logger.info(
+                "✓ İlçe oluşturuldu: %s (%s) - Yaka: %s",
+                record.name,
+                record.state_id.name,
+                record.yaka_tipi
+            )
+        return records
+
     def write(self, vals):
         """İlçe yaka tipi değiştiğinde ilgili araçların eşleştirmesini güncelle."""
         result = super().write(vals)
-        if "yaka_tipi" in vals:
+        if "yaka_tipi" in vals or "name" in vals:
             # Bu ilçeyi uygun ilçeler listesinde bulunan araçları güncelle
             self._update_arac_ilce_eslesmesi()
+            for record in self:
+                _logger.info(
+                    "✓ İlçe güncellendi: %s - Yaka: %s",
+                    record.name,
+                    record.yaka_tipi
+                )
         return result
 
     def _update_arac_ilce_eslesmesi(self) -> None:
