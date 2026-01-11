@@ -161,6 +161,7 @@
                                               edit="false" 
                                               delete="false"
                                               default_order="tarih"
+                                              open="action_teslimat_olustur"
                                               sample="1">
                                             <field name="tarih" readonly="1" widget="date"/>
                                             <field name="gun_adi" readonly="1"/>
