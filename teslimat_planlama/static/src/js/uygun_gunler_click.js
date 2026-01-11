@@ -13,17 +13,47 @@ odoo.define('teslimat_planlama.uygun_gunler_click', function (require) {
                 ev.preventDefault();
                 ev.stopPropagation();
 
-                var recordId = $(ev.currentTarget).data('id');
-                if (recordId) {
-                    this._rpc({
-                        model: 'teslimat.ana.sayfa.gun',
-                        method: 'action_teslimat_olustur',
-                        args: [[recordId]],
-                    }).then(function (action) {
-                        if (action) {
-                            this.do_action(action);
+                var self = this;
+                var $row = $(ev.currentTarget);
+                var rowId = $row.data('id');
+
+                // Record'u state'den bul
+                var record = this.state.data.find(function(r) {
+                    return r.id === rowId;
+                });
+
+                if (record && record.data) {
+                    var tarih = record.data.tarih;
+                    var kalan = record.data.kalan_kapasite;
+
+                    // Kapasite yoksa işlem yapma
+                    if (kalan <= 0) {
+                        return;
+                    }
+
+                    // Parent context'ten arac_id ve ilce_id al
+                    var parentRecord = this.getParent() && this.getParent().state;
+                    if (parentRecord && parentRecord.data) {
+                        var arac_id = parentRecord.data.arac_id && parentRecord.data.arac_id.res_id;
+                        var ilce_id = parentRecord.data.ilce_id && parentRecord.data.ilce_id.res_id;
+
+                        if (arac_id && ilce_id) {
+                            // Wizard'ı aç
+                            self.do_action({
+                                name: 'Teslimat Belgesi Oluştur',
+                                type: 'ir.actions.act_window',
+                                res_model: 'teslimat.belgesi.wizard',
+                                view_mode: 'form',
+                                views: [[false, 'form']],
+                                target: 'new',
+                                context: {
+                                    default_teslimat_tarihi: tarih,
+                                    default_arac_id: arac_id,
+                                    default_ilce_id: ilce_id,
+                                },
+                            });
                         }
-                    }.bind(this));
+                    }
                 }
                 return;
             }
