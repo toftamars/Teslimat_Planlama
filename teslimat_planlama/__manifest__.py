@@ -46,6 +46,9 @@
         'views/teslimat_gun_views.xml',
         'views/teslimat_arac_views.xml',
         
+        # Menu (ONCE yukle - diger view'lar buna referans verecek)
+        'views/menu_views.xml',
+        
         # Business Logic Views
         'views/teslimat_planlama_views.xml',
         'views/teslimat_transfer_views.xml',
@@ -61,9 +64,6 @@
         # Inherit Views
         'views/stock_picking_views.xml',
         'views/res_partner_views.xml',
-        
-        # Menu
-        'views/menu_views.xml',
     ],
     'demo': [],
     'installable': True,
