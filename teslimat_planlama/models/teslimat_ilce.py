@@ -193,7 +193,13 @@ class TeslimatIlce(models.Model):
         Bu constraint kod seviyesinde garanti eder ki:
         - İstanbul ilçeleri mutlaka anadolu veya avrupa yakası olsun
         - Belirsiz yaka tipi kabul edilmesin
+        
+        NOT: Data yükleme sırasında (module install/upgrade) bu kontrol atlanır.
         """
+        # Data yükleme modunda ise constraint'i atla
+        if self.env.context.get('install_mode') or self.env.context.get('module'):
+            return
+            
         for record in self:
             # Sadece İstanbul ilçeleri için kontrol
             if record.state_id and 'istanbul' in record.state_id.name.lower():

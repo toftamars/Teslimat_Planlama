@@ -104,7 +104,14 @@ class TeslimatArac(models.Model):
         Bu constraint kod seviyesinde garanti eder ki:
         - Her araç mutlaka ilçe eşleştirmesine sahip olsun
         - Yanlış eşleştirme yapılmasın
+        
+        NOT: Data yükleme sırasında (module install/upgrade) bu kontrol atlanır.
+        Çünkü data dosyasında write() çağrısı yapılırken henüz ilçeler yüklenmemiş olabilir.
         """
+        # Data yükleme modunda ise constraint'i atla
+        if self.env.context.get('install_mode') or self.env.context.get('module'):
+            return
+            
         for record in self:
             if not record.arac_tipi:
                 continue
@@ -166,22 +173,30 @@ class TeslimatArac(models.Model):
         Bu method kod seviyesinde garanti eder ki:
         - Her yeni araç mutlaka ilçe eşleştirmesine sahip olsun
         - Eşleştirme başarısız olursa kayıt oluşturulmasın
+        
+        NOT: Data yükleme sırasında kontrol daha esnek yapılır.
         """
         records = super().create(vals_list)
+        
+        # Data yükleme modunda mı?
+        data_mode = self.env.context.get('install_mode') or self.env.context.get('module')
+        
         for record in records:
             if not record.arac_tipi:
-                raise ValidationError(
-                    _(
-                        f"Araç '{record.name}' için araç tipi tanımlanmalıdır!\n"
-                        f"Lütfen araç tipini seçin."
+                if not data_mode:
+                    raise ValidationError(
+                        _(
+                            f"Araç '{record.name}' için araç tipi tanımlanmalıdır!\n"
+                            f"Lütfen araç tipini seçin."
+                        )
                     )
-                )
+                continue
             
             # Otomatik ilçe eşleştirmesi - ZORUNLU
             record._update_uygun_ilceler()
             
-            # Eşleştirme kontrolü
-            if not record.uygun_ilceler:
+            # Eşleştirme kontrolü (sadece normal modda)
+            if not data_mode and not record.uygun_ilceler:
                 raise ValidationError(
                     _(
                         f"Araç '{record.name}' için ilçe eşleştirmesi yapılamadı!\n\n"
