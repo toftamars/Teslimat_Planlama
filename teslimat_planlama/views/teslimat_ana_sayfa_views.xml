@@ -163,13 +163,11 @@
                                               open="0"
                                               default_order="tarih"
                                               sample="1">
-                                            <field name="tarih" invisible="1"/>
-                                            <button name="action_teslimat_olustur" type="object"
-                                                    class="btn btn-link text-primary fw-bold"
-                                                    icon="fa-calendar"
-                                                    attrs="{'invisible': [('kalan_kapasite', '&lt;=', 0)]}">
-                                                <field name="tarih_button" readonly="1" nolabel="1"/>
-                                            </button>
+                                            <button name="action_teslimat_olustur" string="Oluştur"
+                                                    type="object" class="btn-success btn-sm"
+                                                    icon="fa-plus"
+                                                    attrs="{'invisible': [('kalan_kapasite', '&lt;=', 0)]}"/>
+                                            <field name="tarih" readonly="1" widget="date"/>
                                             <field name="gun_adi" readonly="1"/>
                                             <field name="teslimat_sayisi" readonly="1"/>
                                             <field name="toplam_kapasite" readonly="1"/>
