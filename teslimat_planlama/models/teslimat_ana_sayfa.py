@@ -36,7 +36,11 @@ class TeslimatAnaSayfa(models.TransientModel):
 
     @api.onchange("state_id", "arac_id")
     def _onchange_filters(self):
-        """İl veya Araç seçildiğinde ilçe domain'ini güncelle."""
+        """İl veya Araç seçildiğinde ilçe domain'ini güncelle.
+        
+        Yöneticiler için tüm ilçeler gösterilir (kısıtlama yok).
+        Normal kullanıcılar için araç tipine göre filtreleme yapılır.
+        """
         self.ilce_id = False
         
         domain = [("aktif", "=", True), ("teslimat_aktif", "=", True)]
@@ -44,8 +48,15 @@ class TeslimatAnaSayfa(models.TransientModel):
         # İl filtresi
         if self.state_id:
             domain.append(("state_id", "=", self.state_id.id))
+        
+        # Yönetici kontrolü - Yöneticiler tüm ilçeleri görebilir
+        from .teslimat_utils import is_manager
+        
+        if is_manager(self.env):
+            # Yöneticiler için kısıtlama yok
+            return {"domain": {"ilce_id": domain}}
             
-        # Araç filtresi
+        # Normal kullanıcılar için araç filtresi
         if self.arac_id:
             arac_tipi = self.arac_id.arac_tipi
             
@@ -198,11 +209,17 @@ class TeslimatAnaSayfa(models.TransientModel):
         """Seçilen ilçe ve araç için uygun tarihleri hesapla (Optimized).
         
         Performans optimizasyonu: Batch sorgulama ile 90+ sorgu → ~10 sorgu.
+        Yöneticiler için tüm günler gösterilir (ilçe-gün eşleşmesi kontrolü bypass).
         """
+        from .teslimat_utils import is_manager
+        
         for record in self:
+            # Yönetici kontrolü
+            yonetici_mi = is_manager(self.env)
             small_vehicle = record.arac_kucuk_mu
+            # Yöneticiler veya küçük araçlar veya uygun ilçe kombinasyonu
             if record.arac_id and (
-                small_vehicle or (record.ilce_id and record.ilce_uygun_mu)
+                yonetici_mi or small_vehicle or (record.ilce_id and record.ilce_uygun_mu)
             ):
                 # Sonraki 30 günü kontrol et (Pazar günleri hariç)
                 bugun = fields.Date.today()
@@ -283,10 +300,11 @@ class TeslimatAnaSayfa(models.TransientModel):
                     gun_adi = tarih.strftime("%A")
                     gun_adi_tr = gun_eslesmesi.get(gun_adi, gun_adi)
 
-                    # İlçe-gün uygunluğunu kontrol et (küçük araçlar için kısıt yok)
+                    # İlçe-gün uygunluğunu kontrol et
+                    # Yöneticiler ve küçük araçlar için kısıt yok
                     ilce_uygun_mu = (
                         True
-                        if small_vehicle
+                        if (yonetici_mi or small_vehicle)
                         else self._check_ilce_gun_uygunlugu(record.ilce_id, tarih)
                     )
 

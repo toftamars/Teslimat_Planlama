@@ -130,11 +130,11 @@ class TeslimatBelgesi(models.Model):
                 or _("Yeni")
             )
 
-        # Pazar günü kontrolü - Tüm araçlar pazar günü kapalıdır
+        # Pazar günü kontrolü - Yöneticiler için bypass
         from .teslimat_utils import check_pazar_gunu_validation
         
         teslimat_tarihi = vals.get("teslimat_tarihi", fields.Date.today())
-        check_pazar_gunu_validation(teslimat_tarihi)
+        check_pazar_gunu_validation(teslimat_tarihi, bypass_for_manager=True, env=self.env)
 
         # Günlük teslimat limiti kontrolü (sadece user grubu için)
         user = self.env.user

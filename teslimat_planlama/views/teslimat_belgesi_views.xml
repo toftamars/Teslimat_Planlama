@@ -73,6 +73,11 @@
                            statusbar_visible="taslak,bekliyor,hazir,yolda,teslim_edildi"/>
                 </header>
                 <sheet>
+                    <!-- Yönetici Bilgilendirme -->
+                    <div class="alert alert-info" role="alert" groups="teslimat_planlama.group_teslimat_manager">
+                        <strong>👑 Yönetici Modu</strong> - Sınırsız teslimat oluşturabilir, tüm kısıtlamaları bypass edebilirsiniz.
+                    </div>
+                    
                     <div class="oe_title">
                         <h1>
                             <field name="name" placeholder="Teslimat No"/>

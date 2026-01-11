@@ -16,6 +16,18 @@
                             <span>🚗 Araç-İlçe Kapasite Sorgulama</span>
                         </h1>
                     </div>
+                    
+                    <!-- Yönetici Bilgilendirme -->
+                    <div class="alert alert-success" role="alert" groups="teslimat_planlama.group_teslimat_manager">
+                        <strong>👑 Yönetici Yetkisi Aktif</strong>
+                        <p>Yönetici olarak:</p>
+                        <ul>
+                            <li>✓ Tüm ilçeleri seçebilirsiniz (yaka kısıtı yok)</li>
+                            <li>✓ Tüm günleri görebilirsiniz (gün-ilçe eşleşmesi yok)</li>
+                            <li>✓ Sınırsız teslimat oluşturabilirsiniz (7 limit yok)</li>
+                            <li>✓ Pazar günü de teslimat oluşturabilirsiniz</li>
+                        </ul>
+                    </div>
                     <!-- Sorgulama Alanları -->
                     <group>
                         <group>

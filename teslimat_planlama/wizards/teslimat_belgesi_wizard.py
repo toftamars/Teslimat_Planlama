@@ -122,10 +122,23 @@ class TeslimatBelgesiWizard(models.TransientModel):
 
     @api.onchange("arac_id")
     def _onchange_arac_id(self) -> None:
-        """Araç seçildiğinde ilçe domain'ini güncelle."""
+        """Araç seçildiğinde ilçe domain'ini güncelle.
+        
+        Yöneticiler için tüm ilçeler gösterilir.
+        """
+        from odoo.addons.teslimat_planlama.models.teslimat_utils import is_manager
+        
         self.ilce_id = False
         
         if not self.arac_id:
+            return {
+                "domain": {
+                    "ilce_id": [("aktif", "=", True), ("teslimat_aktif", "=", True)]
+                }
+            }
+        
+        # Yönetici kontrolü - Yöneticiler tüm ilçeleri görebilir
+        if is_manager(self.env):
             return {
                 "domain": {
                     "ilce_id": [("aktif", "=", True), ("teslimat_aktif", "=", True)]

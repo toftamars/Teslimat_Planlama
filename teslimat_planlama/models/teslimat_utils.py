@@ -1,6 +1,9 @@
 """Teslimat Yardımcı Fonksiyonlar ve Sabitler."""
 from datetime import date
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from odoo import models
 
 # Gün kodları mapping
 GUN_KODU_MAP = {
@@ -53,18 +56,35 @@ def is_pazar_gunu(tarih: date) -> bool:
     return tarih.weekday() == 6  # 6 = Pazar
 
 
-def validate_arac_ilce_eslesmesi(arac, ilce) -> tuple[bool, str]:
+def is_manager(env) -> bool:
+    """Kullanıcının yönetici olup olmadığını kontrol et.
+    
+    Args:
+        env: Odoo environment
+        
+    Returns:
+        bool: Yönetici ise True
+    """
+    return env.user.has_group("teslimat_planlama.group_teslimat_manager")
+
+
+def validate_arac_ilce_eslesmesi(arac, ilce, bypass_for_manager: bool = True) -> tuple[bool, str]:
     """Araç-ilçe eşleştirmesini doğrula.
     
     Args:
         arac: Araç kaydı
         ilce: İlçe kaydı
+        bypass_for_manager: Yöneticiler için kontrolü atla
         
     Returns:
         tuple: (Geçerli mi?, Mesaj)
     """
     if not arac or not ilce:
         return False, "Araç veya ilçe bulunamadı"
+    
+    # Yönetici kontrolü - Yöneticiler her şeyi yapabilir
+    if bypass_for_manager and hasattr(arac, 'env') and is_manager(arac.env):
+        return True, "Yönetici yetkisi - tüm eşleştirmeler geçerli ✓"
     
     # Küçük araçlar her yere gidebilir
     if arac.arac_tipi in ["kucuk_arac_1", "kucuk_arac_2", "ek_arac"]:
@@ -84,3 +104,27 @@ def validate_arac_ilce_eslesmesi(arac, ilce) -> tuple[bool, str]:
             return False, f"Avrupa Yakası araç sadece Avrupa Yakası ilçelerine gidebilir (İlçe: {ilce.yaka_tipi})"
     
     return False, "Bilinmeyen araç tipi"
+
+
+def check_pazar_gunu_validation(tarih, bypass_for_manager: bool = True, env=None) -> None:
+    """Pazar günü kontrolü yap ve hata fırlat.
+    
+    Args:
+        tarih: Kontrol edilecek tarih
+        bypass_for_manager: Yöneticiler için kontrolü atla
+        env: Odoo environment (yönetici kontrolü için)
+        
+    Raises:
+        ValidationError: Pazar günü ise
+    """
+    from odoo.exceptions import ValidationError
+    
+    # Yönetici kontrolü
+    if bypass_for_manager and env and is_manager(env):
+        return  # Yöneticiler pazar günü de teslimat oluşturabilir
+    
+    if is_pazar_gunu(tarih):
+        raise ValidationError(
+            "Pazar günü teslimat yapılamaz! "
+            "Lütfen başka bir gün seçin."
+        )
