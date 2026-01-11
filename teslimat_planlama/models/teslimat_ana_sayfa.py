@@ -275,6 +275,14 @@ class TeslimatAnaSayfa(models.TransientModel):
                             ("gun_id", "in", gunler.ids),
                         ]
                     )
+                    
+                    # DEBUG: Eşleşme sayısını logla
+                    if not gun_ilce_kayitlari:
+                        _logger.warning(
+                            "⚠ İlçe '%s' için gün eşleşmesi bulunamadı! "
+                            "Lütfen '🔄 Verileri Yükle/Güncelle' butonuna tıklayın.",
+                            record.ilce_id.name
+                        )
                     # Tarih bazlı eşleşmeler için dict oluştur
                     for gun_ilce in gun_ilce_kayitlari:
                         key = (gun_ilce.gun_id.id, gun_ilce.ilce_id.id, gun_ilce.tarih)
