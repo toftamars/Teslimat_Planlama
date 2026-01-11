@@ -40,7 +40,8 @@ def get_gun_kodu(tarih: fields.Date) -> Optional[str]:
     """
     if not tarih:
         return None
-    return GUN_KODU_MAP.get(tarih.weekday())
+    date_obj = fields.Date.to_date(tarih)
+    return GUN_KODU_MAP.get(date_obj.weekday())
 
 
 def is_pazar_gunu(tarih: fields.Date) -> bool:
@@ -54,7 +55,8 @@ def is_pazar_gunu(tarih: fields.Date) -> bool:
     """
     if not tarih:
         return False
-    return tarih.weekday() == 6
+    date_obj = fields.Date.to_date(tarih)
+    return date_obj.weekday() == 6
 
 
 def check_pazar_gunu_validation(tarih: fields.Date) -> None:
