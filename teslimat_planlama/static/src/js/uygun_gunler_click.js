@@ -32,7 +32,25 @@ odoo.define('teslimat_planlama.uygun_gunler_click', function (require) {
                     return;
                 }
 
-                var tarih = record.data.tarih;
+                // Tarih değerini al - moment objesi veya string olabilir
+                var tarihValue = record.data.tarih;
+                var tarih;
+
+                if (tarihValue) {
+                    // Moment objesi ise string'e çevir
+                    if (tarihValue._isAMomentObject || typeof tarihValue.format === 'function') {
+                        tarih = tarihValue.format('YYYY-MM-DD');
+                    } else if (typeof tarihValue === 'string') {
+                        tarih = tarihValue;
+                    } else if (tarihValue instanceof Date) {
+                        tarih = tarihValue.toISOString().split('T')[0];
+                    } else {
+                        // Objeden value al
+                        tarih = tarihValue.value || tarihValue;
+                    }
+                }
+
+                console.log('Tıklanan satır tarihi:', tarih, 'Raw:', tarihValue);
 
                 // Parent'ı bul
                 var parent = this.getParent();
