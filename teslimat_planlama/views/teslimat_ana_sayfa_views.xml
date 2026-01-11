@@ -56,7 +56,12 @@
                                 <strong>💡 Kullanım:</strong> Satırdaki "Teslimat Belgesi Oluştur" butonuna tıklayarak sihirbazı açın.
                             </div>
                             <field name="tarih_listesi" readonly="1">
-                                <tree decoration-success="kalan_kapasite &gt; 5" decoration-warning="kalan_kapasite &lt;= 5 and kalan_kapasite &gt; 0" decoration-danger="kalan_kapasite &lt;= 0">
+                                <tree decoration-success="kalan_kapasite &gt; 5" 
+                                      decoration-warning="kalan_kapasite &lt;= 5 and kalan_kapasite &gt; 0" 
+                                      decoration-danger="kalan_kapasite &lt;= 0"
+                                      create="false" 
+                                      edit="false" 
+                                      delete="false">
                                     <field name="tarih" readonly="1"/>
                                     <field name="gun_adi" readonly="1"/>
                                     <field name="teslimat_sayisi" readonly="1"/>
