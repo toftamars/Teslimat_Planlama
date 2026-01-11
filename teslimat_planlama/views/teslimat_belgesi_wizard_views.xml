@@ -29,10 +29,10 @@
                     </group>
                     <!-- Transfer No -->
                     <group>
-                        <field name="transfer_id" 
-                               options="{'no_create': True}" 
+                        <field name="transfer_id"
+                               options="{'no_create': True}"
                                placeholder="DEPO/OUT/00085 yazarak arayın"
-                               attrs="{'readonly': [('transfer_id','!=', False)]}"/>
+                               required="1"/>
                     </group>
                     <!-- Müşteri ve Adres (otomatik) -->
                     <group>
