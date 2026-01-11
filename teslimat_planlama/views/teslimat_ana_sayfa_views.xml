@@ -191,6 +191,28 @@
         </field>
     </record>
 
+    <!-- Minimal Form View - Sadece uyarı mesajı -->
+    <record id="view_teslimat_ana_sayfa_gun_form" model="ir.ui.view">
+        <field name="name">teslimat.ana.sayfa.gun.form</field>
+        <field name="model">teslimat.ana.sayfa.gun</field>
+        <field name="arch" type="xml">
+            <form string="Uyarı" create="false" edit="false" delete="false">
+                <sheet>
+                    <div class="alert alert-warning text-center" style="margin: 50px;">
+                        <h3>⚠️ Yanlış Tıklama</h3>
+                        <p style="font-size: 16px; margin-top: 20px;">
+                            Lütfen bu pencereyi kapatın ve<br/>
+                            yeşil <strong>"Teslimat Oluştur"</strong> butonuna tıklayın.
+                        </p>
+                    </div>
+                </sheet>
+                <footer>
+                    <button string="Kapat" class="btn-primary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
     <!-- Action -->
     <record id="action_teslimat_ana_sayfa" model="ir.actions.act_window">
         <field name="name">Ana Sayfa</field>
