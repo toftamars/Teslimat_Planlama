@@ -378,7 +378,8 @@ class TeslimatAnaSayfa(models.TransientModel):
         # Gün kodunu belirle
         from .teslimat_utils import get_gun_kodu
         
-        gun_kodu = get_gun_kodu(tarih)
+        tarih_obj = fields.Date.to_date(tarih)
+        gun_kodu = get_gun_kodu(tarih_obj)
 
         if not gun_kodu:
             return False
