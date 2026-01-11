@@ -54,6 +54,7 @@
         'views/teslimat_belgesi_wizard_views.xml',
         'views/teslimat_gun_kapatma_wizard_views.xml',
         'views/teslimat_konum_wizard_views.xml',
+        'views/teslimat_arac_ilce_sync_wizard_views.xml',
         'views/teslimat_ana_sayfa_views.xml',
         
         # Inherit Views

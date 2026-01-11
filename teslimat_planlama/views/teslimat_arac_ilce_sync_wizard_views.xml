@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Araç-İlçe Senkronizasyon Wizard -->
+    <record id="view_teslimat_arac_ilce_sync_wizard_form" model="ir.ui.view">
+        <field name="name">teslimat.arac.ilce.sync.wizard.form</field>
+        <field name="model">teslimat.arac.ilce.sync.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Araç-İlçe Eşleştirme Senkronizasyonu">
+                <group attrs="{'invisible': [('durum', '=', 'tamamlandi')]}">
+                    <div class="alert alert-info" role="alert">
+                        <p><strong>Bu işlem nedir?</strong></p>
+                        <p>
+                            Tüm araçların ilçe eşleştirmelerini araç tiplerine göre otomatik olarak günceller:
+                        </p>
+                        <ul>
+                            <li><strong>Anadolu Yakası Araç:</strong> Sadece Anadolu Yakası ilçeleri</li>
+                            <li><strong>Avrupa Yakası Araç:</strong> Sadece Avrupa Yakası ilçeleri</li>
+                            <li><strong>Küçük Araçlar ve Ek Araç:</strong> Tüm ilçeler</li>
+                        </ul>
+                        <p class="text-warning">
+                            <strong>Not:</strong> Bu işlem mevcut eşleştirmeleri değiştirecektir.
+                        </p>
+                    </div>
+                </group>
+                
+                <group attrs="{'invisible': [('durum', '=', 'hazir')]}">
+                    <field name="sonuc_mesaji" nolabel="1" widget="text"/>
+                </group>
+                
+                <field name="durum" invisible="1"/>
+                
+                <footer>
+                    <button string="Senkronize Et" 
+                            name="action_sync" 
+                            type="object" 
+                            class="btn-primary"
+                            attrs="{'invisible': [('durum', '=', 'tamamlandi')]}"/>
+                    <button string="Kapat" 
+                            class="btn-secondary" 
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_teslimat_arac_ilce_sync_wizard" model="ir.actions.act_window">
+        <field name="name">Araç-İlçe Eşleştirme Senkronizasyonu</field>
+        <field name="res_model">teslimat.arac.ilce.sync.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- Menu Item (Ayarlar altında) -->
+    <menuitem id="menu_teslimat_arac_ilce_sync"
+              name="🔄 Araç-İlçe Senkronizasyonu"
+              parent="menu_teslimat_planlama_root"
+              action="action_teslimat_arac_ilce_sync_wizard"
+              sequence="100"
+              groups="teslimat_planlama.group_teslimat_manager"/>
+</odoo>
