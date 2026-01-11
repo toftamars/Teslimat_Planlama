@@ -36,30 +36,34 @@ class TeslimatAnaSayfaTarih(models.TransientModel):
     durum_icon = fields.Char(string="Durum İkonu")
 
     def action_teslimat_olustur_from_tarih(self) -> dict:
-        """Seçilen tarih için teslimat belgesi oluşturma wizard'ını aç.
+        """Seçilen tarih için teslimat belgesi oluştur ve aç.
 
         Returns:
-            dict: Wizard açma action'ı
+            dict: Teslimat belgesi form view action'ı
         """
         self.ensure_one()
 
         if not self.ana_sayfa_id.arac_id:
             raise UserError(_("Araç seçimi gereklidir."))
 
-        context = {
-            "default_teslimat_tarihi": self.tarih,
-            "default_arac_id": self.ana_sayfa_id.arac_id.id,
-            "default_ilce_id": (
-                self.ana_sayfa_id.ilce_id.id if self.ana_sayfa_id.ilce_id else False
-            ),
-        }
+        if not self.ana_sayfa_id.ilce_id:
+            raise UserError(_("İlçe seçimi gereklidir."))
 
+        # Yeni teslimat belgesi oluştur
+        teslimat_belgesi = self.env["teslimat.belgesi"].create({
+            "teslimat_tarihi": self.tarih,
+            "arac_id": self.ana_sayfa_id.arac_id.id,
+            "ilce_id": self.ana_sayfa_id.ilce_id.id,
+            # musteri_id sonra doldurulacak
+        })
+
+        # Oluşturulan teslimat belgesini aç
         return {
-            "name": _("Teslimat Belgesi Oluştur"),
+            "name": _("Teslimat Belgesi"),
             "type": "ir.actions.act_window",
-            "res_model": "teslimat.belgesi.wizard",
+            "res_model": "teslimat.belgesi",
+            "res_id": teslimat_belgesi.id,
             "view_mode": "form",
-            "target": "new",
-            "context": context,
+            "target": "current",  # Mevcut sayfada aç
         }
 
