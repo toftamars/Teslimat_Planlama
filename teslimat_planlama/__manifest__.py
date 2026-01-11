@@ -46,7 +46,10 @@
         'views/teslimat_gun_views.xml',
         'views/teslimat_arac_views.xml',
         
-        # Menu (ONCE yukle - diger view'lar buna referans verecek)
+        # Ana Sayfa Views (ONCE yukle - menu bu action'i referans ediyor)
+        'views/teslimat_ana_sayfa_views.xml',
+        
+        # Menu (Ana sayfa action'i yuklendikten sonra)
         'views/menu_views.xml',
         
         # Business Logic Views
@@ -59,7 +62,6 @@
         'views/teslimat_gun_kapatma_wizard_views.xml',
         'views/teslimat_konum_wizard_views.xml',
         'views/teslimat_arac_ilce_sync_wizard_views.xml',
-        'views/teslimat_ana_sayfa_views.xml',
         
         # Inherit Views
         'views/stock_picking_views.xml',
