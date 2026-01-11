@@ -116,29 +116,35 @@ class TeslimatIlce(models.Model):
                 continue
             
             for isim in ilce_isimleri:
+                # İsmi tam eşleştir veya Türkçe karakterleri tolere et
                 ilce = self.search([
-                    ('name', '=ilike', isim),
-                    ('state_id.name', 'ilike', 'İstanbul')
+                    ('state_id.name', 'ilike', 'İstanbul'),
+                    '|', ('name', '=ilike', isim), ('name', '=ilike', isim.replace('İ', 'i'))
                 ], limit=1)
                 
                 if ilce:
-                    # İlçeye o günü ekle (eğer yoksa)
-                    if gun.id not in ilce.gun_ids.ids:
-                        ilce.write({'gun_ids': [(4, gun.id)]})
-                    
-                    # Ayrıca dinamik kapasite tablosunu (teslimat.gun.ilce) da doldur 
-                    # (Bu tablo ana sayfa sorgusu için kritik)
+                    # Eskiden kalma "sadece bugünlük" kayıtları temizle
+                    old_specific_records = self.env['teslimat.gun.ilce'].search([
+                        ('gun_id', '=', gun.id),
+                        ('ilce_id', '=', ilce.id),
+                        ('tarih', '!=', False)
+                    ])
+                    if old_specific_records:
+                        old_specific_records.unlink()
+
+                    # Genel (her hafta geçerli) kuralı oluştur/güncelle
                     existing_rel = self.env['teslimat.gun.ilce'].search([
                         ('gun_id', '=', gun.id),
-                        ('ilce_id', '=', ilce.id)
+                        ('ilce_id', '=', ilce.id),
+                        ('tarih', '=', False)
                     ], limit=1)
                     
                     if not existing_rel:
                         self.env['teslimat.gun.ilce'].create({
                             'gun_id': gun.id,
                             'ilce_id': ilce.id,
-                            'maksimum_teslimat': 7,  # Kullanıcı isteği: 7
-                            'tarih': fields.Date.today(), # Bugünden başla
+                            'maksimum_teslimat': 7,
+                            'tarih': False,
                         })
                     else:
                         existing_rel.write({'maksimum_teslimat': 7})
