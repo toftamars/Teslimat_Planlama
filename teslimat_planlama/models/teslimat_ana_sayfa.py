@@ -469,10 +469,54 @@ class TeslimatAnaSayfa(models.TransientModel):
 
                     if gun:
                         # Database'den ilçe-gün eşleşmesi kontrol et
+                        # Önce genel kuralı ara (tarih=False)
                         gun_ilce = self.env["teslimat.gun.ilce"].search(
-                            [("gun_id", "=", gun.id), ("ilce_id", "=", record.ilce_id.id)],
+                            [
+                                ("gun_id", "=", gun.id),
+                                ("ilce_id", "=", record.ilce_id.id),
+                                ("tarih", "=", False),  # Genel kural
+                            ],
                             limit=1,
                         )
+                        
+                        # Genel kural yoksa haftalık programa göre otomatik oluştur
+                        if not gun_ilce:
+                            # Haftalık programı kontrol et
+                            from ..data.turkey_data import ANADOLU_ILCELERI, AVRUPA_ILCELERI
+                            
+                            ilce_adi_upper = record.ilce_id.name.upper()
+                            schedule = {
+                                'pazartesi': ['MALTEPE', 'KARTAL', 'PENDİK', 'TUZLA', 'SULTANBEYLİ', 'ŞİŞLİ', 'BEŞİKTAŞ', 'BEYOĞLU', 'KAĞITHANE'],
+                                'sali': ['ÜSKÜDAR', 'KADIKÖY', 'ÜMRANİYE', 'ATAŞEHİR', 'ŞİŞLİ', 'BEŞİKTAŞ', 'BEYOĞLU', 'KAĞITHANE'],
+                                'carsamba': ['ÜSKÜDAR', 'KADIKÖY', 'ÜMRANİYE', 'ATAŞEHİR', 'BAĞCILAR', 'BAHÇELİEVLER', 'BAKIRKÖY', 'GÜNGÖREN', 'ESENLER', 'ZEYTİNBURNU', 'BAYRAMPAŞA', 'FATİH'],
+                                'persembe': ['MALTEPE', 'KARTAL', 'PENDİK', 'TUZLA', 'SULTANBEYLİ', 'BÜYÜKÇEKMECE', 'SİLİVRİ', 'ÇATALCA', 'ARNAVUTKÖY', 'BAKIRKÖY'],
+                                'cuma': ['ÜSKÜDAR', 'KADIKÖY', 'ÜMRANİYE', 'ATAŞEHİR', 'ŞİŞLİ', 'BEŞİKTAŞ', 'BEYOĞLU', 'KAĞITHANE'],
+                                'cumartesi': ['BEYKOZ', 'ÇEKMEKÖY', 'SANCAKTEPE', 'ŞİLE', 'BÜYÜKÇEKMECE', 'SİLİVRİ', 'ÇATALCA', 'ARNAVUTKÖY', 'BAKIRKÖY']
+                            }
+                            
+                            # Bugünün günü için programda bu ilçe var mı?
+                            bugun_gun_programi = schedule.get(gun_kodu, [])
+                            
+                            # İlçe ismini normalize et (Türkçe karakterleri tolere et)
+                            ilce_programda_var_mi = False
+                            for program_ilce in bugun_gun_programi:
+                                if program_ilce.upper() in ilce_adi_upper or ilce_adi_upper in program_ilce.upper():
+                                    ilce_programda_var_mi = True
+                                    break
+                            
+                            # Eğer programda varsa otomatik oluştur
+                            if ilce_programda_var_mi:
+                                gun_ilce = self.env["teslimat.gun.ilce"].create({
+                                    'gun_id': gun.id,
+                                    'ilce_id': record.ilce_id.id,
+                                    'maksimum_teslimat': 7,  # Varsayılan kapasite
+                                    'tarih': False,  # Genel kural
+                                })
+                                _logger.info(
+                                    "✓ Otomatik gün-ilçe eşleşmesi oluşturuldu: %s - %s",
+                                    gun.name,
+                                    record.ilce_id.name
+                                )
 
                         if gun_ilce:
                             record.toplam_kapasite = gun_ilce.maksimum_teslimat
