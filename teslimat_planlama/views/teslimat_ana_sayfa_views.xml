@@ -24,23 +24,25 @@
                                 <div class="card-body">
                                     <div class="row">
                                         <div class="col-md-4">
+                                            <label for="arac_id" class="form-label">Araç <span class="text-danger">*</span></label>
+                                            <field name="arac_id" widget="many2one" 
+                                                   options="{'no_create': True, 'no_edit': True}" 
+                                                   class="form-control"
+                                                   required="1"/>
+                                        </div>
+                                        <div class="col-md-4">
                                             <label for="state_id" class="form-label">İl</label>
                                             <field name="state_id" widget="many2one" 
                                                    options="{'no_create': True, 'no_edit': True}" 
-                                                   class="form-control"/>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label for="arac_id" class="form-label">Araç</label>
-                                            <field name="arac_id" widget="many2one" 
-                                                   options="{'no_create': True, 'no_edit': True}" 
-                                                   class="form-control"/>
+                                                   class="form-control"
+                                                   attrs="{'invisible': [('arac_id', '=', False)]}"/>
                                         </div>
                                         <div class="col-md-4">
                                             <label for="ilce_id" class="form-label">İlçe</label>
                                             <field name="ilce_id" widget="many2one" 
                                                    options="{'no_create': True, 'no_edit': True}" 
-                                                   attrs="{'invisible': [('state_id', '=', False)], 'required': [('state_id', '!=', False)]}" 
-                                                   class="form-control"/>
+                                                   class="form-control"
+                                                   attrs="{'invisible': [('state_id', '=', False)], 'required': [('state_id', '!=', False)]}"/>
                                         </div>
                                     </div>
                                     
@@ -143,6 +145,38 @@
                                             <field name="uygun_arac_ids" readonly="1" widget="many2many_tags" nolabel="1"/>
                                         </div>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Uygun Günler Listesi -->
+                    <div class="row mt-3" attrs="{'invisible': [('ilce_uygun_mu','=', False)]}">
+                        <div class="col-12">
+                            <div class="card shadow-sm">
+                                <div class="card-header bg-success text-white">
+                                    <h5 class="mb-0"><i class="fa fa-calendar"/> Uygun Günler</h5>
+                                </div>
+                                <div class="card-body">
+                                    <field name="uygun_gunler" readonly="1" nolabel="1">
+                                        <tree decoration-success="kalan_kapasite &gt; 5" 
+                                              decoration-warning="kalan_kapasite &lt;= 5 and kalan_kapasite &gt; 0" 
+                                              decoration-danger="kalan_kapasite &lt;= 0"
+                                              create="false" 
+                                              edit="false" 
+                                              delete="false">
+                                            <field name="tarih" readonly="1"/>
+                                            <field name="gun_adi" readonly="1"/>
+                                            <field name="teslimat_sayisi" readonly="1"/>
+                                            <field name="toplam_kapasite" readonly="1"/>
+                                            <field name="kalan_kapasite" readonly="1"/>
+                                            <field name="durum_text" readonly="1"/>
+                                            <button name="action_teslimat_olustur" string="Teslimat Oluştur" 
+                                                    type="object" class="btn-primary btn-sm" 
+                                                    icon="fa-plus"
+                                                    attrs="{'invisible': [('kalan_kapasite', '&lt;=', 0)]}"/>
+                                        </tree>
+                                    </field>
                                 </div>
                             </div>
                         </div>

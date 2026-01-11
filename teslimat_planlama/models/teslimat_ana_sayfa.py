@@ -34,16 +34,25 @@ class TeslimatAnaSayfa(models.TransientModel):
         # Domain onchange ile dinamik olarak güncelleniyor
     )
 
-    @api.onchange("state_id", "arac_id")
-    def _onchange_filters(self):
-        """İl veya Araç seçildiğinde ilçe domain'ini güncelle.
-        
-        Yöneticiler için tüm ilçeler gösterilir (kısıtlama yok).
-        Normal kullanıcılar için araç tipine göre filtreleme yapılır.
-        """
+    @api.onchange("arac_id")
+    def _onchange_arac_id(self):
+        """Araç seçildiğinde İl seçimini sıfırla."""
+        self.state_id = False
+        self.ilce_id = False
+        return {"domain": {"state_id": [("country_id.code", "=", "TR")]}}
+
+    @api.onchange("state_id")
+    def _onchange_state_id(self):
+        """İl seçildiğinde ilçe domain'ini güncelle - Seçilen araca uygun ilçeler göster."""
         self.ilce_id = False
         
-        domain = [("aktif", "=", True), ("teslimat_aktif", "=", True)]
+        if not self.arac_id:
+            return {"domain": {"ilce_id": [("id", "in", [])]}}
+        
+        domain = [
+            ("aktif", "=", True), 
+            ("teslimat_aktif", "=", True)
+        ]
         
         # İl filtresi
         if self.state_id:
@@ -57,33 +66,35 @@ class TeslimatAnaSayfa(models.TransientModel):
             return {"domain": {"ilce_id": domain}}
             
         # Normal kullanıcılar için araç filtresi
-        if self.arac_id:
-            arac_tipi = self.arac_id.arac_tipi
-            
-            # Tüm aktif ilçeleri domain ile filtrele
-            tum_ilceler = self.env["teslimat.ilce"].search(domain)
-            
-            uygun_ilce_ids = []
-            if arac_tipi in ["kucuk_arac_1", "kucuk_arac_2", "ek_arac"]:
-                uygun_ilce_ids = tum_ilceler.ids
-            elif arac_tipi == "anadolu_yakasi":
-                # Sadece İstanbul Anadolu
-                uygun_ilce_ids = tum_ilceler.filtered(
-                    lambda i: i.state_id.name == 'İstanbul' and i.yaka_tipi == 'anadolu'
-                ).ids
-            elif arac_tipi == "avrupa_yakasi":
-                 # Sadece İstanbul Avrupa
-                uygun_ilce_ids = tum_ilceler.filtered(
-                    lambda i: i.state_id.name == 'İstanbul' and i.yaka_tipi == 'avrupa'
+        arac_tipi = self.arac_id.arac_tipi
+        
+        # Tüm aktif ilçeleri domain ile filtrele
+        tum_ilceler = self.env["teslimat.ilce"].search(domain)
+        
+        uygun_ilce_ids = []
+        if arac_tipi in ["kucuk_arac_1", "kucuk_arac_2", "ek_arac"]:
+            # Küçük araçlar tüm ilçelere gidebilir
+            uygun_ilce_ids = tum_ilceler.ids
+        elif arac_tipi == "anadolu_yakasi":
+            # Sadece Anadolu Yakası ilçeleri
+            uygun_ilce_ids = tum_ilceler.filtered(
+                lambda i: i.yaka_tipi == 'anadolu'
+            ).ids
+        elif arac_tipi == "avrupa_yakasi":
+            # Sadece Avrupa Yakası ilçeleri
+            uygun_ilce_ids = tum_ilceler.filtered(
+                lambda i: i.yaka_tipi == 'avrupa'
+            ).ids
+        else:
+            # Diğer araçlar için araçın uygun ilçeler listesine bak
+            if self.arac_id.uygun_ilceler:
+                uygun_ilce_ids = self.arac_id.uygun_ilceler.filtered(
+                    lambda i: i.id in tum_ilceler.ids
                 ).ids
             else:
-                 # Diğer araçlar için uygun_ilceler alanına bakılabilir veya hepsi
-                 # Şimdilik hepsi diyelim veya boş
-                 uygun_ilce_ids = tum_ilceler.ids
+                uygun_ilce_ids = []
 
-            domain.append(("id", "in", uygun_ilce_ids))
-        
-        return {"domain": {"ilce_id": domain}}
+        return {"domain": {"ilce_id": [("id", "in", uygun_ilce_ids)]}}
 
     # Eski metot yerine yenisini kullanıyoruz
 
@@ -127,6 +138,15 @@ class TeslimatAnaSayfa(models.TransientModel):
         "teslimat.arac",
         string="Uygun Araçlar",
         compute="_compute_uygun_araclar",
+        store=False,
+    )
+
+    # Uygun günler listesi
+    uygun_gunler = fields.One2many(
+        "teslimat.ana.sayfa.gun",
+        "ana_sayfa_id",
+        string="Uygun Günler",
+        compute="_compute_uygun_gunler",
         store=False,
     )
 
@@ -552,6 +572,162 @@ class TeslimatAnaSayfa(models.TransientModel):
                 record.uygun_arac_ids = araclar
             else:
                 record.uygun_arac_ids = False
+
+    @api.depends("ilce_id", "arac_id", "ilce_uygun_mu")
+    def _compute_uygun_gunler(self) -> None:
+        """Seçilen ilçe ve araç için uygun günleri hesapla."""
+        from .teslimat_utils import is_manager, GUN_ESLESMESI, GUN_KODU_MAP
+        
+        for record in self:
+            if not record.ilce_id or not record.arac_id or not record.ilce_uygun_mu:
+                record.uygun_gunler = [(5, 0, 0)]
+                continue
+            
+            yonetici_mi = is_manager(self.env)
+            small_vehicle = record.arac_kucuk_mu
+            
+            # Sonraki 30 günü kontrol et (Pazar günleri hariç)
+            bugun = fields.Date.today()
+            bitis_tarihi = bugun + timedelta(days=30)
+            uygun_gunler = []
+
+            # Performans optimizasyonu: Batch sorgulama
+            teslimat_domain = [
+                ("teslimat_tarihi", ">=", bugun),
+                ("teslimat_tarihi", "<=", bitis_tarihi),
+                ("arac_id", "=", record.arac_id.id),
+                ("ilce_id", "=", record.ilce_id.id),
+                ("durum", "in", ["taslak", "bekliyor", "hazir", "yolda"]),
+            ]
+            
+            tum_teslimatlar = self.env["teslimat.belgesi"].search(teslimat_domain)
+            teslimat_sayisi_dict = {}
+            for teslimat in tum_teslimatlar:
+                tarih = teslimat.teslimat_tarihi
+                teslimat_sayisi_dict[tarih] = teslimat_sayisi_dict.get(tarih, 0) + 1
+
+            # Gün kodları için mapping
+            gun_kodu_map = GUN_KODU_MAP
+            gun_eslesmesi = GUN_ESLESMESI
+            
+            # Tüm günleri önceden çek
+            gun_kodlari = list(gun_kodu_map.values())
+            gunler = self.env["teslimat.gun"].search([("gun_kodu", "in", gun_kodlari)])
+            gun_dict = {gun.gun_kodu: gun for gun in gunler}
+
+            # İlçe-gün eşleşmelerini batch olarak çek
+            gun_ilce_dict = {}
+            gun_ilce_kayitlari = self.env["teslimat.gun.ilce"].search(
+                [
+                    ("ilce_id", "=", record.ilce_id.id),
+                    ("gun_id", "in", gunler.ids),
+                    ("tarih", "=", False),  # Genel kurallar
+                ]
+            )
+            
+            for gun_ilce in gun_ilce_kayitlari:
+                key = (gun_ilce.gun_id.id, record.ilce_id.id)
+                gun_ilce_dict[key] = gun_ilce
+
+            # 30 günü loop et - Pazar günleri hariç
+            for i in range(30):
+                tarih = bugun + timedelta(days=i)
+                
+                # Pazar gününü atla
+                from .teslimat_utils import is_pazar_gunu
+                if is_pazar_gunu(tarih):
+                    continue
+                
+                gun_adi = tarih.strftime("%A")
+                gun_adi_tr = gun_eslesmesi.get(gun_adi, gun_adi)
+
+                # İlçe-gün uygunluğunu kontrol et
+                ilce_uygun_mu = (
+                    True
+                    if (yonetici_mi or small_vehicle)
+                    else self._check_ilce_gun_uygunlugu(record.ilce_id, tarih)
+                )
+
+                # Sadece uygun günleri ekle
+                if ilce_uygun_mu:
+                    teslimat_sayisi = teslimat_sayisi_dict.get(tarih, 0)
+
+                    # Araç kapasitesi kontrolü
+                    if teslimat_sayisi >= record.arac_id.gunluk_teslimat_limiti:
+                        continue
+
+                    gun_kodu = gun_kodu_map.get(tarih.weekday())
+                    if not gun_kodu:
+                        continue
+
+                    gun = gun_dict.get(gun_kodu)
+                    if not gun:
+                        continue
+
+                    # İlçe-gün eşleşmesi kontrol et
+                    key = (gun.id, record.ilce_id.id)
+                    gun_ilce = gun_ilce_dict.get(key)
+                    
+                    # Eşleşme yoksa otomatik oluştur
+                    if not gun_ilce:
+                        # Haftalık programa göre kontrol et
+                        from ..data.turkey_data import ANADOLU_ILCELERI, AVRUPA_ILCELERI
+                        
+                        ilce_adi_upper = record.ilce_id.name.upper()
+                        schedule = {
+                            'pazartesi': ['MALTEPE', 'KARTAL', 'PENDİK', 'TUZLA', 'SULTANBEYLİ', 'ŞİŞLİ', 'BEŞİKTAŞ', 'BEYOĞLU', 'KAĞITHANE'],
+                            'sali': ['ÜSKÜDAR', 'KADIKÖY', 'ÜMRANİYE', 'ATAŞEHİR', 'ŞİŞLİ', 'BEŞİKTAŞ', 'BEYOĞLU', 'KAĞITHANE'],
+                            'carsamba': ['ÜSKÜDAR', 'KADIKÖY', 'ÜMRANİYE', 'ATAŞEHİR', 'BAĞCILAR', 'BAHÇELİEVLER', 'BAKIRKÖY', 'GÜNGÖREN', 'ESENLER', 'ZEYTİNBURNU', 'BAYRAMPAŞA', 'FATİH'],
+                            'persembe': ['MALTEPE', 'KARTAL', 'PENDİK', 'TUZLA', 'SULTANBEYLİ', 'BÜYÜKÇEKMECE', 'SİLİVRİ', 'ÇATALCA', 'ARNAVUTKÖY', 'BAKIRKÖY'],
+                            'cuma': ['ÜSKÜDAR', 'KADIKÖY', 'ÜMRANİYE', 'ATAŞEHİR', 'ŞİŞLİ', 'BEŞİKTAŞ', 'BEYOĞLU', 'KAĞITHANE'],
+                            'cumartesi': ['BEYKOZ', 'ÇEKMEKÖY', 'SANCAKTEPE', 'ŞİLE', 'BÜYÜKÇEKMECE', 'SİLİVRİ', 'ÇATALCA', 'ARNAVUTKÖY', 'BAKIRKÖY']
+                        }
+                        
+                        bugun_gun_programi = schedule.get(gun_kodu, [])
+                        ilce_programda_var_mi = False
+                        for program_ilce in bugun_gun_programi:
+                            if program_ilce.upper() in ilce_adi_upper or ilce_adi_upper in program_ilce.upper():
+                                ilce_programda_var_mi = True
+                                break
+                        
+                        if ilce_programda_var_mi:
+                            gun_ilce = self.env["teslimat.gun.ilce"].create({
+                                'gun_id': gun.id,
+                                'ilce_id': record.ilce_id.id,
+                                'maksimum_teslimat': 7,
+                                'tarih': False,
+                            })
+                            gun_ilce_dict[key] = gun_ilce
+
+                    if gun_ilce:
+                        toplam_kapasite = gun_ilce.maksimum_teslimat
+                        kalan_kapasite = gun_ilce.kalan_kapasite
+
+                        # Kapasitesi dolu ise atla
+                        if kalan_kapasite <= 0:
+                            continue
+
+                        # Durum hesaplama
+                        if kalan_kapasite > 5:
+                            durum_text = "🟢 Boş"
+                        elif kalan_kapasite > 0:
+                            durum_text = "🟡 Dolu Yakın"
+                        else:
+                            durum_text = "🔴 Dolu"
+
+                        uygun_gunler.append({
+                            "tarih": tarih,
+                            "gun_adi": gun_adi_tr,
+                            "teslimat_sayisi": teslimat_sayisi,
+                            "toplam_kapasite": toplam_kapasite,
+                            "kalan_kapasite": kalan_kapasite,
+                            "durum_text": durum_text,
+                        })
+
+            # Günleri tarihe göre sırala ve kaydet
+            uygun_gunler.sort(key=lambda x: x["tarih"])
+            gun_komutlari = [(0, 0, data) for data in uygun_gunler]
+            record.uygun_gunler = [(5, 0, 0)] + gun_komutlari
 
     def action_sorgula(self) -> None:
         """Kapasite sorgulamasını yenile.
