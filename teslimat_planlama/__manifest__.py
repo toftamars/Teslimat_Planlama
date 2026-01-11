@@ -30,6 +30,9 @@
         'mail',
     ],
     'data': [
+        # Assets
+        'views/assets.xml',
+
         # Security
         'security/security.xml',
         'security/ir.model.access.csv',
