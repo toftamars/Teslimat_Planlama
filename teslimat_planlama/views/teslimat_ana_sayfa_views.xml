@@ -161,20 +161,47 @@
                                               edit="false" 
                                               delete="false"
                                               default_order="tarih"
-                                              open="action_teslimat_olustur"
+                                              open="false"
                                               sample="1">
-                                            <field name="tarih" readonly="1" widget="date"/>
+                                            <field name="tarih" readonly="1" widget="date" 
+                                                   attrs="{'invisible': [('kalan_kapasite', '&lt;=', 0)]}"
+                                                   class="o_date_cell" style="cursor: pointer;"/>
                                             <field name="gun_adi" readonly="1"/>
                                             <field name="teslimat_sayisi" readonly="1"/>
                                             <field name="toplam_kapasite" readonly="1"/>
                                             <field name="kalan_kapasite" readonly="1"/>
                                             <field name="durum_text" readonly="1"/>
                                             <button name="action_teslimat_olustur" string="Teslimat Oluştur" 
-                                                    type="object" class="btn-primary btn-sm" 
+                                                    type="object" class="btn-primary btn-sm o_wizard_button" 
                                                     icon="fa-plus"
                                                     attrs="{'invisible': [('kalan_kapasite', '&lt;=', 0)]}"/>
                                         </tree>
                                     </field>
+                                    <script>
+                                        <![CDATA[
+                                            (function() {
+                                                setTimeout(function() {
+                                                    var tree = document.querySelector('field[name="uygun_gunler"] table');
+                                                    if (tree) {
+                                                        tree.addEventListener('click', function(e) {
+                                                            var dateCell = e.target.closest('td[name="tarih"]');
+                                                            if (dateCell && !e.target.closest('button')) {
+                                                                var row = dateCell.closest('tr');
+                                                                if (row) {
+                                                                    var button = row.querySelector('button.o_wizard_button');
+                                                                    if (button && !button.closest('[style*="display: none"]')) {
+                                                                        button.click();
+                                                                        e.preventDefault();
+                                                                        e.stopPropagation();
+                                                                    }
+                                                                }
+                                                            }
+                                                        });
+                                                    }
+                                                }, 500);
+                                            })();
+                                        ]]>
+                                    </script>
                                 </div>
                             </div>
                         </div>
