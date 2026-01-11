@@ -53,11 +53,6 @@
                                                    attrs="{'invisible': [('arac_id','=', False)]}">
                                                 <i class="fa fa-refresh"/> Yenile
                                             </button>
-                                            <button string="Verileri Güncelle" name="action_load_districts" type="object" 
-                                                   class="btn btn-link text-muted" 
-                                                   help="İlçe verilerini yeniden yükler">
-                                                <i class="fa fa-database"/> Verileri Güncelle
-                                            </button>
                                         </div>
                                     </div>
                                 </div>
