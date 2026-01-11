@@ -30,9 +30,6 @@
         'mail',
     ],
     'data': [
-        # Assets
-        'views/assets.xml',
-
         # Security
         'security/security.xml',
         'security/ir.model.access.csv',
@@ -77,4 +74,9 @@
     'license': 'LGPL-3',
     'images': ['static/description/icon.png'],
     'post_init_hook': 'post_init_hook',
+    'assets': {
+        'web.assets_backend': [
+            'teslimat_planlama/static/src/js/uygun_gunler_click.js',
+        ],
+    },
 }
