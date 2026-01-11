@@ -154,25 +154,24 @@
                                 </div>
                                 <div class="card-body">
                                     <field name="uygun_gunler" readonly="1" nolabel="1">
-                                        <tree decoration-success="kalan_kapasite &gt; 5" 
-                                              decoration-warning="kalan_kapasite &lt;= 5 and kalan_kapasite &gt; 0" 
+                                        <tree decoration-success="kalan_kapasite &gt; 5"
+                                              decoration-warning="kalan_kapasite &lt;= 5 and kalan_kapasite &gt; 0"
                                               decoration-danger="kalan_kapasite &lt;= 0"
-                                              create="false" 
-                                              edit="false" 
+                                              create="false"
+                                              edit="false"
                                               delete="false"
                                               default_order="tarih"
                                               sample="1">
-                                            <field name="tarih" readonly="1" widget="date" 
-                                                   attrs="{'invisible': [('kalan_kapasite', '&lt;=', 0)]}"/>
+                                            <button name="action_teslimat_olustur" string="Teslimat Oluştur"
+                                                    type="object" class="btn-success btn-sm"
+                                                    icon="fa-calendar-plus-o"
+                                                    attrs="{'invisible': [('kalan_kapasite', '&lt;=', 0)]}"/>
+                                            <field name="tarih" readonly="1" widget="date"/>
                                             <field name="gun_adi" readonly="1"/>
                                             <field name="teslimat_sayisi" readonly="1"/>
                                             <field name="toplam_kapasite" readonly="1"/>
                                             <field name="kalan_kapasite" readonly="1"/>
                                             <field name="durum_text" readonly="1"/>
-                                            <button name="action_teslimat_olustur" string="Teslimat Oluştur" 
-                                                    type="object" class="btn-primary btn-sm" 
-                                                    icon="fa-plus"
-                                                    attrs="{'invisible': [('kalan_kapasite', '&lt;=', 0)]}"/>
                                         </tree>
                                     </field>
                                 </div>
@@ -187,49 +186,6 @@
                 <footer>
                     <button string="Kapat" class="btn-secondary" special="cancel"/>
                 </footer>
-            </form>
-        </field>
-    </record>
-
-    <!-- Transient Model Form View - Satıra tıklandığında direkt wizard açmak için -->
-    <record id="view_teslimat_ana_sayfa_gun_form" model="ir.ui.view">
-        <field name="name">teslimat.ana.sayfa.gun.form</field>
-        <field name="model">teslimat.ana.sayfa.gun</field>
-        <field name="arch" type="xml">
-            <form string="Teslimat Oluştur" create="false" edit="false" delete="false">
-                <header>
-                    <!-- Button - Otomatik tıklanacak -->
-                    <button name="action_teslimat_olustur" string="Teslimat Belgesi Oluştur" 
-                            type="object" class="oe_highlight" 
-                            icon="fa-plus"/>
-                </header>
-                <sheet>
-                    <!-- Form view açıldığında otomatik wizard aç -->
-                    <script>
-                        <![CDATA[
-                            setTimeout(function() {
-                                var button = document.querySelector('button[name="action_teslimat_olustur"]');
-                                if (button) {
-                                    button.click();
-                                }
-                            }, 300);
-                        ]]>
-                    </script>
-                    <div class="alert alert-info">
-                        <strong>Wizard açılıyor...</strong>
-                    </div>
-                    <group>
-                        <group>
-                            <field name="ana_sayfa_id" invisible="1"/>
-                            <field name="tarih" readonly="1" invisible="1"/>
-                            <field name="gun_adi" readonly="1" invisible="1"/>
-                            <field name="teslimat_sayisi" readonly="1" invisible="1"/>
-                            <field name="toplam_kapasite" readonly="1" invisible="1"/>
-                            <field name="kalan_kapasite" readonly="1" invisible="1"/>
-                            <field name="durum_text" readonly="1" invisible="1"/>
-                        </group>
-                    </group>
-                </sheet>
             </form>
         </field>
     </record>
