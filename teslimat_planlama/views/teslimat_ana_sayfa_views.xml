@@ -161,17 +161,13 @@
                                               edit="false"
                                               delete="false"
                                               default_order="tarih"
-                                              editable="false"
                                               no_open="true"
                                               sample="1">
-                                            <field name="tarih" invisible="1"/>
                                             <button name="action_teslimat_olustur" type="object"
-                                                    class="btn btn-link text-primary fw-bold p-0"
-                                                    attrs="{'invisible': [('kalan_kapasite', '&lt;=', 0)]}">
-                                                <field name="tarih_str" readonly="1"/>
-                                            </button>
-                                            <field name="tarih_str" readonly="1"
-                                                   attrs="{'invisible': [('kalan_kapasite', '&gt;', 0)]}"/>
+                                                    string=" " icon="fa-calendar-plus-o"
+                                                    class="btn-success btn-sm"
+                                                    attrs="{'invisible': [('kalan_kapasite', '&lt;=', 0)]}"/>
+                                            <field name="tarih_str" string="Tarih" readonly="1"/>
                                             <field name="teslimat_sayisi" readonly="1" string="Teslimat"/>
                                             <field name="kalan_kapasite" readonly="1" string="Kalan"/>
                                             <field name="durum_text" readonly="1" string="Durum"/>
