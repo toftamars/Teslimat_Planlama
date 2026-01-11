@@ -2,10 +2,10 @@
 <odoo>
     <!-- Ana Menü - Default olarak Ana Sayfa açılacak -->
     <menuitem id="menu_teslimat_planlama_root"
-              name="🚛 Teslimat"
+              name="Teslimat"
               sequence="75"
               action="action_teslimat_ana_sayfa"
-              web_icon="teslimat_planlama,static/description/icon.png"/>
+              web_icon="teslimat_planlama,static/description/icon.svg"/>
 
     <!-- Teslimat Belgeleri -->
     <menuitem id="menu_teslimat_belgeleri"
