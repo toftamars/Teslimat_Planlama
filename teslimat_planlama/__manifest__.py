@@ -36,6 +36,7 @@
         
         # Data
         'data/ir_sequence_data.xml',
+        'data/cleanup_ana_sayfa_tarih_model.xml',
         'data/teslimat_program_kurulum_data.xml',
         'data/istanbul_ilceleri_data.xml',
         
