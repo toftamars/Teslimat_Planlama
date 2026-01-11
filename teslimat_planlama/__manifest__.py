@@ -46,16 +46,16 @@
         'views/teslimat_gun_views.xml',
         'views/teslimat_arac_views.xml',
         
-        # Ana Sayfa Views (ONCE yukle - menu bu action'i referans ediyor)
-        'views/teslimat_ana_sayfa_views.xml',
+        # Action'ları içeren Views (ONCE yukle - menu bunları referans ediyor)
+        'views/teslimat_ana_sayfa_views.xml',  # action_teslimat_ana_sayfa
+        'views/teslimat_belgesi_views.xml',     # action_teslimat_belgesi, action_teslimat_belgesi_surucu
         
-        # Menu (Ana sayfa action'i yuklendikten sonra)
+        # Menu (Tüm action'lar yuklendikten sonra)
         'views/menu_views.xml',
         
         # Business Logic Views
         'views/teslimat_planlama_views.xml',
         'views/teslimat_transfer_views.xml',
-        'views/teslimat_belgesi_views.xml',
         
         # Wizard Views
         'views/teslimat_belgesi_wizard_views.xml',
