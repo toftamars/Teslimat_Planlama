@@ -66,8 +66,36 @@ def post_init_hook(cr, registry):
         cr.commit()
         _logger.info("Eski teslimat.planlama.akilli model referansları temizlendi")
         
-        # NOT: İlçe ve araç eşleştirmeleri artık kod seviyesinde (create/write) yapılıyor
-        # Otomatik hook'lara gerek yok
+        # İlçeleri ve haftalık programı otomatik yükle
+        try:
+            env = api.Environment(cr, SUPERUSER_ID, {})
+            
+            # İstanbul ilçelerini oluştur (yoksa)
+            ilce_model = env["teslimat.ilce"]
+            istanbul = env["res.country.state"].search([
+                ("country_id.code", "=", "TR"),
+                ("name", "ilike", "istanbul")
+            ], limit=1)
+            
+            if istanbul:
+                # İlçe sayısını kontrol et
+                ilce_sayisi = ilce_model.search_count([("state_id", "=", istanbul.id)])
+                
+                if ilce_sayisi < 10:  # Çok az ilçe varsa yükle
+                    _logger.info("İstanbul ilçeleri yükleniyor...")
+                    ilce_model.create_istanbul_districts_simple()
+                    _logger.info("✓ İstanbul ilçeleri yüklendi")
+                
+                # Haftalık programı ZORUNLU uygula
+                _logger.info("Haftalık program uygulanıyor...")
+                ilce_model.apply_weekly_schedule()
+                cr.commit()
+                _logger.info("✓ Haftalık program uygulandı (gün-ilçe eşleştirmeleri oluşturuldu)")
+            else:
+                _logger.warning("İstanbul ili bulunamadı, haftalık program uygulanamadı")
+                
+        except Exception as e:
+            _logger.warning("Haftalık program uygulama hatası (ignored): %s", e)
              
     except Exception as e:
         cr.rollback()
