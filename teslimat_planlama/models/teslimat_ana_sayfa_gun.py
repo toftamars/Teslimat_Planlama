@@ -24,7 +24,7 @@ class TeslimatAnaSayfaGun(models.TransientModel):
     durum_text = fields.Char(string="Durum")
 
     def action_teslimat_olustur(self) -> dict:
-        """Seçilen gün için teslimat belgesi oluştur ve aç."""
+        """Seçilen gün için teslimat belgesi wizard'ını aç."""
         self.ensure_one()
 
         if not self.ana_sayfa_id.arac_id:
@@ -33,19 +33,18 @@ class TeslimatAnaSayfaGun(models.TransientModel):
         if not self.ana_sayfa_id.ilce_id:
             raise UserError(_("İlçe seçimi gereklidir."))
 
-        # Yeni teslimat belgesi oluştur
-        teslimat_belgesi = self.env["teslimat.belgesi"].create({
-            "teslimat_tarihi": self.tarih,
-            "arac_id": self.ana_sayfa_id.arac_id.id,
-            "ilce_id": self.ana_sayfa_id.ilce_id.id,
-        })
+        # Wizard'ı aç
+        context = {
+            "default_teslimat_tarihi": self.tarih,
+            "default_arac_id": self.ana_sayfa_id.arac_id.id,
+            "default_ilce_id": self.ana_sayfa_id.ilce_id.id,
+        }
 
-        # Oluşturulan teslimat belgesini aç
         return {
-            "name": _("Teslimat Belgesi"),
+            "name": _("Teslimat Belgesi Oluştur"),
             "type": "ir.actions.act_window",
-            "res_model": "teslimat.belgesi",
-            "res_id": teslimat_belgesi.id,
+            "res_model": "teslimat.belgesi.wizard",
             "view_mode": "form",
-            "target": "current",
+            "target": "new",
+            "context": context,
         }
