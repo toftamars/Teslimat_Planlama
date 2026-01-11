@@ -103,14 +103,6 @@ class TeslimatAnaSayfa(models.TransientModel):
         string="Uygunluk Mesajı", compute="_compute_ilce_uygunluk", store=False
     )
 
-    # Tarih listesi (computed)
-    tarih_listesi = fields.One2many(
-        "teslimat.ana.sayfa.tarih",
-        "ana_sayfa_id",
-        string="Tarih Listesi",
-        compute="_compute_tarih_listesi",
-        store=False,
-    )
 
     # İlçe kapasite bilgileri
     toplam_kapasite = fields.Integer(
@@ -204,8 +196,10 @@ class TeslimatAnaSayfa(models.TransientModel):
                         f"Bu araç ({arac_tipi_label}) bu ilçeye uygun değil."
                     )
 
+    # Tarih listesi compute metodu kaldırıldı - artık gerekli değil
+    
     @api.depends("ilce_id", "arac_id", "ilce_uygun_mu")
-    def _compute_tarih_listesi(self) -> None:
+    def _compute_tarih_listesi_REMOVED(self) -> None:
         """Seçilen ilçe ve araç için uygun tarihleri hesapla (Optimized).
         
         Performans optimizasyonu: Batch sorgulama ile 90+ sorgu → ~10 sorgu.

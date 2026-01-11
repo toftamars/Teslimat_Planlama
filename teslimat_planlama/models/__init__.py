@@ -8,7 +8,6 @@ from . import teslimat_transfer
 from . import teslimat_belgesi
 from . import teslimat_belgesi_urun
 from . import teslimat_ana_sayfa
-from . import teslimat_ana_sayfa_tarih
 from . import res_partner
 from . import stock_picking
 from . import ir_model_data_cleanup
