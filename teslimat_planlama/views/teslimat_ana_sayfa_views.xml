@@ -6,70 +6,152 @@
         <field name="name">teslimat.ana.sayfa.form</field>
         <field name="model">teslimat.ana.sayfa</field>
         <field name="arch" type="xml">
-            <form string="Teslimat Ana Sayfa - Kapasite Sorgulama">
-                <header>
-                     <button string="🔄 Verileri Yükle/Güncelle" name="action_load_districts" type="object" class="btn-link" help="İlçe verilerini yeniden yükler"/>
-                </header>
-                <sheet>
-                    <div class="oe_title">
-                        <h1>
-                            <span>🚗 Araç-İlçe Kapasite Sorgulama</span>
-                        </h1>
+            <form string="Kapasite Sorgulama" class="o_form_nosheet">
+                <!-- Yönetici Bilgilendirme - Minimal -->
+                <div class="alert alert-info mb-2" role="alert" groups="teslimat_planlama.group_teslimat_manager">
+                    <i class="fa fa-crown"/> Yönetici modu aktif - Tüm kısıtlamalar bypass edilir
+                </div>
+                
+                <!-- Ana İçerik -->
+                <div class="container-fluid">
+                    <!-- Filtreler -->
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <div class="card shadow-sm">
+                                <div class="card-header bg-white border-bottom">
+                                    <h5 class="mb-0"><i class="fa fa-filter"/> Filtreler</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <label for="state_id" class="form-label">İl</label>
+                                            <field name="state_id" widget="many2one" 
+                                                   options="{'no_create': True, 'no_edit': True}" 
+                                                   class="form-control"/>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="arac_id" class="form-label">Araç</label>
+                                            <field name="arac_id" widget="many2one" 
+                                                   options="{'no_create': True, 'no_edit': True}" 
+                                                   class="form-control"/>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="ilce_id" class="form-label">İlçe</label>
+                                            <field name="ilce_id" widget="many2one" 
+                                                   options="{'no_create': True, 'no_edit': True}" 
+                                                   attrs="{'invisible': [('state_id', '=', False)], 'required': [('state_id', '!=', False)]}" 
+                                                   class="form-control"/>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row mt-3">
+                                        <div class="col-12 text-end">
+                                            <button name="action_sorgula" string="Yenile" type="object" 
+                                                   class="btn btn-primary"
+                                                   attrs="{'invisible': [('arac_id','=', False)]}">
+                                                <i class="fa fa-refresh"/> Yenile
+                                            </button>
+                                            <button string="Verileri Güncelle" name="action_load_districts" type="object" 
+                                                   class="btn btn-link text-muted" 
+                                                   help="İlçe verilerini yeniden yükler">
+                                                <i class="fa fa-database"/> Verileri Güncelle
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     
-                    <!-- Yönetici Bilgilendirme -->
-                    <div class="alert alert-success" role="alert" groups="teslimat_planlama.group_teslimat_manager">
-                        <strong>👑 Yönetici Yetkisi Aktif</strong>
-                        <p>Yönetici olarak:</p>
-                        <ul>
-                            <li>✓ Tüm ilçeleri seçebilirsiniz (yaka kısıtı yok)</li>
-                            <li>✓ Tüm günleri görebilirsiniz (gün-ilçe eşleşmesi yok)</li>
-                            <li>✓ Sınırsız teslimat oluşturabilirsiniz (7 limit yok)</li>
-                            <li>✓ Pazar günü de teslimat oluşturabilirsiniz</li>
-                        </ul>
+                    <!-- Uygunluk Durumu -->
+                    <div class="row mb-3" attrs="{'invisible': [('ilce_uygun_mu','=', False)]}">
+                        <div class="col-12">
+                            <div class="alert alert-success mb-0">
+                                <i class="fa fa-check-circle"/> 
+                                <strong>Uygun:</strong> Seçilen araç ve ilçe eşleşmesi uyumlu
+                                <field name="ilce_uygun_mu" invisible="1"/>
+                            </div>
+                        </div>
                     </div>
-                    <!-- Sorgulama Alanları -->
-                    <group>
-                        <group>
-                            <field name="state_id"/>
-                            <field name="arac_id" 
-                                   options="{'no_create': True, 'no_edit': True}"/>
-                            <field name="ilce_id" 
-                                   options="{'no_create': True, 'no_edit': True}"
-                                   attrs="{'invisible': [('state_id', '=', False)], 'required': [('state_id', '!=', False)]}"/>
-                        </group>
-                        <group>
-                            <field name="ilce_uygun_mu" readonly="1"/>
-                            <field name="arac_kucuk_mu" invisible="1"/>
-                        </group>
-                    </group>
-                                               <!-- Sorgula Butonu -->
-                           <group>
-                        <button name="action_sorgula" string="🔄 Yenile" type="object" 
-                                       class="btn-primary"
-                                attrs="{'invisible': [('arac_id','=', False)]}"/>
-                           </group>
-                    <!-- Sonuç Alanları -->
-                    <notebook>
-                        <page string="📊 İlçe Kapasitesi" attrs="{'invisible': [('ilce_uygun_mu','=', False)]}">
-                            <group>
-                                <group>
-                                    <field name="toplam_kapasite" readonly="1"/>
-                                    <field name="kullanilan_kapasite" readonly="1"/>
-                                </group>
-                                <group>
-                                    <field name="kalan_kapasite" readonly="1"/>
-                                    <field name="teslimat_sayisi" readonly="1"/>
-                                </group>
-                            </group>
-                            <!-- Uygun Araçlar -->
-                            <field name="uygun_arac_ids" readonly="1" widget="many2many_tags"/>
-                        </page>
-                        <page string="ℹ️ Uygunluk Bilgisi" attrs="{'invisible': [('ilce_uygun_mu','=', True)]}">
-                            <field name="uygunluk_mesaji" readonly="1" nolabel="1"/>
-                        </page>
-                    </notebook>
-                </sheet>
+                    
+                    <!-- Hata Mesajı -->
+                    <div class="row mb-3" attrs="{'invisible': [('ilce_uygun_mu','=', True)]}">
+                        <div class="col-12">
+                            <div class="alert alert-danger mb-0">
+                                <i class="fa fa-exclamation-triangle"/> 
+                                <strong>Uygun Değil:</strong>
+                                <field name="uygunluk_mesaji" readonly="1" nolabel="1" class="mt-2"/>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Kapasite Bilgileri -->
+                    <div class="row" attrs="{'invisible': [('ilce_uygun_mu','=', False)]}">
+                        <div class="col-12">
+                            <div class="card shadow-sm">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="mb-0"><i class="fa fa-bar-chart"/> Kapasite Bilgileri</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row text-center">
+                                        <div class="col-md-3 mb-3">
+                                            <div class="card border-primary">
+                                                <div class="card-body">
+                                                    <h6 class="text-muted mb-2">Toplam Kapasite</h6>
+                                                    <h3 class="text-primary mb-0">
+                                                        <field name="toplam_kapasite" readonly="1" widget="integer" nolabel="1"/>
+                                                    </h3>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <div class="card border-info">
+                                                <div class="card-body">
+                                                    <h6 class="text-muted mb-2">Kullanılan</h6>
+                                                    <h3 class="text-info mb-0">
+                                                        <field name="kullanilan_kapasite" readonly="1" widget="integer" nolabel="1"/>
+                                                    </h3>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <div class="card border-success">
+                                                <div class="card-body">
+                                                    <h6 class="text-muted mb-2">Kalan Kapasite</h6>
+                                                    <h3 class="text-success mb-0">
+                                                        <field name="kalan_kapasite" readonly="1" widget="integer" nolabel="1"/>
+                                                    </h3>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <div class="card border-warning">
+                                                <div class="card-body">
+                                                    <h6 class="text-muted mb-2">Teslimat Sayısı</h6>
+                                                    <h3 class="text-warning mb-0">
+                                                        <field name="teslimat_sayisi" readonly="1" widget="integer" nolabel="1"/>
+                                                    </h3>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Uygun Araçlar -->
+                                    <div class="row mt-4">
+                                        <div class="col-12">
+                                            <h6 class="text-muted mb-2"><i class="fa fa-truck"/> Uygun Araçlar</h6>
+                                            <field name="uygun_arac_ids" readonly="1" widget="many2many_tags" nolabel="1"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Gizli Alanlar -->
+                    <field name="arac_kucuk_mu" invisible="1"/>
+                </div>
+                
                 <footer>
                     <button string="Kapat" class="btn-secondary" special="cancel"/>
                 </footer>
@@ -93,4 +175,3 @@
         </field>
     </record>
 </odoo>
-
