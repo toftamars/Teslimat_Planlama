@@ -22,17 +22,20 @@ class TeslimatAnaSayfaGun(models.TransientModel):
     toplam_kapasite = fields.Integer(string="Toplam Kapasite", default=0)
     kalan_kapasite = fields.Integer(string="Kalan Kapasite", default=0)
     durum_text = fields.Char(string="Durum")
+    tarih_str = fields.Char(string="Tarih", compute="_compute_tarih_str")
 
-    @api.model
-    def default_get(self, fields_list):
-        """Form view açıldığında context'ten ana_sayfa_id al."""
-        res = super().default_get(fields_list)
-        
-        # Context'ten ana_sayfa_id al
-        if 'default_ana_sayfa_id' in self.env.context:
-            res['ana_sayfa_id'] = self.env.context['default_ana_sayfa_id']
-        
-        return res
+    @api.depends("tarih")
+    def _compute_tarih_str(self):
+        """Tarih field'ını formatlanmış string olarak hesapla."""
+        gun_isimleri = {
+            0: "Pzt", 1: "Sal", 2: "Çar", 3: "Per", 4: "Cum", 5: "Cmt", 6: "Paz"
+        }
+        for rec in self:
+            if rec.tarih:
+                gun = gun_isimleri.get(rec.tarih.weekday(), "")
+                rec.tarih_str = f"{rec.tarih.strftime('%d.%m.%Y')} {gun}"
+            else:
+                rec.tarih_str = "-"
 
     def action_teslimat_olustur(self) -> dict:
         """Seçilen gün için teslimat belgesi wizard'ını aç."""
