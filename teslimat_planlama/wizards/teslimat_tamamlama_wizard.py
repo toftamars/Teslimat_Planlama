@@ -68,6 +68,11 @@ class TeslimatTamamlamaWizard(models.TransientModel):
             'teslim_alan_kisi': self.teslim_alan_kisi,
         }
         
+        # Fotoğraf varsa belgede göster
+        if self.teslimat_fotografi:
+            vals['teslimat_fotografi'] = self.teslimat_fotografi
+            vals['fotograf_dosya_adi'] = self.fotograf_dosya_adi or 'teslimat_fotografi.jpg'
+        
         # Not ekle
         if self.tamamlama_notu:
             mevcut_not = teslimat.notlar or ""
@@ -77,7 +82,7 @@ class TeslimatTamamlamaWizard(models.TransientModel):
         
         teslimat.write(vals)
         
-        # Fotoğraf varsa chatter'a ekle
+        # Fotoğraf varsa chatter'a da ekle
         if self.teslimat_fotografi:
             attachment = self.env['ir.attachment'].create({
                 'name': self.fotograf_dosya_adi or 'teslimat_fotografi.jpg',

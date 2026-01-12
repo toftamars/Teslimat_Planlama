@@ -133,6 +133,15 @@
                             <field name="boylam" readonly="1"/>
                         </group>
                     </group>
+                    
+                    <!-- Teslimat Fotoğrafı -->
+                    <group string="📷 Teslimat Fotoğrafı" attrs="{'invisible': ['|', ('durum', '!=', 'teslim_edildi'), ('teslimat_fotografi', '=', False)]}">
+                        <field name="teslimat_fotografi" widget="image" readonly="1" nolabel="1" 
+                               options="{'size': [400, 400]}"
+                               class="oe_avatar"/>
+                        <field name="fotograf_dosya_adi" invisible="1"/>
+                    </group>
+                    
                     <group string="Notlar" attrs="{'readonly': [('is_readonly', '=', True)]}">
                         <field name="notlar" nolabel="1"/>
                     </group>

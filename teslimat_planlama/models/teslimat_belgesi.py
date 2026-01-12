@@ -113,6 +113,14 @@ class TeslimatBelgesi(models.Model):
     # Notlar
     notlar = fields.Text(string="Notlar")
     
+    # Teslimat Fotoğrafı
+    teslimat_fotografi = fields.Binary(
+        string="Teslimat Fotoğrafı",
+        attachment=True,
+        help="Teslimat tamamlandığında eklenen fotoğraf"
+    )
+    fotograf_dosya_adi = fields.Char(string="Fotoğraf Dosya Adı")
+    
     # UI Control
     is_readonly = fields.Boolean(
         string="Salt Okunur",
