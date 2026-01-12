@@ -71,9 +71,16 @@ class TeslimatBelgesiWizard(models.TransientModel):
         res = super(TeslimatBelgesiWizard, self).default_get(fields_list)
         ctx = self.env.context
 
+        import logging
+        _logger = logging.getLogger(__name__)
+        _logger.info("=== WIZARD DEFAULT_GET ===")
+        _logger.info("Context: %s", ctx)
+        _logger.info("fields_list: %s", fields_list)
+
         # Tarih context'ten geliyorsa kullan
         if ctx.get("default_teslimat_tarihi"):
             tarih_str = ctx.get("default_teslimat_tarihi")
+            _logger.info("Tarih str: %s", tarih_str)
             if isinstance(tarih_str, str):
                 try:
                     tarih = datetime.strptime(tarih_str, "%Y-%m-%d").date()
@@ -85,11 +92,15 @@ class TeslimatBelgesiWizard(models.TransientModel):
 
         # Araç context'ten geliyorsa kullan
         if ctx.get("default_arac_id"):
+            _logger.info("Araç ID: %s", ctx.get("default_arac_id"))
             res["arac_id"] = ctx.get("default_arac_id")
 
         # İlçe context'ten geliyorsa kullan
         if ctx.get("default_ilce_id"):
+            _logger.info("İlçe ID: %s", ctx.get("default_ilce_id"))
             res["ilce_id"] = ctx.get("default_ilce_id")
+
+        _logger.info("Result: %s", res)
 
         # Transfer ID context'ten geliyorsa kullan
         if ctx.get("default_transfer_id") and "transfer_id" in (fields_list or []):
