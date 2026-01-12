@@ -99,7 +99,11 @@ class TeslimatBelgesi(models.Model):
     sira_no = fields.Integer(string="Sıra No", default=1)
 
     # Teslim Bilgileri
-    teslim_alan_kisi = fields.Char(string="Teslim Alan Kişi")
+    teslim_alan_kisi = fields.Char(
+        string="Teslim Alan Kişi",
+        required=True,
+        help="Teslimatı teslim alan kişinin adı soyadı (zorunlu)",
+    )
     gercek_teslimat_saati = fields.Datetime(string="Gerçek Teslimat Saati")
 
     # Konum Bilgileri
