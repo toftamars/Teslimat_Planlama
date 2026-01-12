@@ -37,7 +37,7 @@
                     <!-- Müşteri ve Adres (otomatik) -->
                     <group>
                         <group>
-                            <field name="musteri_id" readonly="1"/>
+                            <field name="musteri_id" readonly="1" force_save="1"/>
                             <field name="adres" readonly="1"/>
                         </group>
                     </group>
