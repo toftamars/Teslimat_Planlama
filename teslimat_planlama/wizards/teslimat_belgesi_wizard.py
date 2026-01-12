@@ -231,9 +231,22 @@ class TeslimatBelgesiWizard(models.TransientModel):
             if picking.partner_id:
                 _logger.info("Setting musteri_id to: %s", picking.partner_id)
                 self.musteri_id = picking.partner_id
-                # Adres bilgisi
-                if picking.location_dest_id:
-                    self.adres = picking.location_dest_id.complete_name
+                # Adres bilgisi - partner'dan al
+                partner = picking.partner_id
+                adres_parts = []
+                if partner.street:
+                    adres_parts.append(partner.street)
+                if partner.street2:
+                    adres_parts.append(partner.street2)
+                if partner.city:
+                    adres_parts.append(partner.city)
+                if partner.state_id:
+                    adres_parts.append(partner.state_id.name)
+                if adres_parts:
+                    self.adres = ", ".join(adres_parts)
+                else:
+                    # Fallback - contact_address kullan
+                    self.adres = partner.contact_address or partner.name
             else:
                 _logger.warning("Picking has no partner_id!")
 
