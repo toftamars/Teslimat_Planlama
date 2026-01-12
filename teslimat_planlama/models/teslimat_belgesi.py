@@ -255,23 +255,47 @@ class TeslimatBelgesi(models.Model):
         )
 
     def action_yol_tarifi(self) -> dict:
-        """Konum wizard'ını aç.
+        """Müşteri konumuna Google Maps ile yol tarifi başlat.
 
         Returns:
-            dict: Konum wizard action
+            dict: Google Maps URL action
         """
         self.ensure_one()
         
-        # Konum wizard'ını aç
+        if not self.musteri_id:
+            raise UserError(_("Müşteri bilgisi bulunamadı. Yol tarifi başlatılamaz."))
+        
+        # Müşteri adres bilgilerini topla
+        partner = self.musteri_id
+        adres_parcalari = []
+        
+        if partner.street:
+            adres_parcalari.append(partner.street)
+        if partner.street2:
+            adres_parcalari.append(partner.street2)
+        if partner.city:
+            adres_parcalari.append(partner.city)
+        if partner.state_id:
+            adres_parcalari.append(partner.state_id.name)
+        if partner.country_id:
+            adres_parcalari.append(partner.country_id.name)
+        
+        # Adres oluştur
+        if adres_parcalari:
+            adres = ", ".join(adres_parcalari)
+        else:
+            # Adres yoksa sadece müşteri adını kullan
+            adres = partner.name
+        
+        # Google Maps URL oluştur (directions API)
+        import urllib.parse
+        encoded_address = urllib.parse.quote(adres)
+        google_maps_url = f"https://www.google.com/maps/dir/?api=1&destination={encoded_address}"
+        
         return {
-            "name": _("Konum Güncelle"),
-            "type": "ir.actions.act_window",
-            "res_model": "teslimat.konum.wizard",
-            "view_mode": "form",
+            "type": "ir.actions.act_url",
+            "url": google_maps_url,
             "target": "new",
-            "context": {
-                "default_teslimat_belgesi_id": self.id,
-            },
         }
 
     def send_teslimat_sms(self) -> bool:
