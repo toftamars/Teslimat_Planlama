@@ -163,6 +163,10 @@
                                               default_order="tarih"
                                               no_open="true"
                                               sample="1">
+                                            <field name="tarih" invisible="1"/>
+                                            <field name="gun_adi" invisible="1"/>
+                                            <field name="ana_sayfa_id" invisible="1"/>
+                                            <field name="toplam_kapasite" invisible="1"/>
                                             <button name="action_teslimat_olustur" type="object"
                                                     string=" " icon="fa-calendar-plus-o"
                                                     class="btn-success btn-sm"
