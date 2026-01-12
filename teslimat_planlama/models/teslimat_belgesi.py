@@ -217,6 +217,38 @@ class TeslimatBelgesi(models.Model):
                 )
         
         return super(TeslimatBelgesi, self).write(vals)
+    
+    def unlink(self):
+        """Teslimat belgesi silme - Kısıtlamalar.
+        
+        - Sadece yöneticiler silebilir
+        - Teslim edilmiş belgeler silinemez (yönetici bile)
+        """
+        # Yönetici kontrolü
+        if not self.env.user.has_group("teslimat_planlama.group_teslimat_manager"):
+            raise UserError(
+                _(
+                    "⛔ Teslimat belgelerini sadece yöneticiler silebilir!\n\n"
+                    "Yönetici yetkisi gereklidir."
+                )
+            )
+        
+        # Teslim edilmiş belge kontrolü
+        for record in self:
+            if record.durum == 'teslim_edildi':
+                raise UserError(
+                    _(
+                        "⛔ Teslim edilmiş teslimat belgeleri silinemez!\n\n"
+                        f"📄 Belge: {record.name}\n"
+                        f"📋 Durum: Teslim Edildi\n"
+                        f"📅 Teslim Tarihi: {record.gercek_teslimat_saati or 'N/A'}\n"
+                        f"👤 Teslim Alan: {record.teslim_alan_kisi or 'N/A'}\n\n"
+                        "Bu belge arşivlenmiştir ve silinemez.\n"
+                        "Veri bütünlüğü için teslim edilmiş belgeler korunur."
+                    )
+                )
+        
+        return super(TeslimatBelgesi, self).unlink()
 
     @api.depends("durum")
     def _compute_is_readonly(self) -> None:
