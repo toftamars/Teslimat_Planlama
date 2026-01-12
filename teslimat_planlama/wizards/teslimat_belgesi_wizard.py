@@ -105,13 +105,16 @@ class TeslimatBelgesiWizard(models.TransientModel):
         # İlçe context'ten geliyorsa kullan - ZORUNLU ATAMA
         if ctx.get("default_ilce_id"):
             ilce_id = ctx.get("default_ilce_id")
-            res["ilce_id"] = ilce_id
-            _logger.info("✓✓✓ İLÇE ID ATANDI: %s ✓✓✓", ilce_id)
             
             # İlçe kaydını doğrula
             ilce = self.env["teslimat.ilce"].browse(ilce_id)
             if ilce.exists():
-                _logger.info("✓ İlçe kaydı doğrulandı: %s (ID: %s)", ilce.name, ilce_id)
+                res["ilce_id"] = ilce_id
+                _logger.info("✓✓✓ İLÇE ID ATANDI: %s - %s ✓✓✓", ilce_id, ilce.name)
+                
+                # fields_list'e ilce_id'yi ekle (Odoo'nun default_get'e dahil etmesi için)
+                if fields_list and 'ilce_id' not in fields_list:
+                    fields_list.append('ilce_id')
             else:
                 _logger.error("✗✗✗ İLÇE KAYDI BULUNAMADI: %s ✗✗✗", ilce_id)
         else:
@@ -139,6 +142,19 @@ class TeslimatBelgesiWizard(models.TransientModel):
 
         return res
 
+    @api.model
+    def create(self, vals):
+        """Wizard oluşturulurken context'ten ilçe ID'sini garanti al."""
+        ctx = self.env.context
+        
+        # Eğer vals'ta ilce_id yoksa ve context'te varsa, ekle
+        if not vals.get('ilce_id') and ctx.get('default_ilce_id'):
+            ilce_id = ctx.get('default_ilce_id')
+            vals['ilce_id'] = ilce_id
+            _logger.info("🟢 CREATE: İlçe ID vals'a eklendi: %s", ilce_id)
+        
+        return super(TeslimatBelgesiWizard, self).create(vals)
+    
     @api.depends("arac_id")
     def _compute_arac_kucuk_mu(self) -> None:
         """Araç küçük araç mı kontrol et."""
