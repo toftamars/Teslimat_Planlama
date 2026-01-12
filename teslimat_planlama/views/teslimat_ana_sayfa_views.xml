@@ -49,9 +49,12 @@
                                     <div class="row mt-3">
                                         <div class="col-12 text-end">
                                             <button name="action_sorgula" string="Yenile" type="object" 
-                                                   class="btn btn-primary"
+                                                   class="btn btn-primary me-2"
                                                    attrs="{'invisible': [('arac_id','=', False)]}">
                                                 <i class="fa fa-refresh"/> Yenile
+                                            </button>
+                                            <button string="Kapat" special="cancel" class="btn btn-secondary">
+                                                <i class="fa fa-times"/> Kapat
                                             </button>
                                         </div>
                                     </div>
