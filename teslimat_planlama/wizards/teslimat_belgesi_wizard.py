@@ -72,9 +72,7 @@ class TeslimatBelgesiWizard(models.TransientModel):
         ctx = self.env.context
 
         # Tarih context'ten geliyorsa kullan
-        if ctx.get("default_teslimat_tarihi") and "teslimat_tarihi" in (
-            fields_list or []
-        ):
+        if ctx.get("default_teslimat_tarihi"):
             tarih_str = ctx.get("default_teslimat_tarihi")
             if isinstance(tarih_str, str):
                 try:
@@ -86,11 +84,11 @@ class TeslimatBelgesiWizard(models.TransientModel):
                 res["teslimat_tarihi"] = tarih_str
 
         # Araç context'ten geliyorsa kullan
-        if ctx.get("default_arac_id") and "arac_id" in (fields_list or []):
+        if ctx.get("default_arac_id"):
             res["arac_id"] = ctx.get("default_arac_id")
 
         # İlçe context'ten geliyorsa kullan
-        if ctx.get("default_ilce_id") and "ilce_id" in (fields_list or []):
+        if ctx.get("default_ilce_id"):
             res["ilce_id"] = ctx.get("default_ilce_id")
 
         # Transfer ID context'ten geliyorsa kullan
