@@ -107,7 +107,7 @@
                             <field name="musteri_telefon" widget="phone"/>
                         </group>
                         <group>
-                            <field name="sira_no"/>
+                            <field name="sira_no" readonly="1"/>
                         </group>
                     </group>
                     <group string="Transfer Ürünleri">

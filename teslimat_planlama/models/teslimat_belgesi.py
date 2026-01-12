@@ -128,6 +128,29 @@ class TeslimatBelgesi(models.Model):
                 self.env["ir.sequence"].next_by_code("teslimat.belgesi")
                 or _("Yeni")
             )
+        
+        # Sıra numarası otomatik ata (aynı araç ve tarih için)
+        if not vals.get("sira_no"):
+            arac_id = vals.get("arac_id")
+            teslimat_tarihi = vals.get("teslimat_tarihi", fields.Date.today())
+            
+            if arac_id and teslimat_tarihi:
+                # Aynı araç ve tarihteki son sıra numarasını bul
+                son_teslimat = self.search(
+                    [
+                        ("arac_id", "=", arac_id),
+                        ("teslimat_tarihi", "=", teslimat_tarihi),
+                    ],
+                    order="sira_no desc",
+                    limit=1,
+                )
+                
+                if son_teslimat:
+                    vals["sira_no"] = son_teslimat.sira_no + 1
+                else:
+                    vals["sira_no"] = 1
+            else:
+                vals["sira_no"] = 1
 
         # Pazar günü kontrolü - Yöneticiler için bypass
         from .teslimat_utils import check_pazar_gunu_validation
