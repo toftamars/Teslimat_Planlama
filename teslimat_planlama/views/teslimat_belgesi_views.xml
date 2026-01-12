@@ -99,7 +99,6 @@
                         <group>
                             <field name="arac_id"/>
                             <field name="ilce_id"/>
-                            <field name="surucu_id"/>
                         </group>
                     </group>
                     <group>
