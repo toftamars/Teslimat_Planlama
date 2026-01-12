@@ -1,6 +1,6 @@
 {
     'name': 'Teslimat Planlama',
-    'version': '15.0.2.1.2',
+    'version': '15.0.2.1.3',
     'category': 'Inventory',
     'summary': 'Teslimat planlaması ve rota optimizasyonu',
     'description': """
@@ -73,6 +73,7 @@
     'auto_install': False,
     'license': 'LGPL-3',
     'images': ['static/description/icon.png'],
+    'web_icon': 'teslimat_planlama,static/description/icon.png',
     'post_init_hook': 'post_init_hook',
     'assets': {
         'web.assets_backend': [
