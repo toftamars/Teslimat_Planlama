@@ -541,8 +541,8 @@ class TeslimatAnaSayfa(models.TransientModel):
 
                         if gun_ilce:
                             record.toplam_kapasite = gun_ilce.maksimum_teslimat
-                            record.kullanilan_kapasite = gun_ilce.teslimat_sayisi
-                            record.kalan_kapasite = gun_ilce.kalan_kapasite
+                            record.kullanilan_kapasite = record.teslimat_sayisi  # Yukarıda hesaplanan gerçek teslimat sayısı
+                            record.kalan_kapasite = record.toplam_kapasite - record.kullanilan_kapasite
                         else:
                             record.toplam_kapasite = 0
                             record.kullanilan_kapasite = 0
