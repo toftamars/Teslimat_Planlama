@@ -31,16 +31,18 @@ class TeslimatTamamlamaWizard(models.TransientModel):
     )
     fotograf_dosya_adi = fields.Char(string="Dosya Adı")
     
-    # Not (opsiyonel)
+    # Not (zorunlu)
     tamamlama_notu = fields.Text(
         string="Tamamlama Notu",
-        help="Teslimat hakkında not ekleyebilirsiniz (opsiyonel)"
+        required=True,
+        help="Teslimat hakkında not eklemelisiniz (zorunlu)"
     )
     
-    # Teslim alan kişi
+    # Teslim alan kişi (zorunlu)
     teslim_alan_kisi = fields.Char(
         string="Teslim Alan Kişi",
-        help="Teslimatı teslim alan kişinin adı"
+        required=True,
+        help="Teslimatı teslim alan kişinin adı (zorunlu)"
     )
 
     def action_teslimat_tamamla(self) -> dict:
@@ -52,17 +54,21 @@ class TeslimatTamamlamaWizard(models.TransientModel):
         if not teslimat:
             raise UserError(_("Teslimat belgesi bulunamadı."))
         
+        # Zorunlu alanları kontrol et
+        if not self.teslim_alan_kisi:
+            raise UserError(_("Teslim alan kişi bilgisi zorunludur!"))
+        
+        if not self.tamamlama_notu:
+            raise UserError(_("Tamamlama notu zorunludur!"))
+        
         # Teslimat durumunu güncelle
         vals = {
             'durum': 'teslim_edildi',
             'gercek_teslimat_saati': fields.Datetime.now(),
+            'teslim_alan_kisi': self.teslim_alan_kisi,
         }
         
-        # Teslim alan kişi
-        if self.teslim_alan_kisi:
-            vals['teslim_alan_kisi'] = self.teslim_alan_kisi
-        
-        # Not varsa ekle
+        # Not ekle
         if self.tamamlama_notu:
             mevcut_not = teslimat.notlar or ""
             tarih_str = fields.Datetime.now().strftime('%d.%m.%Y %H:%M')
