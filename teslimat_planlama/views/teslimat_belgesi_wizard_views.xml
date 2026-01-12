@@ -16,12 +16,14 @@
                     <!-- Temel Bilgiler -->
                     <group>
                         <group>
-                            <field name="teslimat_tarihi" readonly="1"/>
+                            <field name="teslimat_tarihi" readonly="1" force_save="1"/>
                             <field name="arac_id" 
+                                   force_save="1"
                                    domain="[('aktif','=',True),('gecici_kapatma','=',False)]"
                                    options="{'no_create': True, 'no_edit': True}"/>
                             <field name="arac_kucuk_mu" invisible="1"/>
                             <field name="ilce_id"
+                                   force_save="1"
                                    options="{'no_create': True, 'no_edit': True}"
                                    attrs="{'required': ['&amp;', ('arac_id','!=', False), ('arac_kucuk_mu','=', False)]}"/>
                         </group>

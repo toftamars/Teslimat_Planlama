@@ -71,36 +71,56 @@ class TeslimatBelgesiWizard(models.TransientModel):
         res = super(TeslimatBelgesiWizard, self).default_get(fields_list)
         ctx = self.env.context
 
-        import logging
-        _logger = logging.getLogger(__name__)
-        _logger.info("=== WIZARD DEFAULT_GET ===")
-        _logger.info("Context: %s", ctx)
+        _logger.info("=" * 80)
+        _logger.info("WIZARD DEFAULT_GET - BASLANGIC")
+        _logger.info("=" * 80)
+        _logger.info("Context keys: %s", list(ctx.keys()))
         _logger.info("fields_list: %s", fields_list)
 
         # Tarih context'ten geliyorsa kullan
         if ctx.get("default_teslimat_tarihi"):
             tarih_str = ctx.get("default_teslimat_tarihi")
-            _logger.info("Tarih str: %s", tarih_str)
+            _logger.info("✓ Tarih bulundu: %s (type: %s)", tarih_str, type(tarih_str))
             if isinstance(tarih_str, str):
                 try:
                     tarih = datetime.strptime(tarih_str, "%Y-%m-%d").date()
                     res["teslimat_tarihi"] = tarih
+                    _logger.info("✓ Tarih parse edildi: %s", tarih)
                 except ValueError:
                     res["teslimat_tarihi"] = fields.Date.today()
+                    _logger.warning("⚠ Tarih parse edilemedi, bugün kullanıldı")
             else:
                 res["teslimat_tarihi"] = tarih_str
+        else:
+            _logger.warning("✗ Context'te default_teslimat_tarihi YOK")
 
         # Araç context'ten geliyorsa kullan
         if ctx.get("default_arac_id"):
-            _logger.info("Araç ID: %s", ctx.get("default_arac_id"))
-            res["arac_id"] = ctx.get("default_arac_id")
+            arac_id = ctx.get("default_arac_id")
+            res["arac_id"] = arac_id
+            _logger.info("✓ Araç ID atandı: %s", arac_id)
+        else:
+            _logger.warning("✗ Context'te default_arac_id YOK")
 
-        # İlçe context'ten geliyorsa kullan
+        # İlçe context'ten geliyorsa kullan - ZORUNLU ATAMA
         if ctx.get("default_ilce_id"):
-            _logger.info("İlçe ID: %s", ctx.get("default_ilce_id"))
-            res["ilce_id"] = ctx.get("default_ilce_id")
+            ilce_id = ctx.get("default_ilce_id")
+            res["ilce_id"] = ilce_id
+            _logger.info("✓✓✓ İLÇE ID ATANDI: %s ✓✓✓", ilce_id)
+            
+            # İlçe kaydını doğrula
+            ilce = self.env["teslimat.ilce"].browse(ilce_id)
+            if ilce.exists():
+                _logger.info("✓ İlçe kaydı doğrulandı: %s (ID: %s)", ilce.name, ilce_id)
+            else:
+                _logger.error("✗✗✗ İLÇE KAYDI BULUNAMADI: %s ✗✗✗", ilce_id)
+        else:
+            _logger.error("✗✗✗ CONTEXT'TE default_ilce_id YOK! ✗✗✗")
 
-        _logger.info("Result: %s", res)
+        _logger.info("=" * 80)
+        _logger.info("WIZARD DEFAULT_GET - SONUC")
+        _logger.info("Result dict: %s", res)
+        _logger.info("=" * 80)
 
         # Transfer ID context'ten geliyorsa kullan
         if ctx.get("default_transfer_id") and "transfer_id" in (fields_list or []):
