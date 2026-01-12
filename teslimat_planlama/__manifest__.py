@@ -62,6 +62,7 @@
         'views/teslimat_gun_kapatma_wizard_views.xml',
         'views/teslimat_konum_wizard_views.xml',
         'views/teslimat_arac_ilce_sync_wizard_views.xml',
+        'views/teslimat_tamamlama_wizard_views.xml',
         
         # Inherit Views
         'views/stock_picking_views.xml',

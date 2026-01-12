@@ -260,20 +260,26 @@ class TeslimatBelgesi(models.Model):
         
         self.transfer_urun_ids = [(5, 0, 0)] + lines
 
-    def action_teslimat_tamamla(self) -> None:
-        """Teslimatı tamamla."""
+    def action_teslimat_tamamla(self) -> dict:
+        """Teslimat tamamlama wizard'ını aç."""
         self.ensure_one()
+        
         if self.durum not in ["hazir", "yolda"]:
             raise UserError(
                 _("Sadece 'Hazır' veya 'Yolda' durumundaki teslimatlar tamamlanabilir.")
             )
-
-        self.write(
-            {
-                "durum": "teslim_edildi",
-                "gercek_teslimat_saati": fields.Datetime.now(),
-            }
-        )
+        
+        # Wizard'ı aç
+        return {
+            "name": _("Teslimatı Tamamla"),
+            "type": "ir.actions.act_window",
+            "res_model": "teslimat.tamamlama.wizard",
+            "view_mode": "form",
+            "target": "new",
+            "context": {
+                "default_teslimat_belgesi_id": self.id,
+            },
+        }
 
     def action_yol_tarifi(self) -> dict:
         """Müşteri konumuna Google Maps ile yol tarifi başlat.
