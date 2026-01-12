@@ -61,8 +61,7 @@
         <field name="name">teslimat.belgesi.form</field>
         <field name="model">teslimat.belgesi</field>
         <field name="arch" type="xml">
-            <form string="Teslimat Belgesi" create="0" edit="0" delete="0" 
-                  attrs="{'readonly': [('durum', '=', 'teslim_edildi')]}">
+            <form string="Teslimat Belgesi">
                 <header>
                     <button name="action_teslimat_tamamla" string="✅ Teslimatı Tamamla" type="object" 
                             class="oe_highlight" icon="fa-check"
@@ -70,14 +69,19 @@
                             groups="teslimat_planlama.group_teslimat_driver"/>
                     <button name="action_yol_tarifi" string="🗺️ Yol Tarifi" type="object" 
                             class="btn-primary" icon="fa-map-marker"
-                            attrs="{'invisible': [('durum', '=', 'teslim_edildi')]}"/>
+                            attrs="{'invisible': ['|', ('durum', '=', 'teslim_edildi'), ('durum', '=', 'iptal')]}"/>
                     <field name="durum" widget="statusbar" 
                            statusbar_visible="taslak,bekliyor,hazir,yolda,teslim_edildi"
-                           readonly="1"/>
+                           clickable="False"/>
                 </header>
-                <sheet>
+                <sheet attrs="{'readonly': [('durum', '=', 'teslim_edildi')]}">
+                    <!-- Teslim Edildi Uyarısı -->
+                    <div class="alert alert-success" role="alert" attrs="{'invisible': [('durum', '!=', 'teslim_edildi')]}">
+                        <strong>✅ Teslimat Tamamlandı</strong> - Bu belge teslim edilmiştir ve düzenlenemez.
+                    </div>
+                    
                     <!-- Yönetici Bilgilendirme -->
-                    <div class="alert alert-info" role="alert" groups="teslimat_planlama.group_teslimat_manager">
+                    <div class="alert alert-info" role="alert" groups="teslimat_planlama.group_teslimat_manager" attrs="{'invisible': [('durum', '=', 'teslim_edildi')]}">
                         <strong>👑 Yönetici Modu</strong> - Sınırsız teslimat oluşturabilir, tüm kısıtlamaları bypass edebilirsiniz.
                     </div>
                     
