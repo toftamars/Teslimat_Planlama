@@ -148,6 +148,17 @@ class TeslimatBelgesiWizard(models.TransientModel):
                 and record.arac_id.arac_tipi
                 in ["kucuk_arac_1", "kucuk_arac_2", "ek_arac"]
             )
+    
+    @api.onchange("arac_id")
+    def _onchange_arac_id(self):
+        """Araç değiştiğinde context'ten ilçe ID'sini kontrol et ve ata."""
+        # Context'ten ilçe ID'si geliyorsa ata
+        ctx = self.env.context
+        if ctx.get("default_ilce_id") and not self.ilce_id:
+            ilce_id = ctx.get("default_ilce_id")
+            _logger.info("🔵 ONCHANGE: Context'ten ilçe atanıyor: %s", ilce_id)
+            self.ilce_id = ilce_id
+            return {'value': {'ilce_id': ilce_id}}
 
     @api.onchange("arac_id")
     def _onchange_arac_id(self) -> None:

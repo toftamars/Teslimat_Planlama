@@ -42,6 +42,11 @@
                             <field name="adres" readonly="1"/>
                         </group>
                     </group>
+                    
+                    <!-- Debug: Context'i console'a yazdır -->
+                    <script type="text/javascript">
+                        console.log("🔵 WIZARD CONTEXT:", JSON.stringify(window.odoo.__DEBUG__.services['web.core'].action.currentAction.context));
+                    </script>
                 </sheet>
                 <footer>
                     <button name="action_teslimat_olustur" string="✅ Teslimat Belgesi Oluştur" 
