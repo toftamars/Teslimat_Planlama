@@ -43,7 +43,7 @@
         <field name="name">teslimat.belgesi.tree</field>
         <field name="model">teslimat.belgesi</field>
         <field name="arch" type="xml">
-            <tree string="Teslimat Belgeleri" create="false" delete="false" decoration-info="durum == 'hazir'" decoration-success="durum == 'teslim_edildi'" decoration-danger="durum == 'iptal'">
+            <tree string="Teslimat Belgeleri" create="false" decoration-info="durum == 'hazir'" decoration-success="durum == 'teslim_edildi'" decoration-danger="durum == 'iptal'">
                 <field name="name"/>
                 <field name="teslimat_tarihi"/>
                 <field name="musteri_id"/>
