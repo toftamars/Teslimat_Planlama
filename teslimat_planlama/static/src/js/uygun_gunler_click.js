@@ -115,7 +115,7 @@ odoo.define('teslimat_planlama.uygun_gunler_click', function (require) {
 
                 console.log('Context:', ctx);
 
-                // Wizard'ı aç
+                // Wizard'ı aç - context'i farklı yollarla gönder
                 this.do_action({
                     name: 'Teslimat Belgesi Oluştur',
                     type: 'ir.actions.act_window',
@@ -124,6 +124,8 @@ odoo.define('teslimat_planlama.uygun_gunler_click', function (require) {
                     views: [[false, 'form']],
                     target: 'new',
                     context: ctx,
+                }, {
+                    additional_context: ctx,
                 });
                 return;
             }
