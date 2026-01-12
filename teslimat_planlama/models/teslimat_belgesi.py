@@ -106,10 +106,6 @@ class TeslimatBelgesi(models.Model):
     )
     gercek_teslimat_saati = fields.Datetime(string="Gerçek Teslimat Saati")
 
-    # Konum Bilgileri
-    enlem = fields.Float(string="Enlem")
-    boylam = fields.Float(string="Boylam")
-
     # Notlar
     notlar = fields.Text(string="Notlar")
     

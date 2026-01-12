@@ -128,10 +128,6 @@
                             <field name="teslim_alan_kisi" readonly="1"/>
                             <field name="gercek_teslimat_saati" readonly="1"/>
                         </group>
-                        <group>
-                            <field name="enlem" readonly="1"/>
-                            <field name="boylam" readonly="1"/>
-                        </group>
                     </group>
                     
                     <!-- Teslimat Fotoğrafı -->
