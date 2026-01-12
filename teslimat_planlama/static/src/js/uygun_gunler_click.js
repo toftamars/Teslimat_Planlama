@@ -26,18 +26,32 @@ odoo.define('teslimat_planlama.uygun_gunler_click', function (require) {
                     return;
                 }
 
+                console.log('Record data:', record.data);
+                console.log('Record data keys:', Object.keys(record.data));
+
                 var kalan = record.data.kalan_kapasite;
                 if (kalan <= 0) {
                     Dialog.alert(this, 'Bu tarih için kapasite dolmuştur.');
                     return;
                 }
 
-                // Tarih değerini al - moment objesi veya string olabilir
-                var tarihValue = record.data.tarih;
+                // Tarih değerini al - farklı field isimlerini dene
+                var tarihValue = record.data.tarih || record.data.tarih_str;
                 var tarih;
 
-                if (tarihValue) {
-                    // Moment objesi ise string'e çevir
+                console.log('Tarih value:', tarihValue);
+                console.log('Tarih_str value:', record.data.tarih_str);
+
+                // tarih_str'den tarihi parse et (format: "22.01.2026 Çar")
+                if (record.data.tarih_str) {
+                    var parts = record.data.tarih_str.split(' ')[0].split('.');
+                    if (parts.length === 3) {
+                        tarih = parts[2] + '-' + parts[1] + '-' + parts[0]; // YYYY-MM-DD
+                    }
+                }
+
+                // Eğer tarih hala yoksa, record.data.tarih'i dene
+                if (!tarih && tarihValue) {
                     if (tarihValue._isAMomentObject || typeof tarihValue.format === 'function') {
                         tarih = tarihValue.format('YYYY-MM-DD');
                     } else if (typeof tarihValue === 'string') {
@@ -45,12 +59,11 @@ odoo.define('teslimat_planlama.uygun_gunler_click', function (require) {
                     } else if (tarihValue instanceof Date) {
                         tarih = tarihValue.toISOString().split('T')[0];
                     } else {
-                        // Objeden value al
-                        tarih = tarihValue.value || tarihValue;
+                        tarih = tarihValue.value || String(tarihValue);
                     }
                 }
 
-                console.log('Tıklanan satır tarihi:', tarih, 'Raw:', tarihValue);
+                console.log('Final tarih:', tarih);
 
                 // Parent'ı bul
                 var parent = this.getParent();
