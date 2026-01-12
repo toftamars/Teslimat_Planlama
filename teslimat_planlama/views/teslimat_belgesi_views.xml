@@ -43,7 +43,7 @@
         <field name="name">teslimat.belgesi.tree</field>
         <field name="model">teslimat.belgesi</field>
         <field name="arch" type="xml">
-            <tree string="Teslimat Belgeleri" decoration-info="durum == 'hazir'" decoration-success="durum == 'teslim_edildi'" decoration-danger="durum == 'iptal'">
+            <tree string="Teslimat Belgeleri" create="false" decoration-info="durum == 'hazir'" decoration-success="durum == 'teslim_edildi'" decoration-danger="durum == 'iptal'">
                 <field name="name"/>
                 <field name="teslimat_tarihi"/>
                 <field name="musteri_id"/>
@@ -61,7 +61,7 @@
         <field name="name">teslimat.belgesi.form</field>
         <field name="model">teslimat.belgesi</field>
         <field name="arch" type="xml">
-            <form string="Teslimat Belgesi">
+            <form string="Teslimat Belgesi" create="false">
                 <header>
                     <button name="action_teslimat_tamamla" string="✅ Teslimatı Tamamla" type="object" 
                             class="oe_highlight" icon="fa-check"
@@ -176,17 +176,16 @@
         <field name="name">Teslimat Belgeleri</field>
         <field name="res_model">teslimat.belgesi</field>
         <field name="view_mode">tree,form,kanban</field>
-        <field name="context">{'search_default_bugun': 1}</field>
+        <field name="context">{'search_default_bugun': 1, 'create': False}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 Henüz teslimat belgesi oluşturulmamış
             </p>
             <p>
-                Transfer belgelerinden teslimat belgeleri oluşturabilirsiniz.
+                Teslimat belgesi oluşturmak için <strong>Ana Sayfa</strong> üzerinden uygun bir tarih seçin.
             </p>
             <p>
-                <strong>Not:</strong> User grubu günlük maksimum 7 teslimat oluşturabilir.
-                Yöneticiler sınırsız teslimat oluşturabilir.
+                Veya <strong>Transfer Belgeleri</strong> üzerinden "🚛 Teslimat Oluştur" butonuna tıklayın.
             </p>
         </field>
     </record>
