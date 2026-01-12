@@ -102,13 +102,17 @@ class TeslimatTamamlamaWizard(models.TransientModel):
             )
             _logger.info("✓ Teslimat tamamlandı: %s", teslimat.name)
         
+        # Notification göster
+        self.env.user.notify_success(
+            message=_('Teslimat başarıyla tamamlandı!'),
+            title=_('Başarılı'),
+        )
+        
+        # Wizard'ı kapat ve teslimat belgesini göster
         return {
-            'type': 'ir.actions.client',
-            'tag': 'display_notification',
-            'params': {
-                'title': _('Başarılı'),
-                'message': _('Teslimat başarıyla tamamlandı!'),
-                'type': 'success',
-                'sticky': False,
-            }
+            'type': 'ir.actions.act_window',
+            'res_model': 'teslimat.belgesi',
+            'res_id': teslimat.id,
+            'view_mode': 'form',
+            'target': 'current',
         }
