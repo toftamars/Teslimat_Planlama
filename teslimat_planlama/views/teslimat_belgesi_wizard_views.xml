@@ -21,8 +21,7 @@
                                    domain="[('aktif','=',True),('gecici_kapatma','=',False)]"
                                    options="{'no_create': True, 'no_edit': True}"/>
                             <field name="arac_kucuk_mu" invisible="1"/>
-                            <field name="ilce_id" 
-                                   domain="[('aktif','=',True),('teslimat_aktif','=',True)]"
+                            <field name="ilce_id"
                                    options="{'no_create': True, 'no_edit': True}"
                                    attrs="{'required': ['&amp;', ('arac_id','!=', False), ('arac_kucuk_mu','=', False)]}"/>
                         </group>

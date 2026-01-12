@@ -741,16 +741,16 @@ class TeslimatAnaSayfa(models.TransientModel):
         
         # İlçe seçildiyse yaka tipini kontrol et ve düzelt
         if self.ilce_id:
-            # Yaka tipini yeniden hesapla
-            self.ilce_id._compute_yaka_tipi()
+            # Yaka tipini yeniden hesapla (sudo ile izin gerektirmeden)
+            self.ilce_id.sudo()._compute_yaka_tipi()
             
             # Eğer yaka tipi değiştiyse ilgili araçları güncelle
-            self.ilce_id._update_arac_ilce_eslesmesi()
+            self.ilce_id.sudo()._update_arac_ilce_eslesmesi()
         
         # Araç seçildiyse uygun ilçelerini kontrol et ve güncelle
         if self.arac_id:
-            # Uygun ilçeleri yeniden hesapla
-            self.arac_id._update_uygun_ilceler()
+            # Uygun ilçeleri yeniden hesapla (sudo ile izin gerektirmeden)
+            self.arac_id.sudo()._update_uygun_ilceler()
         
         # Compute field'lar otomatik yenilenecek
         return True

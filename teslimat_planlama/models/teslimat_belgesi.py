@@ -95,9 +95,8 @@ class TeslimatBelgesi(models.Model):
         tracking=True,
     )
 
-    # Sıra ve Öncelik
+    # Sıra
     sira_no = fields.Integer(string="Sıra No", default=1)
-    oncelik_puani = fields.Integer(string="Öncelik Puanı", default=0)
 
     # Teslim Bilgileri
     teslim_alan_kisi = fields.Char(string="Teslim Alan Kişi")
@@ -256,24 +255,23 @@ class TeslimatBelgesi(models.Model):
         )
 
     def action_yol_tarifi(self) -> dict:
-        """Yol tarifi için Google Maps'i aç.
+        """Konum wizard'ını aç.
 
         Returns:
-            dict: Google Maps URL'i
+            dict: Konum wizard action
         """
         self.ensure_one()
-        if not self.musteri_id or not self.ilce_id:
-            raise UserError(_("Müşteri ve ilçe bilgisi gereklidir."))
-
-        # Google Maps URL oluştur (basit örnek)
-        # Gerçek implementasyonda koordinatlar kullanılabilir
-        address = f"{self.ilce_id.name}, İstanbul"
-        url = f"https://www.google.com/maps/search/?api=1&query={address}"
-
+        
+        # Konum wizard'ını aç
         return {
-            "type": "ir.actions.act_url",
-            "url": url,
+            "name": _("Konum Güncelle"),
+            "type": "ir.actions.act_window",
+            "res_model": "teslimat.konum.wizard",
+            "view_mode": "form",
             "target": "new",
+            "context": {
+                "default_teslimat_belgesi_id": self.id,
+            },
         }
 
     def send_teslimat_sms(self) -> bool:

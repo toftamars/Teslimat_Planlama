@@ -375,6 +375,7 @@ class TeslimatBelgesiWizard(models.TransientModel):
             "musteri_id": self.musteri_id.id if self.musteri_id else False,
             "stock_picking_id": self.transfer_id.id if self.transfer_id else False,
             "transfer_no": self.transfer_id.name if self.transfer_id else False,
+            "durum": "hazir",  # Teslimat belgesi hazır durumunda oluşturulur
         }
 
         teslimat = self.env["teslimat.belgesi"].create(vals)
