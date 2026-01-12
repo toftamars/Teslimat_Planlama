@@ -156,6 +156,27 @@ class TeslimatBelgesi(models.Model):
                 )
 
         return super(TeslimatBelgesi, self).create(vals)
+    
+    def write(self, vals):
+        """Teslimat belgesi güncelleme - Teslim edilmiş belgelerde kısıtlama.
+        
+        Teslim edilmiş belgeler düzenlenemez (sadece yöneticiler için izin var).
+        """
+        for record in self:
+            # Teslim edilmiş belgelerde değişiklik yapılamaz
+            if record.durum == 'teslim_edildi':
+                # Yönetici değilse hata ver
+                if not self.env.user.has_group("teslimat_planlama.group_teslimat_manager"):
+                    raise UserError(
+                        _(
+                            "Teslim edilmiş teslimat belgeleri düzenlenemez!\n\n"
+                            f"Belge: {record.name}\n"
+                            f"Durum: Teslim Edildi\n\n"
+                            "Yönetici yetkisi gereklidir."
+                        )
+                    )
+        
+        return super(TeslimatBelgesi, self).write(vals)
 
     @api.onchange("transfer_no")
     def _onchange_transfer_no(self) -> None:

@@ -61,16 +61,19 @@
         <field name="name">teslimat.belgesi.form</field>
         <field name="model">teslimat.belgesi</field>
         <field name="arch" type="xml">
-            <form string="Teslimat Belgesi">
+            <form string="Teslimat Belgesi" create="0" edit="0" delete="0" 
+                  attrs="{'readonly': [('durum', '=', 'teslim_edildi')]}">
                 <header>
                     <button name="action_teslimat_tamamla" string="✅ Teslimatı Tamamla" type="object" 
                             class="oe_highlight" icon="fa-check"
                             attrs="{'invisible': [('durum', 'not in', ['hazir', 'yolda'])]}"
                             groups="teslimat_planlama.group_teslimat_driver"/>
                     <button name="action_yol_tarifi" string="🗺️ Yol Tarifi" type="object" 
-                            class="btn-primary" icon="fa-map-marker"/>
+                            class="btn-primary" icon="fa-map-marker"
+                            attrs="{'invisible': [('durum', '=', 'teslim_edildi')]}"/>
                     <field name="durum" widget="statusbar" 
-                           statusbar_visible="taslak,bekliyor,hazir,yolda,teslim_edildi"/>
+                           statusbar_visible="taslak,bekliyor,hazir,yolda,teslim_edildi"
+                           readonly="1"/>
                 </header>
                 <sheet>
                     <!-- Yönetici Bilgilendirme -->
