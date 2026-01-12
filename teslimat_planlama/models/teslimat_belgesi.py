@@ -112,6 +112,13 @@ class TeslimatBelgesi(models.Model):
 
     # Notlar
     notlar = fields.Text(string="Notlar")
+    
+    # UI Control
+    is_readonly = fields.Boolean(
+        string="Salt Okunur",
+        compute="_compute_is_readonly",
+        help="Teslim edilmiş belgeler salt okunurdur"
+    )
 
     @api.model
     def create(self, vals: dict) -> "TeslimatBelgesi":
@@ -192,19 +199,27 @@ class TeslimatBelgesi(models.Model):
         for record in self:
             # Teslim edilmiş belgelerde değişiklik yapılamaz
             if record.durum == 'teslim_edildi':
-                # Yönetici değilse hata ver
-                if not self.env.user.has_group("teslimat_planlama.group_teslimat_manager"):
-                    raise UserError(
-                        _(
-                            "Teslim edilmiş teslimat belgeleri düzenlenemez!\n\n"
-                            f"Belge: {record.name}\n"
-                            f"Durum: Teslim Edildi\n\n"
-                            "Yönetici yetkisi gereklidir."
-                        )
+                # Durum değişikliği de dahil her türlü değişiklik engellenir
+                # (Yönetici bile düzenleyemez - veri bütünlüğü için)
+                raise UserError(
+                    _(
+                        "⛔ Teslim edilmiş teslimat belgeleri düzenlenemez!\n\n"
+                        f"📄 Belge: {record.name}\n"
+                        f"📋 Durum: Teslim Edildi\n"
+                        f"📅 Teslim Tarihi: {record.gercek_teslimat_saati or 'N/A'}\n"
+                        f"👤 Teslim Alan: {record.teslim_alan_kisi or 'N/A'}\n\n"
+                        "Bu belge arşivlenmiştir ve değiştirilemez."
                     )
+                )
         
         return super(TeslimatBelgesi, self).write(vals)
 
+    @api.depends("durum")
+    def _compute_is_readonly(self) -> None:
+        """Teslim edilmiş belgeler salt okunurdur."""
+        for record in self:
+            record.is_readonly = record.durum == 'teslim_edildi'
+    
     @api.onchange("transfer_no")
     def _onchange_transfer_no(self) -> None:
         """Transfer no değiştiğinde otomatik bilgi doldur."""

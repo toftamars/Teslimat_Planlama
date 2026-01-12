@@ -74,9 +74,11 @@
                            statusbar_visible="taslak,bekliyor,hazir,yolda,teslim_edildi"
                            clickable="False"/>
                 </header>
-                <sheet attrs="{'readonly': [('durum', '=', 'teslim_edildi')]}">
+                <sheet>
+                    <field name="is_readonly" invisible="1"/>
+                    
                     <!-- Teslim Edildi Uyarısı -->
-                    <div class="alert alert-success" role="alert" attrs="{'invisible': [('durum', '!=', 'teslim_edildi')]}">
+                    <div class="alert alert-success" role="alert" attrs="{'invisible': [('is_readonly', '=', False)]}">
                         <strong>✅ Teslimat Tamamlandı</strong> - Bu belge teslim edilmiştir ve düzenlenemez.
                     </div>
                     
@@ -90,7 +92,7 @@
                             <field name="name" placeholder="Teslimat No"/>
                         </h1>
                     </div>
-                    <group>
+                    <group attrs="{'readonly': [('is_readonly', '=', True)]}">
                         <group>
                             <field name="teslimat_tarihi"/>
                             <field name="stock_picking_id"/>
@@ -101,7 +103,7 @@
                             <field name="ilce_id"/>
                         </group>
                     </group>
-                    <group>
+                    <group attrs="{'readonly': [('is_readonly', '=', True)]}">
                         <group>
                             <field name="musteri_id"/>
                             <field name="musteri_telefon" widget="phone"/>
@@ -131,7 +133,7 @@
                             <field name="boylam" readonly="1"/>
                         </group>
                     </group>
-                    <group string="Notlar">
+                    <group string="Notlar" attrs="{'readonly': [('is_readonly', '=', True)]}">
                         <field name="notlar" nolabel="1"/>
                     </group>
                 </sheet>
