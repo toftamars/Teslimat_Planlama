@@ -702,10 +702,11 @@ class TeslimatAnaSayfa(models.TransientModel):
 
                     if gun_ilce:
                         toplam_kapasite = gun_ilce.maksimum_teslimat
-                        kalan_kapasite = gun_ilce.kalan_kapasite
+                        # Kalan kapasite = Toplam - Gerçek teslimat sayısı
+                        kalan_kapasite = toplam_kapasite - teslimat_sayisi
 
-                        # Kapasitesi dolu ise atla
-                        if kalan_kapasite <= 0:
+                        # Kapasitesi dolu ise atla (yöneticiler için göster)
+                        if kalan_kapasite <= 0 and not yonetici_mi:
                             continue
 
                         # Durum hesaplama
