@@ -188,8 +188,18 @@ class TeslimatBelgesiWizard(models.TransientModel):
     @api.onchange("transfer_id")
     def _onchange_transfer_id(self) -> None:
         """Transfer seçildiğinde müşteri bilgilerini otomatik doldur."""
+        import logging
+        _logger = logging.getLogger(__name__)
+
         picking = self.transfer_id
+        _logger.info("=== ONCHANGE TRANSFER_ID ===")
+        _logger.info("Picking: %s", picking)
+
         if picking:
+            _logger.info("Picking name: %s", picking.name)
+            _logger.info("Picking partner_id: %s", picking.partner_id)
+            _logger.info("Picking state: %s", picking.state)
+
             # 1. Transfer durumu kontrolü
             if picking.state in ["cancel", "draft"]:
                 return {
@@ -219,10 +229,13 @@ class TeslimatBelgesiWizard(models.TransientModel):
 
             # 3. Müşteri bilgileri
             if picking.partner_id:
+                _logger.info("Setting musteri_id to: %s", picking.partner_id)
                 self.musteri_id = picking.partner_id
                 # Adres bilgisi
                 if picking.location_dest_id:
                     self.adres = picking.location_dest_id.complete_name
+            else:
+                _logger.warning("Picking has no partner_id!")
 
     def action_teslimat_olustur(self) -> dict:
         """Teslimat belgesi oluştur, SMS gönder ve yönlendir.
