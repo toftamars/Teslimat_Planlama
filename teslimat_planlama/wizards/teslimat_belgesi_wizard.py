@@ -304,21 +304,38 @@ class TeslimatBelgesiWizard(models.TransientModel):
         
         check_pazar_gunu_validation(self.teslimat_tarihi)
 
-        # Kapasite kontrolü - Araç (Günlük maksimum 7 teslimat)
-        bugun_teslimatlar = self.env["teslimat.belgesi"].search_count(
-            [
-                ("teslimat_tarihi", "=", self.teslimat_tarihi),
-                ("arac_id", "=", self.arac_id.id),
-                ("durum", "in", ["taslak", "bekliyor", "hazir", "yolda"]),
-            ]
-        )
-        if bugun_teslimatlar >= self.arac_id.gunluk_teslimat_limiti:
-            raise UserError(
-                _(
-                    f"Araç kapasitesi dolu! Seçilen tarih için araç kapasitesi: "
-                    f"{bugun_teslimatlar}/{self.arac_id.gunluk_teslimat_limiti}"
+        # Kapasite kontrolü - Araç + İlçe (Günlük maksimum 7 teslimat)
+        # İlçe bazlı kontrol: Aynı araç aynı gün farklı ilçelere gidebilir
+        domain = [
+            ("teslimat_tarihi", "=", self.teslimat_tarihi),
+            ("arac_id", "=", self.arac_id.id),
+            ("durum", "in", ["taslak", "bekliyor", "hazir", "yolda"]),
+        ]
+        
+        # Eğer ilçe seçiliyse ilçe bazlı kontrol yap
+        if self.ilce_id:
+            domain.append(("ilce_id", "=", self.ilce_id.id))
+            bugun_teslimatlar = self.env["teslimat.belgesi"].search_count(domain)
+            
+            if bugun_teslimatlar >= self.arac_id.gunluk_teslimat_limiti:
+                raise UserError(
+                    _(
+                        f"Araç kapasitesi dolu! Seçilen tarih için "
+                        f"{self.ilce_id.name} ilçesine araç kapasitesi: "
+                        f"{bugun_teslimatlar}/{self.arac_id.gunluk_teslimat_limiti}"
+                    )
                 )
-            )
+        else:
+            # İlçe yoksa (küçük araçlar için) genel kontrol
+            bugun_teslimatlar = self.env["teslimat.belgesi"].search_count(domain)
+            
+            if bugun_teslimatlar >= self.arac_id.gunluk_teslimat_limiti:
+                raise UserError(
+                    _(
+                        f"Araç kapasitesi dolu! Seçilen tarih için araç kapasitesi: "
+                        f"{bugun_teslimatlar}/{self.arac_id.gunluk_teslimat_limiti}"
+                    )
+                )
 
         # Kapasite kontrolü - İlçe-Gün (eğer ilçe seçiliyse)
         if self.ilce_id:
