@@ -7,18 +7,20 @@
               groups="base.group_user"
               web_icon="teslimat_planlama,static/description/icon.svg"/>
 
-    <!-- Ana Sayfa - Kapasite Sorgulama -->
+    <!-- Ana Sayfa - Kapasite Sorgulama (Tüm internal user'lar) -->
     <menuitem id="menu_teslimat_ana_sayfa"
               name="📊 Ana Sayfa"
               parent="menu_teslimat_planlama_root"
               action="action_teslimat_ana_sayfa"
+              groups="base.group_user"
               sequence="10"/>
 
-    <!-- Teslimat Belgeleri -->
+    <!-- Teslimat Belgeleri (Tüm internal user'lar) -->
     <menuitem id="menu_teslimat_belgeleri"
               name="📄 Teslimat Belgeleri"
               parent="menu_teslimat_planlama_root"
               action="action_teslimat_belgesi"
+              groups="base.group_user"
               sequence="20"/>
 
     <!-- Sürücüler için Özel Menü -->
