@@ -21,8 +21,18 @@ class TeslimatAnaSayfaGun(models.TransientModel):
     teslimat_sayisi = fields.Integer(string="Teslimat Sayısı", default=0)
     toplam_kapasite = fields.Integer(string="Toplam Kapasite", default=0)
     kalan_kapasite = fields.Integer(string="Kalan Kapasite", default=0)
+    doluluk_yuzdesi = fields.Float(string="Doluluk %", compute="_compute_doluluk_yuzdesi", store=False)
     durum_text = fields.Char(string="Durum")
     tarih_str = fields.Char(string="Tarih", compute="_compute_tarih_str")
+
+    @api.depends("teslimat_sayisi", "toplam_kapasite")
+    def _compute_doluluk_yuzdesi(self):
+        """Doluluk yüzdesini hesapla."""
+        for rec in self:
+            if rec.toplam_kapasite > 0:
+                rec.doluluk_yuzdesi = (rec.teslimat_sayisi / rec.toplam_kapasite) * 100
+            else:
+                rec.doluluk_yuzdesi = 0.0
 
     @api.depends("tarih")
     def _compute_tarih_str(self):

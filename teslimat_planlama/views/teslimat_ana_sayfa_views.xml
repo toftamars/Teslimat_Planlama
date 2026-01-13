@@ -169,10 +169,8 @@
                                             <field name="tarih_str" string="Tarih" readonly="1"/>
                                             <field name="teslimat_sayisi" readonly="1" string="Teslimat"/>
                                             <field name="kalan_kapasite" readonly="1" string="Kalan"/>
+                                            <field name="doluluk_yuzdesi" readonly="1" string="Doluluk %" widget="percentage"/>
                                             <field name="durum_text" readonly="1" string="Durum"/>
-                                            <button name="action_teslimat_olustur" type="object"
-                                                    string="Teslimat Olustur" icon="fa-calendar-plus-o"
-                                                    class="btn-success btn-sm"/>
                                 </tree>
                             </field>
                                 </div>
