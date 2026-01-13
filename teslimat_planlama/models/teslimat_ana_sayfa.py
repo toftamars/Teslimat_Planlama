@@ -555,8 +555,20 @@ class TeslimatAnaSayfa(models.TransientModel):
                         if kalan_kapasite <= 0 and not yonetici_mi:
                             continue
 
+                        # Araç kapatma kontrolü
+                        arac_kapali = False
+                        if record.arac_id:
+                            kapali, kapatma = self.env["teslimat.arac.kapatma"].arac_kapali_mi(
+                                record.arac_id.id, tarih
+                            )
+                            if kapali and kapatma:
+                                arac_kapali = True
+
                         # Durum hesaplama
-                        if kalan_kapasite < 0:
+                        if arac_kapali:
+                            # Araç kapalı durumu (öncelikli)
+                            durum_text = "🚫 Kapalı"
+                        elif kalan_kapasite < 0:
                             # Aşım durumu - teslimat sayısı kapasiteyi aşmış
                             durum_text = f"⚠️ Aşım ({teslimat_sayisi}/{toplam_kapasite})"
                         elif kalan_kapasite > 5:
