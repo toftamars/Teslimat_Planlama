@@ -556,7 +556,10 @@ class TeslimatAnaSayfa(models.TransientModel):
                             continue
 
                         # Durum hesaplama
-                        if kalan_kapasite > 5:
+                        if kalan_kapasite < 0:
+                            # Aşım durumu - teslimat sayısı kapasiteyi aşmış
+                            durum_text = f"⚠️ Aşım ({teslimat_sayisi}/{toplam_kapasite})"
+                        elif kalan_kapasite > 5:
                             durum_text = "🟢 Boş"
                         elif kalan_kapasite > 0:
                             durum_text = "🟡 Dolu Yakın"

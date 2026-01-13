@@ -50,10 +50,13 @@ class TeslimatAnaSayfaGun(models.TransientModel):
 
     @api.depends("teslimat_sayisi", "toplam_kapasite")
     def _compute_doluluk_yuzdesi(self):
-        """Doluluk yüzdesini hesapla."""
+        """Doluluk yüzdesini hesapla - Maksimum %100."""
         for rec in self:
             if rec.toplam_kapasite > 0:
-                rec.doluluk_yuzdesi = (rec.teslimat_sayisi / rec.toplam_kapasite) * 100
+                # Doluluk yüzdesi hesapla
+                yuzde = (rec.teslimat_sayisi / rec.toplam_kapasite) * 100
+                # Maksimum %100 ile sınırla (aşım durumunda)
+                rec.doluluk_yuzdesi = min(yuzde, 100.0)
             else:
                 rec.doluluk_yuzdesi = 0.0
 
