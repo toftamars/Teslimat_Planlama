@@ -199,18 +199,26 @@ class TeslimatBelgesi(models.Model):
 
         Teslim edilmiş belgeler düzenlenemez (sadece yöneticiler için izin var).
         """
+        # HER WRITE İŞLEMİNİ LOGLA
+        _logger.info("=== WRITE CALLED ON TESLIMAT BELGESI ===")
+        _logger.info("Records: %s", [r.name for r in self])
+        _logger.info("Vals keys: %s", list(vals.keys()))
+        _logger.info("Vals: %s", vals)
+
         for record in self:
             # Teslim edilmiş belgelerde değişiklik yapılamaz
             # AMA: Eğer wizard tamamlama işleminden geliyorsa (durum değişikliği), izin ver
             if record.durum == 'teslim_edildi':
                 _logger.info("=== WRITE TO COMPLETED DELIVERY ===")
-                _logger.info("Record: %s", record.name)
-                _logger.info("Vals keys: %s", list(vals.keys()))
-                _logger.info("Vals: %s", vals)
+                _logger.info("Record: %s (durum: %s)", record.name, record.durum)
 
                 # Sadece wizard'dan gelen alanları kontrol et
-                wizard_fields = {'durum', 'gercek_teslimat_saati', 'teslim_alan_kisi',
-                                'teslimat_fotografi', 'fotograf_dosya_adi', 'notlar'}
+                # message_main_attachment_id: mail modülünden, message_post çağrısı sonrası otomatik eklenir
+                wizard_fields = {
+                    'durum', 'gercek_teslimat_saati', 'teslim_alan_kisi',
+                    'teslimat_fotografi', 'fotograf_dosya_adi', 'notlar',
+                    'message_main_attachment_id'  # mail.thread - message_post sonrası otomatik
+                }
                 extra_fields = set(vals.keys()) - wizard_fields
 
                 if extra_fields:
