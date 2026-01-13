@@ -271,6 +271,92 @@ class TeslimatBelgesi(models.Model):
         
         return super(TeslimatBelgesi, self).unlink()
 
+    @api.constrains("teslimat_tarihi", "arac_id", "ilce_id")
+    def _check_teslimat_validations(self):
+        """Teslimat belgesi validasyonları.
+
+        - Pazar günü kontrolü
+        - İlçe-gün eşleşmesi kontrolü (yönetici ve küçük araçlar hariç)
+        - Araç kapasitesi kontrolü
+        """
+        from .teslimat_utils import is_pazar_gunu, get_gun_kodu, is_manager
+
+        for record in self:
+            # Teslim edilmiş veya iptal belgeleri kontrol etme
+            if record.durum in ['teslim_edildi', 'iptal']:
+                continue
+
+            # Pazar günü kontrolü
+            if is_pazar_gunu(record.teslimat_tarihi):
+                raise ValidationError(
+                    _("⛔ Pazar günü teslimat yapılamaz!\n\n"
+                      "Lütfen farklı bir gün seçin.")
+                )
+
+            # Küçük araç kontrolü
+            small_vehicle = record.arac_id and record.arac_id.arac_tipi in [
+                "kucuk_arac_1", "kucuk_arac_2", "ek_arac"
+            ]
+
+            # Yönetici mi?
+            yonetici_mi = is_manager(self.env)
+
+            # İlçe-gün eşleşmesi kontrolü (yönetici ve küçük araçlar hariç)
+            if not yonetici_mi and not small_vehicle and record.ilce_id and record.arac_id:
+                gun_kodu = get_gun_kodu(record.teslimat_tarihi)
+                if gun_kodu:
+                    gun = self.env["teslimat.gun"].search(
+                        [("gun_kodu", "=", gun_kodu)], limit=1
+                    )
+                    if gun:
+                        # Genel ilçe-gün eşleşmesi kontrolü
+                        gun_ilce = self.env["teslimat.gun.ilce"].search(
+                            [
+                                ("gun_id", "=", gun.id),
+                                ("ilce_id", "=", record.ilce_id.id),
+                                ("tarih", "=", False),  # Genel kurallar
+                            ],
+                            limit=1,
+                        )
+
+                        if not gun_ilce:
+                            raise ValidationError(
+                                _(f"⛔ İlçe-Gün Eşleşmesi Hatası!\n\n"
+                                  f"📍 İlçe: {record.ilce_id.name}\n"
+                                  f"📅 Gün: {gun.name}\n\n"
+                                  f"Bu ilçeye bu gün teslimat yapılamaz.\n"
+                                  f"Lütfen uygun bir gün seçin.")
+                            )
+
+            # Araç kapasitesi kontrolü
+            if record.arac_id and record.teslimat_tarihi:
+                domain = [
+                    ("teslimat_tarihi", "=", record.teslimat_tarihi),
+                    ("arac_id", "=", record.arac_id.id),
+                    ("durum", "in", ["taslak", "bekliyor", "hazir", "yolda"]),
+                    ("id", "!=", record.id),  # Kendisini hariç tut
+                ]
+
+                # İlçe bazlı kontrol
+                if record.ilce_id:
+                    domain.append(("ilce_id", "=", record.ilce_id.id))
+
+                mevcut_teslimat_sayisi = self.env["teslimat.belgesi"].search_count(domain)
+
+                # +1 ekle (kendisi için)
+                toplam = mevcut_teslimat_sayisi + 1
+
+                if toplam > record.arac_id.gunluk_teslimat_limiti:
+                    ilce_bilgi = f" - {record.ilce_id.name}" if record.ilce_id else ""
+                    raise ValidationError(
+                        _(f"⛔ Araç Kapasitesi Dolu!\n\n"
+                          f"🚚 Araç: {record.arac_id.name}{ilce_bilgi}\n"
+                          f"📅 Tarih: {record.teslimat_tarihi.strftime('%d.%m.%Y')}\n"
+                          f"📦 Kapasite: {mevcut_teslimat_sayisi}/{record.arac_id.gunluk_teslimat_limiti}\n\n"
+                          f"Bu tarih için araç kapasitesi dolmuştur.\n"
+                          f"Lütfen farklı bir tarih veya araç seçin.")
+                    )
+
     @api.depends("durum")
     def _compute_is_readonly(self) -> None:
         """Teslim edilmiş belgeler salt okunurdur."""
