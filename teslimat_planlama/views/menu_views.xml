@@ -1,25 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Ana Menü - Default olarak Ana Sayfa açılacak -->
+    <!-- Ana Menü - Yönetici ve User için Ana Sayfa açılacak -->
     <menuitem id="menu_teslimat_planlama_root"
               name="Teslimat"
               sequence="75"
               action="action_teslimat_ana_sayfa"
-              web_icon="teslimat_planlama,static/description/icon.svg"/>
+              web_icon="teslimat_planlama,static/description/icon.svg"
+              groups="teslimat_planlama.group_teslimat_user,teslimat_planlama.group_teslimat_manager"/>
 
-    <!-- Teslimat Belgeleri -->
+    <!-- Ana Menü - Sürücü için Bugünkü Teslimatlarım açılacak -->
+    <menuitem id="menu_teslimat_planlama_root_driver"
+              name="Teslimat"
+              sequence="75"
+              action="action_teslimat_belgesi_surucu"
+              web_icon="teslimat_planlama,static/description/icon.svg"
+              groups="teslimat_planlama.group_teslimat_driver"/>
+
+    <!-- Teslimat Belgeleri - Sürücü hariç -->
     <menuitem id="menu_teslimat_belgeleri"
               name="📄 Teslimat Belgeleri"
               parent="menu_teslimat_planlama_root"
               action="action_teslimat_belgesi"
-              sequence="20"/>
+              sequence="20"
+              groups="teslimat_planlama.group_teslimat_user,teslimat_planlama.group_teslimat_manager"/>
 
-    <!-- Sürücüler için Özel Menü -->
+    <!-- Bugünkü Teslimatlarım - Sadece sürücü için parent farklı -->
     <menuitem id="menu_teslimat_belgeleri_surucu"
               name="🚗 Bugünkü Teslimatlarım"
-              parent="menu_teslimat_planlama_root"
+              parent="menu_teslimat_planlama_root_driver"
               action="action_teslimat_belgesi_surucu"
-              sequence="25"
+              sequence="10"
               groups="teslimat_planlama.group_teslimat_driver"/>
 </odoo>
 
