@@ -26,10 +26,8 @@ class TeslimatAnaSayfa(models.TransientModel):
     state_id = fields.Many2one(
         "res.country.state",
         string="İl",
-        domain=[("country_id.code", "=", "TR"), ("name", "=", "Istanbul")],
-        default=lambda self: self.env["res.country.state"].search(
-            [("country_id.code", "=", "TR"), ("name", "=", "Istanbul")], limit=1
-        ),
+        domain=[("country_id.code", "=", "TR")],
+        # Default değer default_get'te ayarlanıyor
     )
     ilce_id = fields.Many2one(
         "teslimat.ilce",
@@ -45,7 +43,7 @@ class TeslimatAnaSayfa(models.TransientModel):
         # İstanbul'u varsayılan olarak seç
         if 'state_id' in fields_list and not res.get('state_id'):
             istanbul = self.env["res.country.state"].search(
-                [("country_id.code", "=", "TR"), ("name", "=", "Istanbul")], limit=1
+                [("country_id.code", "=", "TR"), ("name", "=", "İstanbul")], limit=1
             )
             if istanbul:
                 res['state_id'] = istanbul.id
@@ -59,13 +57,13 @@ class TeslimatAnaSayfa(models.TransientModel):
         
         # İstanbul'u otomatik seç
         istanbul = self.env["res.country.state"].search(
-            [("country_id.code", "=", "TR"), ("name", "=", "Istanbul")], limit=1
+            [("country_id.code", "=", "TR"), ("name", "=", "İstanbul")], limit=1
         )
         if istanbul:
             self.state_id = istanbul
         
-        # İl domain'ini güncelle - sadece İstanbul
-        return {"domain": {"state_id": [("country_id.code", "=", "TR"), ("name", "=", "Istanbul")]}}
+        # İl domain'ini sadece Türkiye ile sınırla
+        return {"domain": {"state_id": [("country_id.code", "=", "TR")]}}
 
     @api.onchange("state_id")
     def _onchange_state_id(self):
