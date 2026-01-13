@@ -44,12 +44,12 @@
         'views/teslimat_ilce_views.xml',
         'views/teslimat_gun_views.xml',
         'views/teslimat_arac_views.xml',
-        'views/teslimat_arac_kapatma_views.xml',
-        
+
         # Action'ları içeren Views (ONCE yukle - menu bunları referans ediyor)
         'views/teslimat_ana_sayfa_views.xml',  # action_teslimat_ana_sayfa
         'views/teslimat_belgesi_views.xml',     # action_teslimat_belgesi, action_teslimat_belgesi_surucu
-        
+        'views/teslimat_arac_kapatma_views.xml',  # action_teslimat_arac_kapatma
+
         # Menu (Tüm action'lar yuklendikten sonra)
         'views/menu_views.xml',
         
