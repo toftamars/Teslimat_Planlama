@@ -364,9 +364,9 @@ class TeslimatArac(models.Model):
         
         for arac in araclar:
             try:
-            if arac.arac_tipi:
+                if arac.arac_tipi:
                     eski_sayisi = len(arac.uygun_ilceler)
-                arac._update_uygun_ilceler()
+                    arac._update_uygun_ilceler()
                     yeni_sayisi = len(arac.uygun_ilceler)
                     
                     if eski_sayisi != yeni_sayisi:
