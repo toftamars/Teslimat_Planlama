@@ -458,15 +458,37 @@ class TeslimatBelgesi(models.Model):
         
         self.transfer_urun_ids = [(5, 0, 0)] + lines
 
+    def action_yolda_yap(self) -> None:
+        """Teslimat durumunu 'yolda' yap (sürücüler için).
+
+        Sürücü yola çıktığında bu butona basar.
+        Durum 'hazir' → 'yolda' olur.
+        """
+        self.ensure_one()
+
+        if self.durum != "hazir":
+            raise UserError(
+                _("Sadece 'Hazır' durumundaki teslimatlar yola çıkarılabilir.")
+            )
+
+        # Durumu yolda yap
+        self.durum = "yolda"
+
+        # Chatter'a not ekle
+        self.message_post(
+            body=_("🚗 Sürücü yola çıktı. Teslimat yolda."),
+            subject=_("Teslimat Yolda"),
+        )
+
     def action_teslimat_tamamla(self) -> dict:
         """Teslimat tamamlama wizard'ını aç."""
         self.ensure_one()
-        
+
         if self.durum not in ["hazir", "yolda"]:
             raise UserError(
                 _("Sadece 'Hazır' veya 'Yolda' durumundaki teslimatlar tamamlanabilir.")
             )
-        
+
         # Wizard'ı aç
         return {
             "name": _("Teslimatı Tamamla"),

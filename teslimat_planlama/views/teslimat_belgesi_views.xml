@@ -63,14 +63,25 @@
         <field name="arch" type="xml">
             <form string="Teslimat Belgesi" create="false">
                 <header>
-                    <button name="action_teslimat_tamamla" string="✅ Teslimatı Tamamla" type="object" 
-                            class="oe_highlight" icon="fa-check"
-                            attrs="{'invisible': [('durum', 'not in', ['hazir', 'yolda'])]}"
+                    <!-- Sürücü: Yolda Butonu (sadece hazir durumunda görünür) -->
+                    <button name="action_yolda_yap" string="🚗 Yolda" type="object"
+                            class="oe_highlight" icon="fa-road"
+                            attrs="{'invisible': [('durum', '!=', 'hazir')]}"
                             groups="teslimat_planlama.group_teslimat_driver"/>
-                    <button name="action_yol_tarifi" string="🗺️ Yol Tarifi" type="object" 
+
+                    <!-- Sürücü: Yol Tarifi (sadece yolda durumunda görünür) -->
+                    <button name="action_yol_tarifi" string="🗺️ Yol Tarifi" type="object"
                             class="btn-primary" icon="fa-map-marker"
-                            attrs="{'invisible': ['|', ('durum', '=', 'teslim_edildi'), ('durum', '=', 'iptal')]}"/>
-                    <field name="durum" widget="statusbar" 
+                            attrs="{'invisible': [('durum', '!=', 'yolda')]}"
+                            groups="teslimat_planlama.group_teslimat_driver"/>
+
+                    <!-- Sürücü: Teslimatı Tamamla (sadece yolda durumunda görünür) -->
+                    <button name="action_teslimat_tamamla" string="✅ Teslimatı Tamamla" type="object"
+                            class="oe_highlight" icon="fa-check"
+                            attrs="{'invisible': [('durum', '!=', 'yolda')]}"
+                            groups="teslimat_planlama.group_teslimat_driver"/>
+
+                    <field name="durum" widget="statusbar"
                            statusbar_visible="taslak,bekliyor,hazir,yolda,teslim_edildi"
                            clickable="False"/>
                 </header>
