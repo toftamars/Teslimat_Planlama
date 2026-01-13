@@ -20,6 +20,10 @@ class TeslimatIlce(models.Model):
     _description = "Teslimat İlçe Yönetimi"
     _order = "state_id, name"
 
+    _sql_constraints = [
+        ('name_state_unique', 'UNIQUE(name, state_id)', 'Aynı şehirde aynı isimde iki ilçe olamaz!'),
+    ]
+
     name = fields.Char(string="İlçe Adı", required=True)
     state_id = fields.Many2one("res.country.state", string="Şehir (İl)", required=True, domain=[("country_id.code", "=", "TR")])
     # sehir_id field removed

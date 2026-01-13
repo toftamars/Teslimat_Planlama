@@ -626,18 +626,17 @@ class TeslimatAnaSayfa(models.TransientModel):
                 ("durum", "!=", "iptal"),  # Sadece iptal hariç
             ]
 
-            _logger.info("🔍 Kapasite hesaplama - Araç: %s, İlçe: %s",
-                        record.arac_id.name, record.ilce_id.name)
-            _logger.info("📋 Teslimat domain: %s", teslimat_domain)
+            # DEBUG: Kapasite hesaplama (production'da kapatılmalı)
+            if _logger.isEnabledFor(logging.DEBUG):
+                _logger.debug("Capacity calc: vehicle=%s, district=%s",
+                            record.arac_id.name, record.ilce_id.name)
 
             tum_teslimatlar = self.env["teslimat.belgesi"].search(teslimat_domain)
-            _logger.info("📦 Toplam %d aktif teslimat bulundu", len(tum_teslimatlar))
 
             teslimat_sayisi_dict = {}
             for teslimat in tum_teslimatlar:
                 tarih = teslimat.teslimat_tarihi
                 teslimat_sayisi_dict[tarih] = teslimat_sayisi_dict.get(tarih, 0) + 1
-                _logger.info("  - %s: %s (durum: %s)", teslimat.name, tarih, teslimat.durum)
 
             # Gün kodları için mapping
             gun_kodu_map = GUN_KODU_MAP

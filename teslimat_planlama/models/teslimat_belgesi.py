@@ -199,18 +199,16 @@ class TeslimatBelgesi(models.Model):
 
         Teslim edilmiş belgeler düzenlenemez (sadece yöneticiler için izin var).
         """
-        # HER WRITE İŞLEMİNİ LOGLA
-        _logger.info("=== WRITE CALLED ON TESLIMAT BELGESI ===")
-        _logger.info("Records: %s", [r.name for r in self])
-        _logger.info("Vals keys: %s", list(vals.keys()))
-        _logger.info("Vals: %s", vals)
+        # DEBUG: Write işlemlerini logla (Production'da kapatılmalı)
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug("WRITE: Records=%s, Keys=%s", [r.name for r in self], list(vals.keys()))
 
         for record in self:
-            # Teslim edilmiş belgelerde değişiklik yapılamaz
+            # Teslim edilmiş ve iptal edilmiş belgelerde değişiklik yapılamaz
             # AMA: Eğer wizard tamamlama işleminden geliyorsa (durum değişikliği), izin ver
-            if record.durum == 'teslim_edildi':
-                _logger.info("=== WRITE TO COMPLETED DELIVERY ===")
-                _logger.info("Record: %s (durum: %s)", record.name, record.durum)
+            if record.durum in ['teslim_edildi', 'iptal']:
+                if _logger.isEnabledFor(logging.DEBUG):
+                    _logger.debug("WRITE to archived: %s (status=%s)", record.name, record.durum)
 
                 # Sadece wizard'dan gelen alanları kontrol et
                 # message_main_attachment_id: mail modülünden, message_post çağrısı sonrası otomatik eklenir
@@ -222,7 +220,7 @@ class TeslimatBelgesi(models.Model):
                 extra_fields = set(vals.keys()) - wizard_fields
 
                 if extra_fields:
-                    _logger.error("❌ Extra fields not in whitelist: %s", extra_fields)
+                    _logger.warning("Archived record edit attempt: %s, extra_fields=%s", record.name, extra_fields)
                     # Wizard dışı değişiklik - engelle
                     raise UserError(
                         _(
@@ -234,8 +232,7 @@ class TeslimatBelgesi(models.Model):
                             "Bu belge arşivlenmiştir ve değiştirilemez."
                         )
                     )
-                else:
-                    _logger.info("✅ All fields are in whitelist - allowing write")
+                # Whitelist OK - no log needed
 
         return super(TeslimatBelgesi, self).write(vals)
     
@@ -271,13 +268,14 @@ class TeslimatBelgesi(models.Model):
         
         return super(TeslimatBelgesi, self).unlink()
 
-    @api.constrains("teslimat_tarihi", "arac_id", "ilce_id")
+    @api.constrains("teslimat_tarihi", "arac_id", "ilce_id", "durum")
     def _check_teslimat_validations(self):
         """Teslimat belgesi validasyonları.
 
         - Pazar günü kontrolü
         - İlçe-gün eşleşmesi kontrolü (yönetici ve küçük araçlar hariç)
         - Araç kapasitesi kontrolü
+        - Durum değişikliklerinde de tetiklenir (iptal -> hazir bypass önleme)
         """
         from .teslimat_utils import is_pazar_gunu, get_gun_kodu, is_manager
 

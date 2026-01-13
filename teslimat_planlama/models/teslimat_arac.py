@@ -71,12 +71,15 @@ class TeslimatArac(models.Model):
 
     @api.depends("teslimat_ids", "teslimat_ids.durum", "teslimat_ids.teslimat_tarihi")
     def _compute_mevcut_kapasite(self) -> None:
-        """Bugün için mevcut kapasiteyi hesapla."""
+        """Bugün için mevcut kapasiteyi hesapla.
+
+        İptal hariç TÜM durumlar kapasite doldurur (teslim_edildi dahil).
+        """
         for record in self:
             bugun = fields.Date.today()
             bugun_teslimatlar = record.teslimat_ids.filtered(
                 lambda t: t.teslimat_tarihi == bugun
-                and t.durum in ["hazir", "yolda"]
+                and t.durum != "iptal"  # Sadece iptal hariç
             )
             record.mevcut_kapasite = len(bugun_teslimatlar)
 
@@ -87,6 +90,10 @@ class TeslimatArac(models.Model):
             record.kalan_kapasite = (
                 record.gunluk_teslimat_limiti - record.mevcut_kapasite
             )
+
+    _sql_constraints = [
+        ('name_unique', 'UNIQUE(name)', 'Araç adı benzersiz olmalıdır!'),
+    ]
 
     @api.constrains("gunluk_teslimat_limiti")
     def _check_gunluk_limit(self) -> None:
