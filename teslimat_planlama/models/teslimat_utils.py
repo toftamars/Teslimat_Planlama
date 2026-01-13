@@ -27,6 +27,18 @@ GUN_ESLESMESI = {
     "Sunday": "Pazar",
 }
 
+# Forecasting constants
+FORECAST_DAYS = 30  # Number of days to show in available days list
+
+# Delivery status constants
+ACTIVE_STATUSES = ["taslak", "bekliyor", "hazir", "yolda", "teslim_edildi"]
+IN_TRANSIT_STATUSES = ["hazir", "yolda"]
+CANCELLED_STATUS = "iptal"
+COMPLETED_STATUS = "teslim_edildi"
+
+# Vehicle type constants
+SMALL_VEHICLE_TYPES = ["kucuk_arac_1", "kucuk_arac_2", "ek_arac"]
+
 
 def get_gun_kodu(tarih: date) -> Optional[str]:
     """Tarih için gün kodunu döndür.
@@ -58,14 +70,60 @@ def is_pazar_gunu(tarih: date) -> bool:
 
 def is_manager(env) -> bool:
     """Kullanıcının yönetici olup olmadığını kontrol et.
-    
+
     Args:
         env: Odoo environment
-        
+
     Returns:
         bool: Yönetici ise True
     """
     return env.user.has_group("teslimat_planlama.group_teslimat_manager")
+
+
+def is_small_vehicle(arac) -> bool:
+    """Araç küçük araç mı kontrol et.
+
+    Args:
+        arac: Araç kaydı (teslimat.arac)
+
+    Returns:
+        bool: Küçük araç ise True
+    """
+    if not arac:
+        return False
+    return arac.arac_tipi in SMALL_VEHICLE_TYPES
+
+
+def get_istanbul_state(env):
+    """İstanbul şehrini döndür (cached).
+
+    Args:
+        env: Odoo environment
+
+    Returns:
+        res.country.state: İstanbul kaydı veya None
+    """
+    # Cache key
+    cache_key = '_istanbul_state_cache'
+
+    # Check if already cached in environment context
+    if hasattr(env, 'context') and cache_key in env.context:
+        state_id = env.context[cache_key]
+        if state_id:
+            return env["res.country.state"].browse(state_id)
+        return None
+
+    # Search for Istanbul
+    istanbul = env["res.country.state"].search(
+        [("country_id.code", "=", "TR"), ("name", "=", "İstanbul")],
+        limit=1
+    )
+
+    # Cache the result (store ID to avoid recordset serialization issues)
+    if istanbul:
+        env.context = dict(env.context, **{cache_key: istanbul.id})
+
+    return istanbul
 
 
 def validate_arac_ilce_eslesmesi(arac, ilce, bypass_for_manager: bool = True) -> tuple[bool, str]:
@@ -87,7 +145,7 @@ def validate_arac_ilce_eslesmesi(arac, ilce, bypass_for_manager: bool = True) ->
         return True, "Yönetici yetkisi - tüm eşleştirmeler geçerli ✓"
     
     # Küçük araçlar her yere gidebilir
-    if arac.arac_tipi in ["kucuk_arac_1", "kucuk_arac_2", "ek_arac"]:
+    if arac.arac_tipi in SMALL_VEHICLE_TYPES:
         return True, "Küçük araç - tüm ilçelere gidebilir"
     
     # Yaka bazlı kontrol

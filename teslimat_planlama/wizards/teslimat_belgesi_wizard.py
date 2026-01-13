@@ -10,6 +10,7 @@ from odoo.addons.teslimat_planlama.models.teslimat_ilce import (
     ANADOLU_ILCELERI,
     AVRUPA_ILCELERI,
 )
+from odoo.addons.teslimat_planlama.models.teslimat_utils import is_small_vehicle
 
 _logger = logging.getLogger(__name__)
 
@@ -225,7 +226,7 @@ class TeslimatBelgesiWizard(models.TransientModel):
         arac_tipi = self.arac_id.arac_tipi
         
         # Araç tipine göre filtrele
-        if arac_tipi in ["kucuk_arac_1", "kucuk_arac_2", "ek_arac"]:
+        if is_small_vehicle(self.arac_id):
             uygun_ilce_ids = tum_ilceler.ids
         elif arac_tipi == "anadolu_yakasi":
             uygun_ilce_ids = tum_ilceler.filtered(

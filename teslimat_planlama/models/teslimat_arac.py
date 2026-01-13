@@ -5,6 +5,8 @@ from typing import List, Optional
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 
+from .teslimat_utils import is_small_vehicle
+
 _logger = logging.getLogger(__name__)
 
 
@@ -146,7 +148,7 @@ class TeslimatArac(models.Model):
                 continue
 
             # Küçük araçlar ve ek araç tüm ilçelere gidebilir
-            if record.arac_tipi in ["kucuk_arac_1", "kucuk_arac_2", "ek_arac"]:
+            if is_small_vehicle(record):
                 # Tüm aktif ilçeleri al
                 tum_ilceler = self.env["teslimat.ilce"].search(
                     [("aktif", "=", True), ("teslimat_aktif", "=", True)]
@@ -252,7 +254,7 @@ class TeslimatArac(models.Model):
                 continue
 
             # Küçük araçlar ve ek araç için kontrol yok
-            if record.arac_tipi in ["kucuk_arac_1", "kucuk_arac_2", "ek_arac"]:
+            if is_small_vehicle(record):
                 continue
 
             # Yaka bazlı araçlar için kontrol
