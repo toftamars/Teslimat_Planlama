@@ -167,7 +167,7 @@
                                             <field name="ana_sayfa_id" invisible="1"/>
                                             <field name="toplam_kapasite" invisible="1"/>
                                             <field name="arac_kapali_mi" invisible="1"/>
-                                            <field name="tarih_str" string="📅 Tarih" readonly="1" 
+                                            <field name="tarih_str" string="Tarih" readonly="1" 
                                                    optional="show"/>
                                             <field name="teslimat_sayisi" readonly="1" string="Teslimat" optional="show"/>
                                             <field name="kalan_kapasite" readonly="1" string="Kalan" optional="show"/>
@@ -178,7 +178,7 @@
                                                    optional="show"/>
                                             <field name="kapatan_kisi" readonly="1" string="👤 Kapatan"
                                                    attrs="{'invisible': [('arac_kapali_mi', '=', False)]}"
-                                                   optional="show"/>
+                                                   optional="hide"/>
                                 </tree>
                             </field>
                                 </div>
