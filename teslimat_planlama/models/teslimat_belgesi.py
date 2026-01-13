@@ -207,6 +207,36 @@ class TeslimatBelgesi(models.Model):
         
         teslimat_tarihi = vals.get("teslimat_tarihi", fields.Date.today())
         check_pazar_gunu_validation(teslimat_tarihi, bypass_for_manager=True, env=self.env)
+        
+        # Araç kapatma kontrolü - Yöneticiler bile kapalı araçlara teslimat oluşturamaz
+        arac_id = vals.get("arac_id")
+        if arac_id and teslimat_tarihi:
+            kapali, kapatma = self.env["teslimat.arac.kapatma"].arac_kapali_mi(
+                arac_id, teslimat_tarihi
+            )
+            if kapali and kapatma:
+                sebep_dict = {
+                    "bakim": "Bakım",
+                    "ariza": "Arıza",
+                    "kaza": "Kaza",
+                    "yakit": "Yakıt Sorunu",
+                    "surucu_yok": "Sürücü Yok",
+                    "diger": "Diğer",
+                }
+                sebep_text = sebep_dict.get(kapatma.sebep, kapatma.sebep)
+                kapatan_kisi = kapatma.kapatan_kullanici_id.name or "Bilinmiyor"
+                arac_name = self.env["teslimat.arac"].browse(arac_id).name
+                
+                raise ValidationError(
+                    _(
+                        f"Bu tarihte araç kapalı! Teslimat oluşturulamaz.\n\n"
+                        f"📅 Tarih: {teslimat_tarihi.strftime('%d.%m.%Y')}\n"
+                        f"🚗 Araç: {arac_name}\n"
+                        f"⚠️ Sebep: {sebep_text}\n"
+                        f"👤 Kapatan: {kapatan_kisi}\n"
+                        f"{('📝 Açıklama: ' + kapatma.aciklama) if kapatma.aciklama else ''}"
+                    )
+                )
 
         # Günlük teslimat limiti kontrolü (sadece user grubu için)
         user = self.env.user
@@ -373,6 +403,41 @@ class TeslimatBelgesi(models.Model):
                     _("⛔ Pazar günü teslimat yapılamaz!\n\n"
                       "Lütfen farklı bir gün seçin.")
                 )
+            
+            # Araç kapatma kontrolü - Tarih veya araç değişikliğinde kontrol et
+            if 'teslimat_tarihi' in vals or 'arac_id' in vals or record.teslimat_tarihi or record.arac_id:
+                teslimat_tarihi = vals.get('teslimat_tarihi', record.teslimat_tarihi)
+                arac_id = vals.get('arac_id', record.arac_id.id if record.arac_id else False)
+                
+                if arac_id and teslimat_tarihi:
+                    kapali, kapatma = self.env["teslimat.arac.kapatma"].arac_kapali_mi(
+                        arac_id, teslimat_tarihi
+                    )
+                    if kapali and kapatma:
+                        sebep_dict = {
+                            "bakim": "Bakım",
+                            "ariza": "Arıza",
+                            "kaza": "Kaza",
+                            "yakit": "Yakıt Sorunu",
+                            "surucu_yok": "Sürücü Yok",
+                            "diger": "Diğer",
+                        }
+                        sebep_text = sebep_dict.get(kapatma.sebep, kapatma.sebep)
+                        kapatan_kisi = kapatma.kapatan_kullanici_id.name or "Bilinmiyor"
+                        arac_name = record.arac_id.name if record.arac_id else self.env["teslimat.arac"].browse(arac_id).name
+                        
+                        _logger.error("❌ ARAÇ KAPALI! Teslimat tarihi değiştirilemez!")
+                        raise ValidationError(
+                            _(
+                                f"⛔ Bu tarihte araç kapalı! Teslimat oluşturulamaz veya tarih değiştirilemez.\n\n"
+                                f"📅 Tarih: {teslimat_tarihi.strftime('%d.%m.%Y')}\n"
+                                f"🚗 Araç: {arac_name}\n"
+                                f"⚠️ Sebep: {sebep_text}\n"
+                                f"👤 Kapatan: {kapatan_kisi}\n"
+                                f"{('📝 Açıklama: ' + kapatma.aciklama) if kapatma.aciklama else ''}\n\n"
+                                f"Lütfen başka bir tarih seçin."
+                            )
+                        )
 
             # Küçük araç kontrolü
             small_vehicle = record.arac_id and record.arac_id.arac_tipi in [

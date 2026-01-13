@@ -361,6 +361,35 @@ class TeslimatBelgesiWizard(models.TransientModel):
         from ..models.teslimat_utils import check_pazar_gunu_validation
         
         check_pazar_gunu_validation(self.teslimat_tarihi)
+        
+        # Araç kapatma kontrolü
+        if self.arac_id and self.teslimat_tarihi:
+            kapali, kapatma = self.env["teslimat.arac.kapatma"].arac_kapali_mi(
+                self.arac_id.id, self.teslimat_tarihi
+            )
+            if kapali and kapatma:
+                sebep_dict = {
+                    "bakim": "Bakım",
+                    "ariza": "Arıza",
+                    "kaza": "Kaza",
+                    "yakit": "Yakıt Sorunu",
+                    "surucu_yok": "Sürücü Yok",
+                    "diger": "Diğer",
+                }
+                sebep_text = sebep_dict.get(kapatma.sebep, kapatma.sebep)
+                kapatan_kisi = kapatma.kapatan_kullanici_id.name or "Bilinmiyor"
+                
+                raise UserError(
+                    _(
+                        f"Bu tarihte araç kapalı!\n\n"
+                        f"📅 Tarih: {self.teslimat_tarihi.strftime('%d.%m.%Y')}\n"
+                        f"🚗 Araç: {self.arac_id.name}\n"
+                        f"⚠️ Sebep: {sebep_text}\n"
+                        f"👤 Kapatan: {kapatan_kisi}\n"
+                        f"{('📝 Açıklama: ' + kapatma.aciklama) if kapatma.aciklama else ''}\n\n"
+                        f"Lütfen başka bir tarih veya araç seçin."
+                    )
+                )
 
         # Kapasite kontrolü - Araç + İlçe (Günlük maksimum 7 teslimat)
         # İlçe bazlı kontrol: Aynı araç aynı gün farklı ilçelere gidebilir
