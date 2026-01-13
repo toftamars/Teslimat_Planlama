@@ -1,22 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Ana Menü - Yönetici ve User için Ana Sayfa açılacak -->
+    <!-- Ana Menü - Tek root menü -->
     <menuitem id="menu_teslimat_planlama_root"
               name="Teslimat"
               sequence="75"
+              web_icon="teslimat_planlama,static/description/icon.svg"/>
+
+    <!-- Ana Sayfa - Yönetici ve User için -->
+    <menuitem id="menu_teslimat_ana_sayfa"
+              name="🏠 Ana Sayfa"
+              parent="menu_teslimat_planlama_root"
               action="action_teslimat_ana_sayfa"
-              web_icon="teslimat_planlama,static/description/icon.svg"
+              sequence="10"
               groups="teslimat_planlama.group_teslimat_user,teslimat_planlama.group_teslimat_manager"/>
 
-    <!-- Ana Menü - Sürücü için Bugünkü Teslimatlarım açılacak -->
-    <menuitem id="menu_teslimat_planlama_root_driver"
-              name="Teslimat"
-              sequence="75"
-              action="action_teslimat_belgesi_surucu"
-              web_icon="teslimat_planlama,static/description/icon.svg"
-              groups="teslimat_planlama.group_teslimat_driver"/>
-
-    <!-- Teslimat Belgeleri - Sürücü hariç -->
+    <!-- Teslimat Belgeleri - Yönetici ve User için -->
     <menuitem id="menu_teslimat_belgeleri"
               name="📄 Teslimat Belgeleri"
               parent="menu_teslimat_planlama_root"
@@ -24,12 +22,12 @@
               sequence="20"
               groups="teslimat_planlama.group_teslimat_user,teslimat_planlama.group_teslimat_manager"/>
 
-    <!-- Bugünkü Teslimatlarım - Sadece sürücü için parent farklı -->
+    <!-- Bugünkü Teslimatlarım - Sadece sürücü için -->
     <menuitem id="menu_teslimat_belgeleri_surucu"
               name="🚗 Bugünkü Teslimatlarım"
-              parent="menu_teslimat_planlama_root_driver"
+              parent="menu_teslimat_planlama_root"
               action="action_teslimat_belgesi_surucu"
-              sequence="10"
+              sequence="5"
               groups="teslimat_planlama.group_teslimat_driver"/>
 </odoo>
 
