@@ -124,7 +124,12 @@
                     <group attrs="{'readonly': [('is_readonly', '=', True)]}">
                         <group>
                             <field name="musteri_id"/>
-                            <field name="musteri_telefon" widget="phone"/>
+                            <field name="musteri_telefon" widget="phone" 
+                                   string="📞 Müşteri Telefonu"/>
+                            <field name="manuel_telefon" widget="phone"
+                                   string="📱 Telefon (Opsiyonel)"
+                                   attrs="{'invisible': [('manuel_telefon', '=', False)]}"
+                                   help="Wizard'dan girilen opsiyonel telefon numarası"/>
                         </group>
                         <group>
                             <field name="sira_no" readonly="1"/>

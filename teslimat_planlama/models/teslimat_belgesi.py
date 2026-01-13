@@ -46,6 +46,10 @@ class TeslimatBelgesi(models.Model):
     musteri_telefon = fields.Char(
         string="Müşteri Telefon", related="musteri_id.phone", readonly=True
     )
+    manuel_telefon = fields.Char(
+        string="Telefon (Opsiyonel)",
+        help="Wizard'dan girilen opsiyonel telefon numarası"
+    )
 
     # Araç ve İlçe Bilgileri
     arac_id = fields.Many2one(

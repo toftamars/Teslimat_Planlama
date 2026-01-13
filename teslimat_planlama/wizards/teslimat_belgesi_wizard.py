@@ -472,6 +472,7 @@ class TeslimatBelgesiWizard(models.TransientModel):
             "stock_picking_id": self.transfer_id.id if self.transfer_id else False,
             "transfer_no": self.transfer_id.name if self.transfer_id else False,
             "durum": "hazir",  # Teslimat belgesi hazır durumunda oluşturulur
+            "manuel_telefon": self.manuel_telefon if self.manuel_telefon else False,  # Opsiyonel telefon
         }
 
         teslimat = self.env["teslimat.belgesi"].create(vals)
