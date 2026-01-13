@@ -93,6 +93,24 @@ def post_init_hook(cr, registry):
                 _logger.info("✓ Haftalık program uygulandı (gün-ilçe eşleştirmeleri oluşturuldu)")
             else:
                 _logger.warning("İstanbul ili bulunamadı, haftalık program uygulanamadı")
+            
+            # Tüm internal user'lara Teslimat Kullanıcısı grubunu ata
+            try:
+                _logger.info("Teslimat grupları atanıyor...")
+                teslimat_user_group = env.ref('teslimat_planlama.group_teslimat_user')
+                internal_users = env['res.users'].search([
+                    ('share', '=', False),  # Internal users only
+                    ('active', '=', True)
+                ])
+                
+                for user in internal_users:
+                    if teslimat_user_group.id not in user.groups_id.ids:
+                        user.write({'groups_id': [(4, teslimat_user_group.id)]})
+                
+                cr.commit()
+                _logger.info("✓ %s kullanıcıya Teslimat Kullanıcısı grubu atandı", len(internal_users))
+            except Exception as e:
+                _logger.warning("Grup atama hatası (ignored): %s", e)
                 
         except Exception as e:
             _logger.warning("Haftalık program uygulama hatası (ignored): %s", e)

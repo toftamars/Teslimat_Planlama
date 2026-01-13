@@ -7,11 +7,12 @@
             <field name="sequence">75</field>
         </record>
 
-        <!-- Teslimat Kullanıcısı Grubu -->
+        <!-- Teslimat Kullanıcısı Grubu - Varsayılan olarak tüm çalışanlara verilir -->
         <record id="group_teslimat_user" model="res.groups">
             <field name="name">Teslimat Kullanıcısı</field>
             <field name="category_id" ref="teslimat_planlama.module_category_teslimat"/>
             <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+            <field name="comment">Modül kurulduğunda tüm internal user'lara otomatik atanır</field>
         </record>
 
         <!-- Teslimat Sürücüsü Grubu -->
