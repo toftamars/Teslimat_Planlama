@@ -50,13 +50,17 @@ class TeslimatAnaSayfaGun(models.TransientModel):
 
     @api.depends("teslimat_sayisi", "toplam_kapasite")
     def _compute_doluluk_yuzdesi(self):
-        """Doluluk yüzdesini hesapla - Maksimum %100."""
+        """Doluluk yüzdesini hesapla - 0-1 aralığında (widget="percentage" için).
+        
+        Not: Odoo'nun percentage widget'ı değeri 0-1 aralığında bekler ve otomatik 100 ile çarpar.
+        Bu yüzden burada 100 ile çarpmıyoruz.
+        """
         for rec in self:
             if rec.toplam_kapasite > 0:
-                # Doluluk yüzdesi hesapla
-                yuzde = (rec.teslimat_sayisi / rec.toplam_kapasite) * 100
-                # Maksimum %100 ile sınırla (aşım durumunda)
-                rec.doluluk_yuzdesi = min(yuzde, 100.0)
+                # Doluluk oranını 0-1 aralığında hesapla (widget="percentage" otomatik 100 ile çarpar)
+                oran = rec.teslimat_sayisi / rec.toplam_kapasite
+                # Maksimum 1.0 ile sınırla (aşım durumunda %100 gösterilir)
+                rec.doluluk_yuzdesi = min(oran, 1.0)
             else:
                 rec.doluluk_yuzdesi = 0.0
 
