@@ -101,8 +101,7 @@ class TeslimatBelgesi(models.Model):
     # Teslim Bilgileri
     teslim_alan_kisi = fields.Char(
         string="Teslim Alan Kişi",
-        required=True,
-        help="Teslimatı teslim alan kişinin adı soyadı (zorunlu)",
+        help="Teslimatı teslim alan kişinin adı soyadı (tamamlanırken doldurulur)",
     )
     gercek_teslimat_saati = fields.Datetime(string="Gerçek Teslimat Saati")
 

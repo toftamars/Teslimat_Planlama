@@ -35,7 +35,6 @@ class TeslimatBelgesiWizard(models.TransientModel):
         "teslimat.ilce",
         string="İlçe",
         required=False,
-        domain=[("aktif", "=", True), ("teslimat_aktif", "=", True)],
     )
 
     # Transfer No (stock.picking)
