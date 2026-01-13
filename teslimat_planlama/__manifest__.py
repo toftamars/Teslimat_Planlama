@@ -1,6 +1,6 @@
 {
     'name': 'Teslimat Planlama',
-    'version': '15.0.2.1.3',
+    'version': '15.0.2.1.4',
     'category': 'Inventory',
     'summary': 'Teslimat planlaması ve rota optimizasyonu',
     'description': """
@@ -61,7 +61,6 @@
         'views/teslimat_belgesi_wizard_views.xml',
         'views/teslimat_gun_kapatma_wizard_views.xml',
         'views/teslimat_konum_wizard_views.xml',
-        'views/teslimat_arac_ilce_sync_wizard_views.xml',
         'views/teslimat_tamamlama_wizard_views.xml',
         
         # Inherit Views
