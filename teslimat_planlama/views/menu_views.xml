@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Ana Menü - Action kaldırıldı -->
+    <!-- Ana Menü - Tüm internal user'lara açık -->
     <menuitem id="menu_teslimat_planlama_root"
               name="Teslimat"
               sequence="75"
+              groups="base.group_user"
               web_icon="teslimat_planlama,static/description/icon.svg"/>
 
     <!-- Ana Sayfa - Kapasite Sorgulama -->
