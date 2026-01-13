@@ -1,6 +1,6 @@
 {
     'name': 'Teslimat Planlama',
-    'version': '15.0.2.3.6',
+    'version': '15.0.2.3.7',
     'category': 'Inventory',
     'summary': 'Teslimat planlaması ve rota optimizasyonu',
     'description': """
