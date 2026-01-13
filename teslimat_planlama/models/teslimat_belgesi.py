@@ -280,12 +280,22 @@ class TeslimatBelgesi(models.Model):
         from .teslimat_utils import is_pazar_gunu, get_gun_kodu, is_manager
 
         for record in self:
+            _logger.info("=" * 60)
+            _logger.info("TESLIMAT VALIDASYON KONTROLÜ")
+            _logger.info("Belge: %s", record.name)
+            _logger.info("Tarih: %s", record.teslimat_tarihi)
+            _logger.info("Araç: %s", record.arac_id.name if record.arac_id else None)
+            _logger.info("İlçe: %s", record.ilce_id.name if record.ilce_id else None)
+            _logger.info("Durum: %s", record.durum)
+            
             # Teslim edilmiş veya iptal belgeleri kontrol etme
             if record.durum in ['teslim_edildi', 'iptal']:
+                _logger.info("⏭ Durum '%s' - Validasyon atlandı", record.durum)
                 continue
 
             # Pazar günü kontrolü
             if is_pazar_gunu(record.teslimat_tarihi):
+                _logger.error("❌ PAZAR GÜNÜ TESLİMAT!")
                 raise ValidationError(
                     _("⛔ Pazar günü teslimat yapılamaz!\n\n"
                       "Lütfen farklı bir gün seçin.")
@@ -295,9 +305,11 @@ class TeslimatBelgesi(models.Model):
             small_vehicle = record.arac_id and record.arac_id.arac_tipi in [
                 "kucuk_arac_1", "kucuk_arac_2", "ek_arac"
             ]
+            _logger.info("Küçük araç mı: %s", small_vehicle)
 
             # Yönetici mi?
             yonetici_mi = is_manager(self.env)
+            _logger.info("Yönetici mi: %s", yonetici_mi)
 
             # Araç-İlçe uyumluluğu kontrolü (yönetici ve küçük araçlar hariç)
             if not yonetici_mi and not small_vehicle and record.ilce_id and record.arac_id:
@@ -316,11 +328,14 @@ class TeslimatBelgesi(models.Model):
             # İlçe-gün eşleşmesi kontrolü (yönetici ve küçük araçlar hariç)
             if not yonetici_mi and not small_vehicle and record.ilce_id and record.arac_id:
                 gun_kodu = get_gun_kodu(record.teslimat_tarihi)
+                _logger.info("Gün kodu: %s", gun_kodu)
+                
                 if gun_kodu:
                     gun = self.env["teslimat.gun"].search(
                         [("gun_kodu", "=", gun_kodu)], limit=1
                     )
                     if gun:
+                        _logger.info("Gün bulundu: %s", gun.name)
                         # Genel ilçe-gün eşleşmesi kontrolü
                         gun_ilce = self.env["teslimat.gun.ilce"].search(
                             [
@@ -332,6 +347,7 @@ class TeslimatBelgesi(models.Model):
                         )
 
                         if not gun_ilce:
+                            _logger.error("❌ İLÇE-GÜN EŞLEŞME HATASI!")
                             raise ValidationError(
                                 _(f"⛔ İlçe-Gün Eşleşmesi Hatası!\n\n"
                                   f"📍 İlçe: {record.ilce_id.name}\n"
@@ -339,6 +355,16 @@ class TeslimatBelgesi(models.Model):
                                   f"Bu ilçeye bu gün teslimat yapılamaz.\n"
                                   f"Lütfen uygun bir gün seçin.")
                             )
+                        else:
+                            _logger.info("✅ İlçe-Gün eşleşmesi uygun")
+                    else:
+                        _logger.warning("⚠ Gün bulunamadı: %s", gun_kodu)
+            else:
+                _logger.info("⏭ İlçe-gün kontrolü atlandı (yönetici veya küçük araç)")
+
+            # Araç kapasitesi kontrolü
+            # İptal hariç TÜM durumlar kapasite doldurur (teslim_edildi dahil)
+            if record.arac_id and record.teslimat_tarihi:
 
             # Araç kapasitesi kontrolü
             # İptal hariç TÜM durumlar kapasite doldurur (teslim_edildi dahil)
@@ -358,17 +384,25 @@ class TeslimatBelgesi(models.Model):
 
                 # +1 ekle (kendisi için)
                 toplam = mevcut_teslimat_sayisi + 1
+                
+                _logger.info("Kapasite kontrolü: %s/%s", toplam, record.arac_id.gunluk_teslimat_limiti)
 
                 if toplam > record.arac_id.gunluk_teslimat_limiti:
                     ilce_bilgi = f" - {record.ilce_id.name}" if record.ilce_id else ""
+                    _logger.error("❌ KAPASİTE AŞILDI!")
                     raise ValidationError(
                         _(f"⛔ Araç Kapasitesi Dolu!\n\n"
                           f"🚚 Araç: {record.arac_id.name}{ilce_bilgi}\n"
                           f"📅 Tarih: {record.teslimat_tarihi.strftime('%d.%m.%Y')}\n"
-                          f"📦 Kapasite: {mevcut_teslimat_sayisi}/{record.arac_id.gunluk_teslimat_limiti}\n\n"
+                          f"📦 Kapasite: {toplam}/{record.arac_id.gunluk_teslimat_limiti}\n\n"
                           f"Bu tarih için araç kapasitesi dolmuştur.\n"
                           f"Lütfen farklı bir tarih veya araç seçin.")
                     )
+                else:
+                    _logger.info("✅ Kapasite uygun")
+            
+            _logger.info("✅ Tüm validasyonlar başarılı")
+            _logger.info("=" * 60)
 
     @api.depends("durum")
     def _compute_is_readonly(self) -> None:
