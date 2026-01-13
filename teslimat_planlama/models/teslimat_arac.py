@@ -96,7 +96,7 @@ class TeslimatArac(models.Model):
                 raise ValidationError(
                     _("Günlük teslimat limiti 0'dan büyük olmalıdır.")
                 )
-    
+
     @api.constrains("arac_tipi", "uygun_ilceler")
     def _check_uygun_ilceler_dolu(self) -> None:
         """Araç tipine göre uygun ilçeler ZORUNLU olarak dolu olmalı.
@@ -364,9 +364,9 @@ class TeslimatArac(models.Model):
         
         for arac in araclar:
             try:
-                if arac.arac_tipi:
+            if arac.arac_tipi:
                     eski_sayisi = len(arac.uygun_ilceler)
-                    arac._update_uygun_ilceler()
+                arac._update_uygun_ilceler()
                     yeni_sayisi = len(arac.uygun_ilceler)
                     
                     if eski_sayisi != yeni_sayisi:
@@ -380,7 +380,7 @@ class TeslimatArac(models.Model):
                             eski_sayisi,
                             yeni_sayisi
                         )
-                    guncellenen_sayisi += 1
+                guncellenen_sayisi += 1
                 else:
                     _logger.warning("⚠ %s: Araç tipi tanımlı değil, atlandı", arac.name)
             except Exception as e:

@@ -125,6 +125,6 @@ def check_pazar_gunu_validation(tarih, bypass_for_manager: bool = True, env=None
     
     if is_pazar_gunu(tarih):
         raise ValidationError(
-            "Pazar günü teslimat yapılamaz! "
+                "Pazar günü teslimat yapılamaz! "
             "Lütfen başka bir gün seçin."
-        )
+            )

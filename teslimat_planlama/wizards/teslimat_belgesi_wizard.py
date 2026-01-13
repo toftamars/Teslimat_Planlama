@@ -349,11 +349,10 @@ class TeslimatBelgesiWizard(models.TransientModel):
 
         # Kapasite kontrolü - Araç + İlçe (Günlük maksimum 7 teslimat)
         # İlçe bazlı kontrol: Aynı araç aynı gün farklı ilçelere gidebilir
-        # İptal hariç TÜM durumlar kapasite doldurur (teslim_edildi dahil)
         domain = [
             ("teslimat_tarihi", "=", self.teslimat_tarihi),
             ("arac_id", "=", self.arac_id.id),
-            ("durum", "!=", "iptal"),  # Sadece iptal hariç
+            ("durum", "in", ["taslak", "bekliyor", "hazir", "yolda"]),
         ]
         
         # Eğer ilçe seçiliyse ilçe bazlı kontrol yap

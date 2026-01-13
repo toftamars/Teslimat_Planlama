@@ -74,9 +74,9 @@ class TeslimatGunIlce(models.Model):
         """
         for record in self:
             domain = [
-                ("gun_id", "=", record.gun_id.id),
-                ("ilce_id", "=", record.ilce_id.id),
-                ("id", "!=", record.id),
+                    ("gun_id", "=", record.gun_id.id),
+                    ("ilce_id", "=", record.ilce_id.id),
+                    ("id", "!=", record.id),
             ]
             
             # Tarih kontrolü
@@ -89,8 +89,8 @@ class TeslimatGunIlce(models.Model):
             
             if existing:
                 if record.tarih:
-                    raise ValidationError(
-                        _(
+                raise ValidationError(
+                    _(
                             f"Bu gün ({record.gun_id.name}), ilçe ({record.ilce_id.name}) "
                             f"ve tarih ({record.tarih}) için zaten bir eşleştirme mevcut."
                         )
@@ -100,6 +100,6 @@ class TeslimatGunIlce(models.Model):
                         _(
                             f"Bu gün ({record.gun_id.name}) ve ilçe ({record.ilce_id.name}) "
                             f"için zaten genel bir kural mevcut."
-                        )
                     )
+                )
 

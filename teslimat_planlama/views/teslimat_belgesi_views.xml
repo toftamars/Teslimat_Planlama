@@ -128,7 +128,7 @@
                             <field name="teslim_alan_kisi" readonly="1"/>
                             <field name="gercek_teslimat_saati" readonly="1"/>
                         </group>
-                    </group>
+                        </group>
                     
                     <!-- Teslimat Fotoğrafı -->
                     <group string="📷 Teslimat Fotoğrafı" attrs="{'invisible': ['|', ('durum', '!=', 'teslim_edildi'), ('teslimat_fotografi', '=', False)]}">

@@ -177,8 +177,8 @@
                                             <button name="action_teslimat_olustur" type="object"
                                                     string="Teslimat Olustur" icon="fa-calendar-plus-o"
                                                     class="btn-success btn-sm"/>
-                                        </tree>
-                                    </field>
+                                </tree>
+                            </field>
                                 </div>
                             </div>
                         </div>
