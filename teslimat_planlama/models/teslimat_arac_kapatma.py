@@ -9,12 +9,13 @@ _logger = logging.getLogger(__name__)
 
 class TeslimatAracKapatma(models.Model):
     """Araç Kapatma Kaydı.
-    
+
     Araçların belirli günlerde kapatılmasını (bakım, arıza, vb.) yönetir.
     """
-    
+
     _name = "teslimat.arac.kapatma"
     _description = "Araç Kapatma"
+    _inherit = ["mail.thread", "mail.activity.mixin"]
     _order = "baslangic_tarihi desc"
     _rec_name = "display_name"
     
