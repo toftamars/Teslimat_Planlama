@@ -3,6 +3,56 @@ from . import wizards
 from odoo import api, SUPERUSER_ID
 
 
+def pre_init_hook(cr):
+    """Pre-install/upgrade hook: Eski model referanslarını temizle (modeller yüklenmeden önce)."""
+    import logging
+    _logger = logging.getLogger(__name__)
+
+    try:
+        # Eski teslimat.arac.ilce.sync.wizard modelini temizle
+        _logger.info("🧹 Eski wizard modeli temizleniyor...")
+
+        cr.execute("""
+            DELETE FROM ir_model_data
+            WHERE module = 'teslimat_planlama'
+            AND model = 'teslimat.arac.ilce.sync.wizard'
+        """)
+        deleted_data = cr.rowcount
+        if deleted_data:
+            _logger.info("✓ ir_model_data (sync.wizard) silindi: %s kayıt", deleted_data)
+
+        cr.execute("""
+            DELETE FROM ir_model
+            WHERE model = 'teslimat.arac.ilce.sync.wizard'
+        """)
+        deleted_model = cr.rowcount
+        if deleted_model:
+            _logger.info("✓ ir_model (sync.wizard) silindi: %s kayıt", deleted_model)
+
+        cr.execute("""
+            DELETE FROM ir_model_fields
+            WHERE model = 'teslimat.arac.ilce.sync.wizard'
+        """)
+        deleted_fields = cr.rowcount
+        if deleted_fields:
+            _logger.info("✓ ir_model_fields (sync.wizard) silindi: %s kayıt", deleted_fields)
+
+        cr.execute("""
+            DELETE FROM ir_model_access
+            WHERE model_id NOT IN (SELECT id FROM ir_model)
+        """)
+        deleted_access = cr.rowcount
+        if deleted_access:
+            _logger.info("✓ Orphan access rights silindi: %s kayıt", deleted_access)
+
+        cr.commit()
+        _logger.info("✅ Eski wizard modeli başarıyla temizlendi")
+
+    except Exception as e:
+        cr.rollback()
+        _logger.warning("⚠️ Eski model temizleme hatası (ignored): %s", e)
+
+
 def post_init_hook(cr, registry):
     """Post-install/upgrade hook: Eski model referanslarını temizle."""
     import logging
