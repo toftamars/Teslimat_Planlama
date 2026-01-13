@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Eski silinmiş wizard modellerini temizle -->
+
+        <!-- teslimat.arac.ilce.sync.wizard modelini sil -->
+        <delete model="ir.model" search="[('model', '=', 'teslimat.arac.ilce.sync.wizard')]"/>
+
+        <!-- İlgili field kayıtlarını sil -->
+        <delete model="ir.model.fields" search="[('model', '=', 'teslimat.arac.ilce.sync.wizard')]"/>
+
+        <!-- İlgili access rights kayıtlarını sil -->
+        <delete model="ir.model.access" search="[('model_id.model', '=', 'teslimat.arac.ilce.sync.wizard')]"/>
+
+    </data>
+</odoo>
