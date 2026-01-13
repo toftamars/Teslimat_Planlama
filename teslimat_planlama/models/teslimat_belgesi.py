@@ -272,11 +272,14 @@ class TeslimatBelgesi(models.Model):
     def _check_teslimat_validations(self):
         """Teslimat belgesi validasyonları.
 
+        - Aynı gün teslimat kontrolü (12:00 sonrası yasak)
         - Pazar günü kontrolü
         - İlçe-gün eşleşmesi kontrolü (yönetici ve küçük araçlar hariç)
         - Araç kapasitesi kontrolü
         - Durum değişikliklerinde de tetiklenir (iptal -> hazir bypass önleme)
         """
+        from datetime import datetime
+        import pytz
         from .teslimat_utils import is_pazar_gunu, get_gun_kodu, is_manager
 
         for record in self:
@@ -287,11 +290,32 @@ class TeslimatBelgesi(models.Model):
             _logger.info("Araç: %s", record.arac_id.name if record.arac_id else None)
             _logger.info("İlçe: %s", record.ilce_id.name if record.ilce_id else None)
             _logger.info("Durum: %s", record.durum)
-            
+
             # Teslim edilmiş veya iptal belgeleri kontrol etme
             if record.durum in ['teslim_edildi', 'iptal']:
                 _logger.info("⏭ Durum '%s' - Validasyon atlandı", record.durum)
                 continue
+
+            # Aynı gün teslimat kontrolü (12:00 sonrası yasak)
+            istanbul_tz = pytz.timezone('Europe/Istanbul')
+            simdi_istanbul = datetime.now(istanbul_tz)
+            bugun = simdi_istanbul.date()
+            saat = simdi_istanbul.hour
+            dakika = simdi_istanbul.minute
+
+            _logger.info("İstanbul Saati: %s:%s", saat, dakika)
+            _logger.info("Bugün: %s", bugun)
+
+            # Eğer teslimat tarihi bugüne eşitse ve saat 12:00 veya sonrası ise
+            if record.teslimat_tarihi == bugun and (saat >= 12):
+                _logger.error("❌ AYNI GÜN TESLİMAT YASAK (Saat 12:00 sonrası)")
+                raise ValidationError(
+                    _(f"⛔ Aynı gün teslimat yazılamaz!\n\n"
+                      f"🕐 İstanbul Saati: {saat:02d}:{dakika:02d}\n"
+                      f"📅 Teslimat Tarihi: {record.teslimat_tarihi}\n\n"
+                      f"Saat 12:00'dan sonra bugüne teslimat planlanamaz.\n"
+                      f"Lütfen yarın veya sonraki günler için teslimat planlayın.")
+                )
 
             # Pazar günü kontrolü
             if is_pazar_gunu(record.teslimat_tarihi):

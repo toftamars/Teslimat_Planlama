@@ -464,13 +464,25 @@ class TeslimatAnaSayfa(models.TransientModel):
                 key = (gun_ilce.gun_id.id, record.ilce_id.id)
                 gun_ilce_dict[key] = gun_ilce
 
+            # Saat kontrolü için İstanbul saati
+            from datetime import datetime
+            import pytz
+            istanbul_tz = pytz.timezone('Europe/Istanbul')
+            simdi_istanbul = datetime.now(istanbul_tz)
+            saat = simdi_istanbul.hour
+
             # 30 günü loop et - Pazar günleri hariç
             for i in range(30):
                 tarih = bugun + timedelta(days=i)
-                
+
                 # Pazar gününü atla
                 from .teslimat_utils import is_pazar_gunu
                 if is_pazar_gunu(tarih):
+                    continue
+
+                # Aynı gün kontrolü: Saat 12:00 veya sonrası ise bugünü atla
+                if tarih == bugun and saat >= 12:
+                    _logger.info("Bugün atlandı (Saat 12:00 sonrası): %s", tarih)
                     continue
                 
                 gun_adi = tarih.strftime("%A")
