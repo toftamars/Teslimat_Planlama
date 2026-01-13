@@ -203,10 +203,18 @@ class TeslimatBelgesi(models.Model):
             # Teslim edilmiş belgelerde değişiklik yapılamaz
             # AMA: Eğer wizard tamamlama işleminden geliyorsa (durum değişikliği), izin ver
             if record.durum == 'teslim_edildi':
+                _logger.info("=== WRITE TO COMPLETED DELIVERY ===")
+                _logger.info("Record: %s", record.name)
+                _logger.info("Vals keys: %s", list(vals.keys()))
+                _logger.info("Vals: %s", vals)
+
                 # Sadece wizard'dan gelen alanları kontrol et
                 wizard_fields = {'durum', 'gercek_teslimat_saati', 'teslim_alan_kisi',
                                 'teslimat_fotografi', 'fotograf_dosya_adi', 'notlar'}
-                if not set(vals.keys()).issubset(wizard_fields):
+                extra_fields = set(vals.keys()) - wizard_fields
+
+                if extra_fields:
+                    _logger.error("❌ Extra fields not in whitelist: %s", extra_fields)
                     # Wizard dışı değişiklik - engelle
                     raise UserError(
                         _(
@@ -218,6 +226,8 @@ class TeslimatBelgesi(models.Model):
                             "Bu belge arşivlenmiştir ve değiştirilemez."
                         )
                     )
+                else:
+                    _logger.info("✅ All fields are in whitelist - allowing write")
 
         return super(TeslimatBelgesi, self).write(vals)
     
