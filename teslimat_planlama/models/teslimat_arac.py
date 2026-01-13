@@ -380,7 +380,7 @@ class TeslimatArac(models.Model):
                             eski_sayisi,
                             yeni_sayisi
                         )
-                guncellenen_sayisi += 1
+                    guncellenen_sayisi += 1
                 else:
                     _logger.warning("⚠ %s: Araç tipi tanımlı değil, atlandı", arac.name)
             except Exception as e:
