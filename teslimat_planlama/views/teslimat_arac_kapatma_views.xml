@@ -7,8 +7,8 @@
         <field name="arch" type="xml">
             <tree string="Araç Kapatma Kayıtları" 
                   decoration-danger="not aktif"
-                  decoration-warning="aktif and baslangic_tarihi &lt;= context_today() and bitis_tarihi &gt;= context_today()"
-                  decoration-success="aktif and bitis_tarihi &lt; context_today()">
+                  decoration-warning="aktif"
+                  decoration-success="not aktif">
                 <field name="arac_id"/>
                 <field name="baslangic_tarihi"/>
                 <field name="bitis_tarihi"/>
@@ -44,8 +44,8 @@
                     
                     <!-- Uyarı Mesajı - Aktif kapatma -->
                     <div class="alert alert-warning" role="alert" 
-                         attrs="{'invisible': ['|', ('aktif', '=', False), ('baslangic_tarihi', '&gt;', context_today()), ('bitis_tarihi', '&lt;', context_today())]}">
-                        <i class="fa fa-exclamation-triangle"/> Bu araç <strong>şu anda kapalı</strong>
+                         attrs="{'invisible': [('aktif', '=', False)]}">
+                        <i class="fa fa-exclamation-triangle"/> Bu araç <strong>kapalı</strong>
                     </div>
                     
                     <div class="oe_title">
