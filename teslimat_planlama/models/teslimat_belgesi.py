@@ -365,10 +365,6 @@ class TeslimatBelgesi(models.Model):
             # Araç kapasitesi kontrolü
             # İptal hariç TÜM durumlar kapasite doldurur (teslim_edildi dahil)
             if record.arac_id and record.teslimat_tarihi:
-
-            # Araç kapasitesi kontrolü
-            # İptal hariç TÜM durumlar kapasite doldurur (teslim_edildi dahil)
-            if record.arac_id and record.teslimat_tarihi:
                 domain = [
                     ("teslimat_tarihi", "=", record.teslimat_tarihi),
                     ("arac_id", "=", record.arac_id.id),
