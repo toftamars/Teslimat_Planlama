@@ -53,21 +53,27 @@ class TeslimatAnaSayfa(models.TransientModel):
     @api.onchange("arac_id")
     def _onchange_arac_id(self):
         """Araç seçildiğinde ilçe seçimini sıfırla ve İstanbul'u otomatik seç."""
+        _logger.info("=== ONCHANGE ARAC_ID ===")
+        _logger.info("Araç: %s", self.arac_id.name if self.arac_id else None)
+        
         self.ilce_id = False
 
         # İstanbul'u otomatik seç
         istanbul = get_istanbul_state(self.env)
         if istanbul:
             self.state_id = istanbul
+            _logger.info("İstanbul otomatik set edildi: %s", istanbul.name)
+            
+            # İlçe domain'ini de hemen hesapla
+            result = self._compute_ilce_domain()
+            _logger.info("İlçe domain: %s", result)
+            return result
 
         # İl domain'ini sadece Türkiye ile sınırla
         return {"domain": {"state_id": [("country_id.code", "=", "TR")]}}
 
-    @api.onchange("state_id")
-    def _onchange_state_id(self):
-        """İl seçildiğinde ilçe domain'ini güncelle - Seçilen araca uygun ilçeler göster."""
-        self.ilce_id = False
-        
+    def _compute_ilce_domain(self):
+        """İlçe domain'ini hesapla - Ortak metod."""
         if not self.arac_id:
             return {"domain": {"ilce_id": [("id", "in", [])]}}
         
@@ -85,6 +91,7 @@ class TeslimatAnaSayfa(models.TransientModel):
         
         if is_manager(self.env):
             # Yöneticiler için kısıtlama yok
+            _logger.info("Yönetici - Tüm ilçeler gösteriliyor")
             return {"domain": {"ilce_id": domain}}
             
         # Normal kullanıcılar için araç filtresi
@@ -92,16 +99,19 @@ class TeslimatAnaSayfa(models.TransientModel):
         
         # Tüm aktif ilçeleri domain ile filtrele
         tum_ilceler = self.env["teslimat.ilce"].search(domain)
+        _logger.info("Toplam aktif ilçe: %s", len(tum_ilceler))
         
         uygun_ilce_ids = []
         if is_small_vehicle(self.arac_id):
             # Küçük araçlar tüm ilçelere gidebilir
             uygun_ilce_ids = tum_ilceler.ids
+            _logger.info("Küçük araç - Tüm ilçeler: %s", len(uygun_ilce_ids))
         elif arac_tipi == "anadolu_yakasi":
             # Sadece Anadolu Yakası ilçeleri
             uygun_ilce_ids = tum_ilceler.filtered(
                 lambda i: i.yaka_tipi == 'anadolu'
             ).ids
+            _logger.info("Anadolu Yakası - Uygun ilçeler: %s", len(uygun_ilce_ids))
         elif arac_tipi == "avrupa_yakasi":
             # Sadece Avrupa Yakası ilçeleri
             uygun_ilce_ids = tum_ilceler.filtered(
@@ -117,9 +127,15 @@ class TeslimatAnaSayfa(models.TransientModel):
                 uygun_ilce_ids = []
 
         return {"domain": {"ilce_id": [("id", "in", uygun_ilce_ids)]}}
-
-    # Eski metot yerine yenisini kullanıyoruz
-
+    
+    @api.onchange("state_id")
+    def _onchange_state_id(self):
+        """İl seçildiğinde ilçe domain'ini güncelle."""
+        _logger.info("=== ONCHANGE STATE_ID ===")
+        _logger.info("İl: %s", self.state_id.name if self.state_id else None)
+        
+        self.ilce_id = False
+        return self._compute_ilce_domain()
 
     # Hesaplanan alanlar
     arac_kucuk_mu = fields.Boolean(
