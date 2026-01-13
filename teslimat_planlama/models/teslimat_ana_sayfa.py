@@ -488,12 +488,12 @@ class TeslimatAnaSayfa(models.TransientModel):
             if record.ilce_id and record.arac_id:
                 bugun = fields.Date.today()
 
-                # Bugün için teslimat sayısı
+                # Bugün için teslimat sayısı (iptal hariç tüm durumlar)
                 record.teslimat_sayisi = self.env["teslimat.belgesi"].search_count(
                     [
                         ("teslimat_tarihi", "=", bugun),
                         ("ilce_id", "=", record.ilce_id.id),
-                        ("durum", "in", ["taslak", "bekliyor", "hazir", "yolda"]),
+                        ("durum", "!=", "iptal"),  # Sadece iptal hariç
                     ]
                 )
 
@@ -619,12 +619,13 @@ class TeslimatAnaSayfa(models.TransientModel):
             uygun_gunler = []
 
             # Performans optimizasyonu: Batch sorgulama
+            # İptal hariç TÜM durumlar kapasite doldurur (teslim_edildi dahil)
             teslimat_domain = [
                 ("teslimat_tarihi", ">=", bugun),
                 ("teslimat_tarihi", "<=", bitis_tarihi),
                 ("arac_id", "=", record.arac_id.id),
                 ("ilce_id", "=", record.ilce_id.id),
-                ("durum", "in", ["taslak", "bekliyor", "hazir", "yolda"]),
+                ("durum", "!=", "iptal"),  # Sadece iptal hariç
             ]
 
             _logger.info("🔍 Kapasite hesaplama - Araç: %s, İlçe: %s",
