@@ -50,6 +50,8 @@ class TeslimatBelgesiWizard(models.TransientModel):
     # Müşteri ve Adres (otomatik dolar)
     musteri_id = fields.Many2one("res.partner", string="Müşteri", readonly=True)
     adres = fields.Char(string="Adres", readonly=True)
+    musteri_telefon = fields.Char(string="Telefon", readonly=True, help="Transfer belgesindeki müşteri telefon numarası")
+    manuel_telefon = fields.Char(string="Telefon (Opsiyonel)", required=False, help="İsteğe bağlı - farklı bir telefon numarası girebilirsiniz")
 
     # Hesaplanan alanlar
     arac_kucuk_mu = fields.Boolean(
@@ -295,8 +297,9 @@ class TeslimatBelgesiWizard(models.TransientModel):
             if picking.partner_id:
                 _logger.info("Setting musteri_id to: %s", picking.partner_id)
                 self.musteri_id = picking.partner_id
-                # Adres bilgisi - partner'dan al
                 partner = picking.partner_id
+
+                # Adres bilgisi - partner'dan al
                 adres_parts = []
                 if partner.street:
                     adres_parts.append(partner.street)
@@ -311,6 +314,17 @@ class TeslimatBelgesiWizard(models.TransientModel):
                 else:
                     # Fallback - contact_address kullan
                     self.adres = partner.contact_address or partner.name
+
+                # Telefon bilgisi - partner'dan al
+                if partner.phone:
+                    self.musteri_telefon = partner.phone
+                    _logger.info("Telefon bilgisi atandı: %s", partner.phone)
+                elif partner.mobile:
+                    self.musteri_telefon = partner.mobile
+                    _logger.info("Mobil telefon bilgisi atandı: %s", partner.mobile)
+                else:
+                    self.musteri_telefon = ""
+                    _logger.warning("Müşterinin telefon bilgisi yok")
             else:
                 _logger.warning("Picking has no partner_id!")
 

@@ -36,10 +36,14 @@
                                required="1"/>
                     </group>
                     <!-- Müşteri ve Adres (otomatik) -->
-                    <group>
+                    <group string="Müşteri Bilgileri">
                         <group>
                             <field name="musteri_id" readonly="1" force_save="1"/>
                             <field name="adres" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="musteri_telefon" readonly="1" widget="phone"/>
+                            <field name="manuel_telefon" widget="phone" placeholder="İsteğe bağlı - farklı telefon girebilirsiniz"/>
                         </group>
                     </group>
                 </sheet>
