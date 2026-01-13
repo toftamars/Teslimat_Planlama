@@ -12,14 +12,52 @@ def pre_init_hook(cr):
         # Eski teslimat.arac.ilce.sync.wizard modelini temizle
         _logger.info("🧹 Eski wizard modeli temizleniyor...")
 
+        # Önce tüm ilişkili kayıtları bul ve geçici olarak sakla
+        cr.execute("""
+            SELECT id FROM ir_model WHERE model = 'teslimat.arac.ilce.sync.wizard'
+        """)
+        old_model_ids = [row[0] for row in cr.fetchall()]
+
+        if old_model_ids:
+            _logger.info("Bulunan eski model ID'leri: %s", old_model_ids)
+
+            # ir_model_constraint kayıtlarını sil
+            cr.execute("""
+                DELETE FROM ir_model_constraint
+                WHERE model IN %s
+            """, (tuple(old_model_ids),))
+            deleted_constraints = cr.rowcount
+            if deleted_constraints:
+                _logger.info("✓ ir_model_constraint silindi: %s kayıt", deleted_constraints)
+
+            # ir_model_relation kayıtlarını sil
+            cr.execute("""
+                DELETE FROM ir_model_relation
+                WHERE model IN %s
+            """, (tuple(old_model_ids),))
+            deleted_relations = cr.rowcount
+            if deleted_relations:
+                _logger.info("✓ ir_model_relation silindi: %s kayıt", deleted_relations)
+
+        # ir_model_data kayıtlarını sil (hem model hem de name ile)
         cr.execute("""
             DELETE FROM ir_model_data
             WHERE module = 'teslimat_planlama'
-            AND model = 'teslimat.arac.ilce.sync.wizard'
+            AND (model = 'teslimat.arac.ilce.sync.wizard' OR name LIKE '%sync_wizard%' OR name LIKE '%arac_ilce_sync%')
         """)
         deleted_data = cr.rowcount
         if deleted_data:
             _logger.info("✓ ir_model_data (sync.wizard) silindi: %s kayıt", deleted_data)
+
+        # res_id'ye göre de sil (eğer model_id referansı varsa)
+        if old_model_ids:
+            cr.execute("""
+                DELETE FROM ir_model_data
+                WHERE model = 'ir.model' AND res_id IN %s
+            """, (tuple(old_model_ids),))
+            deleted_model_refs = cr.rowcount
+            if deleted_model_refs:
+                _logger.info("✓ ir_model referansları silindi: %s kayıt", deleted_model_refs)
 
         # ir_model_fields_selection tablosundaki referansları ÖNCE temizle (Odoo 15+)
         cr.execute("""
