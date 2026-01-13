@@ -1,6 +1,6 @@
 {
     'name': 'Teslimat Planlama',
-    'version': '15.0.2.3.1',
+    'version': '15.0.2.3.2',
     'category': 'Inventory',
     'summary': 'Teslimat planlaması ve rota optimizasyonu',
     'description': """
@@ -78,6 +78,7 @@
     'assets': {
         'web.assets_backend': [
             'teslimat_planlama/static/src/js/uygun_gunler_click.js',
+            'teslimat_planlama/static/src/js/fotograf_zoom.js',
         ],
     },
 }

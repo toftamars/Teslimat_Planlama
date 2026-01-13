@@ -155,10 +155,17 @@
                     
                     <!-- Teslimat Fotoğrafı -->
                     <group string="📷 Teslimat Fotoğrafı" attrs="{'invisible': ['|', ('durum', '!=', 'teslim_edildi'), ('teslimat_fotografi', '=', False)]}">
-                        <field name="teslimat_fotografi" widget="image" readonly="1" nolabel="1" 
-                               options="{'size': [400, 400]}"
-                               class="oe_avatar"/>
-                        <field name="fotograf_dosya_adi" invisible="1"/>
+                        <div class="text-center">
+                            <field name="teslimat_fotografi" widget="image" readonly="1" nolabel="1" 
+                                   options="{'size': [600, 600], 'preview_image': true}"
+                                   class="oe_avatar"
+                                   style="cursor: pointer; max-width: 100%;"
+                                   title="Fotoğrafa tıklayarak büyütebilirsiniz"/>
+                            <field name="fotograf_dosya_adi" invisible="1"/>
+                            <p class="text-muted mt-2">
+                                <i class="fa fa-info-circle"/> Fotoğrafa tıklayarak tam boyutta görüntüleyebilirsiniz
+                            </p>
+                        </div>
                     </group>
                     
                     <group string="Notlar" attrs="{'readonly': [('is_readonly', '=', True)]}">
