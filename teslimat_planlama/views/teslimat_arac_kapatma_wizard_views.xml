@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Araç Kapatma Wizard Form View -->
+    <record id="view_teslimat_arac_kapatma_wizard_form" model="ir.ui.view">
+        <field name="name">teslimat.arac.kapatma.wizard.form</field>
+        <field name="model">teslimat.arac.kapatma.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Araç Kapat">
+                <div class="alert alert-info" role="alert">
+                    <i class="fa fa-info-circle"/> 
+                    <strong>Araç Kapatma</strong><br/>
+                    Seçtiğiniz araç belirtilen tarih aralığında kullanılamaz hale gelecek.
+                    Bu günler "Uygun Günler" listesinde kırmızı uyarı ile gösterilecek.
+                </div>
+                
+                <group>
+                    <group string="🚗 Araç Bilgileri">
+                        <field name="arac_id" options="{'no_create': True, 'no_edit': True}"/>
+                        <field name="sebep"/>
+                    </group>
+                    <group string="📅 Tarih Aralığı">
+                        <field name="baslangic_tarihi"/>
+                        <field name="bitis_tarihi"/>
+                        <field name="gun_sayisi" readonly="1" class="text-primary"/>
+                    </group>
+                </group>
+                
+                <group string="📝 Açıklama (Opsiyonel)">
+                    <field name="aciklama" nolabel="1" placeholder="Örn: Motor arızası, tamir süresi 3 gün..."/>
+                </group>
+                
+                <footer>
+                    <button string="Aracı Kapat" name="action_kapat" type="object" class="btn-primary"/>
+                    <button string="İptal" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_teslimat_arac_kapatma_wizard" model="ir.actions.act_window">
+        <field name="name">Araç Kapat</field>
+        <field name="res_model">teslimat.arac.kapatma.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

@@ -153,9 +153,9 @@
                                 </div>
                                 <div class="card-body">
                                     <field name="uygun_gunler" readonly="1" nolabel="1">
-                                        <tree decoration-success="kalan_kapasite &gt; 5"
-                                              decoration-warning="kalan_kapasite &lt;= 5 and kalan_kapasite &gt; 0"
-                                              decoration-danger="kalan_kapasite &lt;= 0"
+                                        <tree decoration-success="kalan_kapasite &gt; 5 and not arac_kapali_mi"
+                                              decoration-warning="kalan_kapasite &lt;= 5 and kalan_kapasite &gt; 0 and not arac_kapali_mi"
+                                              decoration-danger="kalan_kapasite &lt;= 0 or arac_kapali_mi"
                                               create="false"
                                               edit="false"
                                               delete="false"
@@ -166,11 +166,20 @@
                                             <field name="gun_adi" invisible="1"/>
                                             <field name="ana_sayfa_id" invisible="1"/>
                                             <field name="toplam_kapasite" invisible="1"/>
+                                            <field name="arac_kapali_mi" invisible="1"/>
                                             <field name="tarih_str" string="Tarih" readonly="1"/>
-                                            <field name="teslimat_sayisi" readonly="1" string="Teslimat"/>
-                                            <field name="kalan_kapasite" readonly="1" string="Kalan"/>
-                                            <field name="doluluk_yuzdesi" readonly="1" string="Doluluk %" widget="percentage"/>
-                                            <field name="durum_text" readonly="1" string="Durum"/>
+                                            <field name="teslimat_sayisi" readonly="1" string="Teslimat"
+                                                   attrs="{'invisible': [('arac_kapali_mi', '=', True)]}"/>
+                                            <field name="kalan_kapasite" readonly="1" string="Kalan"
+                                                   attrs="{'invisible': [('arac_kapali_mi', '=', True)]}"/>
+                                            <field name="doluluk_yuzdesi" readonly="1" string="Doluluk %" widget="percentage"
+                                                   attrs="{'invisible': [('arac_kapali_mi', '=', True)]}"/>
+                                            <field name="durum_text" readonly="1" string="Durum" 
+                                                   attrs="{'invisible': [('arac_kapali_mi', '=', True)]}"/>
+                                            <field name="kapatma_sebep" readonly="1" string="🚫 Kapatma Sebebi"
+                                                   attrs="{'invisible': [('arac_kapali_mi', '=', False)]}"/>
+                                            <field name="kapatan_kisi" readonly="1" string="👤 Kapatan"
+                                                   attrs="{'invisible': [('arac_kapali_mi', '=', False)]}"/>
                                 </tree>
                             </field>
                                 </div>

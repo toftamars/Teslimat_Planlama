@@ -24,6 +24,29 @@ class TeslimatAnaSayfaGun(models.TransientModel):
     doluluk_yuzdesi = fields.Float(string="Doluluk %", compute="_compute_doluluk_yuzdesi", store=False)
     durum_text = fields.Char(string="Durum")
     tarih_str = fields.Char(string="Tarih", compute="_compute_tarih_str")
+    
+    # Araç Kapatma Bilgileri
+    arac_kapali_mi = fields.Boolean(
+        string="Araç Kapalı",
+        compute="_compute_arac_kapatma",
+        store=False,
+        help="Bu tarihte araç kapalı mı?"
+    )
+    kapatma_sebep = fields.Char(
+        string="Kapatma Sebebi",
+        compute="_compute_arac_kapatma",
+        store=False
+    )
+    kapatma_aciklama = fields.Text(
+        string="Kapatma Açıklama",
+        compute="_compute_arac_kapatma",
+        store=False
+    )
+    kapatan_kisi = fields.Char(
+        string="Kapatan Kişi",
+        compute="_compute_arac_kapatma",
+        store=False
+    )
 
     @api.depends("teslimat_sayisi", "toplam_kapasite")
     def _compute_doluluk_yuzdesi(self):
@@ -46,6 +69,43 @@ class TeslimatAnaSayfaGun(models.TransientModel):
                 rec.tarih_str = f"{rec.tarih.strftime('%d.%m.%Y')} {gun}"
             else:
                 rec.tarih_str = "-"
+    
+    @api.depends("tarih", "ana_sayfa_id.arac_id")
+    def _compute_arac_kapatma(self):
+        """Araç kapatma bilgilerini hesapla."""
+        sebep_dict = {
+            "bakim": "Bakım",
+            "ariza": "Arıza",
+            "kaza": "Kaza",
+            "yakit": "Yakıt Sorunu",
+            "surucu_yok": "Sürücü Yok",
+            "diger": "Diğer",
+        }
+        
+        for rec in self:
+            if not rec.tarih or not rec.ana_sayfa_id.arac_id:
+                rec.arac_kapali_mi = False
+                rec.kapatma_sebep = ""
+                rec.kapatma_aciklama = ""
+                rec.kapatan_kisi = ""
+                continue
+            
+            # Araç kapatma kontrolü
+            kapali, kapatma = self.env["teslimat.arac.kapatma"].arac_kapali_mi(
+                rec.ana_sayfa_id.arac_id.id,
+                rec.tarih
+            )
+            
+            if kapali and kapatma:
+                rec.arac_kapali_mi = True
+                rec.kapatma_sebep = sebep_dict.get(kapatma.sebep, kapatma.sebep)
+                rec.kapatma_aciklama = kapatma.aciklama or ""
+                rec.kapatan_kisi = kapatma.kapatan_kullanici_id.name or ""
+            else:
+                rec.arac_kapali_mi = False
+                rec.kapatma_sebep = ""
+                rec.kapatma_aciklama = ""
+                rec.kapatan_kisi = ""
 
     def action_teslimat_olustur(self) -> dict:
         """Seçilen gün için teslimat belgesi wizard'ını aç."""
@@ -56,6 +116,16 @@ class TeslimatAnaSayfaGun(models.TransientModel):
 
         if not self.ana_sayfa_id.ilce_id:
             raise UserError(_("İlçe seçimi gereklidir."))
+        
+        # Araç kapalı mı kontrol et
+        if self.arac_kapali_mi:
+            raise UserError(
+                f"Bu tarihte araç kapalı!\n\n"
+                f"📅 Tarih: {self.tarih_str}\n"
+                f"⚠️ Sebep: {self.kapatma_sebep}\n"
+                f"👤 Kapatan: {self.kapatan_kisi}\n\n"
+                f"Lütfen başka bir tarih veya araç seçin."
+            )
 
         # Wizard'ı aç
         context = {

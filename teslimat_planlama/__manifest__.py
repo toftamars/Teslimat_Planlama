@@ -1,6 +1,6 @@
 {
     'name': 'Teslimat Planlama',
-    'version': '15.0.2.2.0',
+    'version': '15.0.2.3.0',
     'category': 'Inventory',
     'summary': 'Teslimat planlaması ve rota optimizasyonu',
     'description': """
@@ -44,6 +44,7 @@
         'views/teslimat_ilce_views.xml',
         'views/teslimat_gun_views.xml',
         'views/teslimat_arac_views.xml',
+        'views/teslimat_arac_kapatma_views.xml',
         
         # Action'ları içeren Views (ONCE yukle - menu bunları referans ediyor)
         'views/teslimat_ana_sayfa_views.xml',  # action_teslimat_ana_sayfa
@@ -61,6 +62,7 @@
         'views/teslimat_gun_kapatma_wizard_views.xml',
         'views/teslimat_konum_wizard_views.xml',
         'views/teslimat_tamamlama_wizard_views.xml',
+        'views/teslimat_arac_kapatma_wizard_views.xml',
         
         # Inherit Views
         'views/stock_picking_views.xml',

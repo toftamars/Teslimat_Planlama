@@ -2,4 +2,5 @@ from . import teslimat_belgesi_wizard
 from . import teslimat_gun_kapatma_wizard
 from . import teslimat_konum_wizard
 from . import teslimat_tamamlama_wizard
+from . import teslimat_arac_kapatma_wizard
 
