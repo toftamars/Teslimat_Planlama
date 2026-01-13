@@ -10,20 +10,31 @@ def post_init_hook(cr, registry):
     
     try:
         # SQL direkt ile temizle (ORM çalışmadan önce)
-        # Eski ir.model.data kayıtlarını sil
+
+        # 1. Eski teslimat.planlama.akilli modelini temizle
         cr.execute("""
-            DELETE FROM ir_model_data 
-            WHERE module = 'teslimat_planlama' 
+            DELETE FROM ir_model_data
+            WHERE module = 'teslimat_planlama'
             AND model = 'teslimat.planlama.akilli'
         """)
         deleted_data = cr.rowcount
         if deleted_data:
-            _logger.info("Eski ir_model_data kayıtları silindi: %s", deleted_data)
+            _logger.info("Eski ir_model_data (akilli) kayıtları silindi: %s", deleted_data)
+
+        # 2. Eski teslimat.arac.ilce.sync.wizard modelini temizle
+        cr.execute("""
+            DELETE FROM ir_model_data
+            WHERE module = 'teslimat_planlama'
+            AND model = 'teslimat.arac.ilce.sync.wizard'
+        """)
+        deleted_data_wizard = cr.rowcount
+        if deleted_data_wizard:
+            _logger.info("Eski ir_model_data (sync.wizard) kayıtları silindi: %s", deleted_data_wizard)
         
         # Eski ir.model kayıtlarını sil
         cr.execute("""
-            DELETE FROM ir_model 
-            WHERE model = 'teslimat.planlama.akilli'
+            DELETE FROM ir_model
+            WHERE model IN ('teslimat.planlama.akilli', 'teslimat.arac.ilce.sync.wizard')
         """)
         deleted_model = cr.rowcount
         if deleted_model:
@@ -31,8 +42,8 @@ def post_init_hook(cr, registry):
         
         # Eski ir.model.fields kayıtlarını sil (model referansı olan field'lar)
         cr.execute("""
-            DELETE FROM ir_model_fields 
-            WHERE model = 'teslimat.planlama.akilli'
+            DELETE FROM ir_model_fields
+            WHERE model IN ('teslimat.planlama.akilli', 'teslimat.arac.ilce.sync.wizard')
         """)
         deleted_fields = cr.rowcount
         if deleted_fields:

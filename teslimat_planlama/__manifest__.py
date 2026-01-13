@@ -35,7 +35,6 @@
         'security/ir.model.access.csv',
         
         # Data
-        'data/cleanup_old_models.xml',  # Eski modelleri temizle
         'data/ir_sequence_data.xml',
         'data/teslimat_program_kurulum_data.xml',
         'data/istanbul_ilceleri_data.xml',
