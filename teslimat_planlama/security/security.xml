@@ -7,19 +7,12 @@
             <field name="sequence">75</field>
         </record>
 
-        <!-- Teslimat Kullanıcısı Grubu - Varsayılan olarak tüm çalışanlara verilir -->
-        <record id="group_teslimat_user" model="res.groups">
-            <field name="name">Teslimat Kullanıcısı</field>
-            <field name="category_id" ref="teslimat_planlama.module_category_teslimat"/>
-            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
-            <field name="comment">Modül kurulduğunda tüm internal user'lara otomatik atanır</field>
-        </record>
-
         <!-- Teslimat Sürücüsü Grubu -->
         <record id="group_teslimat_driver" model="res.groups">
             <field name="name">Teslimat Sürücüsü</field>
             <field name="category_id" ref="teslimat_planlama.module_category_teslimat"/>
             <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+            <field name="comment">Sürücüler için özel menü ve butonlar (Yolda, Teslimatı Tamamla)</field>
         </record>
 
         <!-- Teslimat Yöneticisi Grubu -->
@@ -27,6 +20,7 @@
             <field name="name">Teslimat Yöneticisi</field>
             <field name="category_id" ref="teslimat_planlama.module_category_teslimat"/>
             <field name="implied_ids" eval="[(4, ref('stock.group_stock_manager'))]"/>
+            <field name="comment">Tüm yetkiler + validasyon bypass (pazar günü, kapasite, vb.)</field>
         </record>
     </data>
 </odoo>
