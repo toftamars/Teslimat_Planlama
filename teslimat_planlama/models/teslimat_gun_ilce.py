@@ -89,8 +89,8 @@ class TeslimatGunIlce(models.Model):
             
             if existing:
                 if record.tarih:
-                raise ValidationError(
-                    _(
+                    raise ValidationError(
+                        _(
                             f"Bu gün ({record.gun_id.name}), ilçe ({record.ilce_id.name}) "
                             f"ve tarih ({record.tarih}) için zaten bir eşleştirme mevcut."
                         )
