@@ -58,6 +58,23 @@ class TeslimatBelgesiWizard(models.TransientModel):
     )
 
     @api.model
+    def create(self, vals):
+        """Create metodunu override et - context'ten ilce_id al."""
+        ctx = self.env.context
+
+        _logger.info("=== WIZARD CREATE ===")
+        _logger.info("Context: %s", ctx)
+        _logger.info("Vals before: %s", vals)
+
+        # Context'ten ilce_id al ve vals'a ekle
+        if ctx.get("default_ilce_id") and "ilce_id" not in vals:
+            vals["ilce_id"] = ctx.get("default_ilce_id")
+            _logger.info("İlçe ID vals'a eklendi: %s", vals["ilce_id"])
+
+        _logger.info("Vals after: %s", vals)
+        return super().create(vals)
+
+    @api.model
     def default_get(self, fields_list: list) -> dict:
         """Varsayılan değerleri context'ten al.
 
