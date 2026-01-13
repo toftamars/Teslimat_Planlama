@@ -30,5 +30,13 @@
               action="action_teslimat_belgesi_surucu"
               sequence="25"
               groups="teslimat_planlama.group_teslimat_driver"/>
+
+    <!-- Araç Kapatma (Yöneticiler) -->
+    <menuitem id="menu_teslimat_arac_kapatma"
+              name="🔧 Araç Kapatma"
+              parent="menu_teslimat_planlama_root"
+              action="action_teslimat_arac_kapatma"
+              sequence="90"
+              groups="teslimat_planlama.group_teslimat_manager"/>
 </odoo>
 
