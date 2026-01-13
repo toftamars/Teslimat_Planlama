@@ -73,7 +73,7 @@
     'application': True,
     'auto_install': False,
     'license': 'LGPL-3',
-    'icon': '/teslimat_planlama/static/description/icon.png',
+    'images': ['static/description/icon.png'],
     'post_init_hook': 'post_init_hook',
     'assets': {
         'web.assets_backend': [
