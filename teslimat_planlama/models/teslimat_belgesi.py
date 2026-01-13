@@ -196,25 +196,29 @@ class TeslimatBelgesi(models.Model):
     
     def write(self, vals):
         """Teslimat belgesi güncelleme - Teslim edilmiş belgelerde kısıtlama.
-        
+
         Teslim edilmiş belgeler düzenlenemez (sadece yöneticiler için izin var).
         """
         for record in self:
             # Teslim edilmiş belgelerde değişiklik yapılamaz
+            # AMA: Eğer wizard tamamlama işleminden geliyorsa (durum değişikliği), izin ver
             if record.durum == 'teslim_edildi':
-                # Durum değişikliği de dahil her türlü değişiklik engellenir
-                # (Yönetici bile düzenleyemez - veri bütünlüğü için)
-                raise UserError(
-                    _(
-                        "⛔ Teslim edilmiş teslimat belgeleri düzenlenemez!\n\n"
-                        f"📄 Belge: {record.name}\n"
-                        f"📋 Durum: Teslim Edildi\n"
-                        f"📅 Teslim Tarihi: {record.gercek_teslimat_saati or 'N/A'}\n"
-                        f"👤 Teslim Alan: {record.teslim_alan_kisi or 'N/A'}\n\n"
-                        "Bu belge arşivlenmiştir ve değiştirilemez."
+                # Sadece wizard'dan gelen alanları kontrol et
+                wizard_fields = {'durum', 'gercek_teslimat_saati', 'teslim_alan_kisi',
+                                'teslimat_fotografi', 'fotograf_dosya_adi', 'notlar'}
+                if not set(vals.keys()).issubset(wizard_fields):
+                    # Wizard dışı değişiklik - engelle
+                    raise UserError(
+                        _(
+                            "⛔ Teslim edilmiş teslimat belgeleri düzenlenemez!\n\n"
+                            f"📄 Belge: {record.name}\n"
+                            f"📋 Durum: Teslim Edildi\n"
+                            f"📅 Teslim Tarihi: {record.gercek_teslimat_saati or 'N/A'}\n"
+                            f"👤 Teslim Alan: {record.teslim_alan_kisi or 'N/A'}\n\n"
+                            "Bu belge arşivlenmiştir ve değiştirilemez."
+                        )
                     )
-                )
-        
+
         return super(TeslimatBelgesi, self).write(vals)
     
     def unlink(self):
