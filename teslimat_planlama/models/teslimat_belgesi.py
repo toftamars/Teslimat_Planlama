@@ -198,7 +198,20 @@ class TeslimatBelgesi(models.Model):
         """Teslimat belgesi güncelleme - Teslim edilmiş belgelerde kısıtlama.
 
         Teslim edilmiş belgeler düzenlenemez (sadece yöneticiler için izin var).
+        İptal işlemi sadece yöneticiler tarafından yapılabilir.
         """
+        # İptal yetkisi kontrolü - Sadece yöneticiler iptal edebilir
+        if 'durum' in vals and vals['durum'] == 'iptal':
+            from .teslimat_utils import is_manager
+            if not is_manager(self.env):
+                raise UserError(
+                    _(
+                        "⛔ Teslimat iptal yetkisi yok!\n\n"
+                        "Sadece yöneticiler teslimat belgelerini iptal edebilir.\n"
+                        "Lütfen yöneticinizle iletişime geçin."
+                    )
+                )
+
         # DEBUG: Write işlemlerini logla (Production'da kapatılmalı)
         if _logger.isEnabledFor(logging.DEBUG):
             _logger.debug("WRITE: Records=%s, Keys=%s", [r.name for r in self], list(vals.keys()))
@@ -598,6 +611,43 @@ class TeslimatBelgesi(models.Model):
             "url": google_maps_url,
             "target": "new",
         }
+
+    def action_iptal_et(self) -> None:
+        """Teslimatı iptal et (sadece yöneticiler).
+
+        Yöneticiler bu butona basarak teslimatı iptal edebilir.
+        Durum 'iptal' olur ve chatter'a not eklenir.
+        """
+        self.ensure_one()
+
+        # Yönetici kontrolü (write metodunda da var ama burada da kontrol edelim)
+        from .teslimat_utils import is_manager
+        if not is_manager(self.env):
+            raise UserError(
+                _(
+                    "⛔ Teslimat iptal yetkisi yok!\n\n"
+                    "Sadece yöneticiler teslimat belgelerini iptal edebilir.\n"
+                    "Lütfen yöneticinizle iletişime geçin."
+                )
+            )
+
+        # Zaten iptal veya teslim edilmiş ise hata ver
+        if self.durum == "iptal":
+            raise UserError(_("Bu teslimat zaten iptal edilmiş."))
+
+        if self.durum == "teslim_edildi":
+            raise UserError(
+                _("Teslim edilmiş teslimat iptal edilemez!")
+            )
+
+        # Durumu iptal yap
+        self.durum = "iptal"
+
+        # Chatter'a not ekle
+        self.message_post(
+            body=_("❌ Teslimat yönetici tarafından iptal edildi."),
+            subject=_("Teslimat İptal Edildi"),
+        )
 
     def send_teslimat_sms(self) -> bool:
         """Teslimat SMS'i gönder ve chatter'a kaydet.

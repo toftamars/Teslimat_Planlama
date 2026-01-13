@@ -81,6 +81,13 @@
                             attrs="{'invisible': [('durum', '!=', 'yolda')]}"
                             groups="teslimat_planlama.group_teslimat_driver"/>
 
+                    <!-- Yönetici: İptal Butonu (teslim edilmiş ve iptal hariç) -->
+                    <button name="action_iptal_et" string="❌ İptal Et" type="object"
+                            class="btn-danger" icon="fa-times-circle"
+                            attrs="{'invisible': [('durum', 'in', ['teslim_edildi', 'iptal'])]}"
+                            groups="teslimat_planlama.group_teslimat_manager"
+                            confirm="Bu teslimatı iptal etmek istediğinizden emin misiniz?"/>
+
                     <field name="durum" widget="statusbar"
                            statusbar_visible="taslak,bekliyor,hazir,yolda,teslim_edildi"
                            clickable="False"/>
