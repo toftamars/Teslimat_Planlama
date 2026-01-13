@@ -1,11 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Ana Menü - Default olarak Ana Sayfa açılacak -->
+    <!-- Ana Menü - Action kaldırıldı -->
     <menuitem id="menu_teslimat_planlama_root"
               name="Teslimat"
               sequence="75"
-              action="action_teslimat_ana_sayfa"
               web_icon="teslimat_planlama,static/description/icon.svg"/>
+
+    <!-- Ana Sayfa - Kapasite Sorgulama -->
+    <menuitem id="menu_teslimat_ana_sayfa"
+              name="📊 Ana Sayfa"
+              parent="menu_teslimat_planlama_root"
+              action="action_teslimat_ana_sayfa"
+              sequence="10"/>
 
     <!-- Teslimat Belgeleri -->
     <menuitem id="menu_teslimat_belgeleri"
