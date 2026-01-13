@@ -5,7 +5,7 @@
               name="Teslimat"
               sequence="75"
               groups="base.group_user"
-              web_icon="teslimat_planlama,static/description/icon.svg"/>
+              web_icon="teslimat_planlama,static/description/icon.png"/>
 
     <!-- Ana Sayfa - Kapasite Sorgulama (Tüm internal user'lar) -->
     <menuitem id="menu_teslimat_ana_sayfa"
