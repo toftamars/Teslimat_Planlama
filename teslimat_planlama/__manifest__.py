@@ -1,6 +1,6 @@
 {
     'name': 'Teslimat Planlama',
-    'version': '15.0.2.1.4',
+    'version': '15.0.2.2.0',
     'category': 'Inventory',
     'summary': 'Teslimat planlaması ve rota optimizasyonu',
     'description': """
@@ -36,7 +36,6 @@
         
         # Data
         'data/ir_sequence_data.xml',
-        'data/cleanup_ana_sayfa_tarih_model.xml',
         'data/teslimat_program_kurulum_data.xml',
         'data/istanbul_ilceleri_data.xml',
         

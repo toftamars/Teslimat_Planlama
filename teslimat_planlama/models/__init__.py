@@ -11,5 +11,4 @@ from . import teslimat_ana_sayfa
 from . import teslimat_ana_sayfa_gun
 from . import res_partner
 from . import stock_picking
-from . import ir_model_data_cleanup
 
