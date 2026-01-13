@@ -21,13 +21,22 @@ def pre_init_hook(cr):
         if deleted_data:
             _logger.info("✓ ir_model_data (sync.wizard) silindi: %s kayıt", deleted_data)
 
+        # ir_model_fields_selection tablosundaki referansları ÖNCE temizle (Odoo 15+)
         cr.execute("""
-            DELETE FROM ir_model
-            WHERE model = 'teslimat.arac.ilce.sync.wizard'
+            SELECT 1 FROM information_schema.tables
+            WHERE table_name='ir_model_fields_selection'
         """)
-        deleted_model = cr.rowcount
-        if deleted_model:
-            _logger.info("✓ ir_model (sync.wizard) silindi: %s kayıt", deleted_model)
+        if cr.fetchone():
+            cr.execute("""
+                DELETE FROM ir_model_fields_selection
+                WHERE field_id IN (
+                    SELECT id FROM ir_model_fields
+                    WHERE model = 'teslimat.arac.ilce.sync.wizard'
+                )
+            """)
+            deleted_selections = cr.rowcount
+            if deleted_selections:
+                _logger.info("✓ ir_model_fields_selection kayıtları silindi: %s kayıt", deleted_selections)
 
         cr.execute("""
             DELETE FROM ir_model_fields
@@ -36,6 +45,14 @@ def pre_init_hook(cr):
         deleted_fields = cr.rowcount
         if deleted_fields:
             _logger.info("✓ ir_model_fields (sync.wizard) silindi: %s kayıt", deleted_fields)
+
+        cr.execute("""
+            DELETE FROM ir_model
+            WHERE model = 'teslimat.arac.ilce.sync.wizard'
+        """)
+        deleted_model = cr.rowcount
+        if deleted_model:
+            _logger.info("✓ ir_model (sync.wizard) silindi: %s kayıt", deleted_model)
 
         cr.execute("""
             DELETE FROM ir_model_access
