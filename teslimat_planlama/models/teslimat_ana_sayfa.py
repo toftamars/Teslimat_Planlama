@@ -27,6 +27,7 @@ class TeslimatAnaSayfa(models.TransientModel):
         "res.country.state",
         string="İl",
         domain=[("country_id.code", "=", "TR")],
+        # Default değer default_get'te ayarlanıyor
     )
     ilce_id = fields.Many2one(
         "teslimat.ilce",
@@ -34,11 +35,34 @@ class TeslimatAnaSayfa(models.TransientModel):
         # Domain onchange ile dinamik olarak güncelleniyor
     )
 
+    @api.model
+    def default_get(self, fields_list):
+        """Form açılırken İstanbul'u otomatik seç."""
+        res = super(TeslimatAnaSayfa, self).default_get(fields_list)
+
+        # İstanbul'u varsayılan olarak seç
+        if 'state_id' in fields_list and not res.get('state_id'):
+            istanbul = self.env["res.country.state"].search(
+                [("country_id.code", "=", "TR"), ("name", "=", "İstanbul")], limit=1
+            )
+            if istanbul:
+                res['state_id'] = istanbul.id
+
+        return res
+
     @api.onchange("arac_id")
     def _onchange_arac_id(self):
-        """Araç seçildiğinde İl seçimini sıfırla."""
-        self.state_id = False
+        """Araç seçildiğinde ilçe seçimini sıfırla ve İstanbul'u otomatik seç."""
         self.ilce_id = False
+
+        # İstanbul'u otomatik seç
+        istanbul = self.env["res.country.state"].search(
+            [("country_id.code", "=", "TR"), ("name", "=", "İstanbul")], limit=1
+        )
+        if istanbul:
+            self.state_id = istanbul
+
+        # İl domain'ini sadece Türkiye ile sınırla
         return {"domain": {"state_id": [("country_id.code", "=", "TR")]}}
 
     @api.onchange("state_id")
@@ -50,11 +74,11 @@ class TeslimatAnaSayfa(models.TransientModel):
             return {"domain": {"ilce_id": [("id", "in", [])]}}
         
         domain = [
-            ("aktif", "=", True), 
+            ("aktif", "=", True),
             ("teslimat_aktif", "=", True)
         ]
-        
-        # İl filtresi
+
+        # İl filtresi (İstanbul)
         if self.state_id:
             domain.append(("state_id", "=", self.state_id.id))
         
@@ -462,12 +486,12 @@ class TeslimatAnaSayfa(models.TransientModel):
             if record.ilce_id and record.arac_id:
                 bugun = fields.Date.today()
 
-                # Bugün için teslimat sayısı
+                # Bugün için teslimat sayısı (iptal hariç tüm durumlar)
                 record.teslimat_sayisi = self.env["teslimat.belgesi"].search_count(
                     [
                         ("teslimat_tarihi", "=", bugun),
                         ("ilce_id", "=", record.ilce_id.id),
-                        ("durum", "in", ["taslak", "bekliyor", "hazir", "yolda"]),
+                        ("durum", "!=", "iptal"),  # Sadece iptal hariç
                     ]
                 )
 
@@ -593,12 +617,13 @@ class TeslimatAnaSayfa(models.TransientModel):
             uygun_gunler = []
 
             # Performans optimizasyonu: Batch sorgulama
+            # İptal hariç TÜM durumlar kapasite doldurur (teslim_edildi dahil)
             teslimat_domain = [
                 ("teslimat_tarihi", ">=", bugun),
                 ("teslimat_tarihi", "<=", bitis_tarihi),
                 ("arac_id", "=", record.arac_id.id),
                 ("ilce_id", "=", record.ilce_id.id),
-                ("durum", "in", ["taslak", "bekliyor", "hazir", "yolda"]),
+                ("durum", "!=", "iptal"),  # Sadece iptal hariç
             ]
 
             _logger.info("🔍 Kapasite hesaplama - Araç: %s, İlçe: %s",

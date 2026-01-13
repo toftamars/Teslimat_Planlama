@@ -301,6 +301,20 @@ class TeslimatBelgesi(models.Model):
             # Yönetici mi?
             yonetici_mi = is_manager(self.env)
 
+            # Araç-İlçe uyumluluğu kontrolü (yönetici ve küçük araçlar hariç)
+            if not yonetici_mi and not small_vehicle and record.ilce_id and record.arac_id:
+                if record.ilce_id not in record.arac_id.uygun_ilceler:
+                    arac_tipi_label = dict(record.arac_id._fields["arac_tipi"].selection).get(
+                        record.arac_id.arac_tipi, record.arac_id.arac_tipi
+                    )
+                    raise ValidationError(
+                        _(f"⛔ Araç-İlçe Uyumsuzluğu!\n\n"
+                          f"🚚 Araç: {record.arac_id.name} ({arac_tipi_label})\n"
+                          f"📍 İlçe: {record.ilce_id.name}\n\n"
+                          f"Bu araç bu ilçeye teslimat yapamaz.\n"
+                          f"Lütfen uygun bir araç veya ilçe seçin.")
+                    )
+
             # İlçe-gün eşleşmesi kontrolü (yönetici ve küçük araçlar hariç)
             if not yonetici_mi and not small_vehicle and record.ilce_id and record.arac_id:
                 gun_kodu = get_gun_kodu(record.teslimat_tarihi)
@@ -329,11 +343,12 @@ class TeslimatBelgesi(models.Model):
                             )
 
             # Araç kapasitesi kontrolü
+            # İptal hariç TÜM durumlar kapasite doldurur (teslim_edildi dahil)
             if record.arac_id and record.teslimat_tarihi:
                 domain = [
                     ("teslimat_tarihi", "=", record.teslimat_tarihi),
                     ("arac_id", "=", record.arac_id.id),
-                    ("durum", "in", ["taslak", "bekliyor", "hazir", "yolda"]),
+                    ("durum", "!=", "iptal"),  # Sadece iptal hariç
                     ("id", "!=", record.id),  # Kendisini hariç tut
                 ]
 
