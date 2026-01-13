@@ -26,20 +26,46 @@ class TeslimatAnaSayfa(models.TransientModel):
     state_id = fields.Many2one(
         "res.country.state",
         string="İl",
-        domain=[("country_id.code", "=", "TR")],
+        domain=[("country_id.code", "=", "TR"), ("name", "=", "Istanbul")],
+        default=lambda self: self.env["res.country.state"].search(
+            [("country_id.code", "=", "TR"), ("name", "=", "Istanbul")], limit=1
+        ),
     )
     ilce_id = fields.Many2one(
         "teslimat.ilce",
         string="İlçe",
         # Domain onchange ile dinamik olarak güncelleniyor
     )
+    
+    @api.model
+    def default_get(self, fields_list):
+        """Form açılırken İstanbul'u otomatik seç."""
+        res = super(TeslimatAnaSayfa, self).default_get(fields_list)
+        
+        # İstanbul'u varsayılan olarak seç
+        if 'state_id' in fields_list and not res.get('state_id'):
+            istanbul = self.env["res.country.state"].search(
+                [("country_id.code", "=", "TR"), ("name", "=", "Istanbul")], limit=1
+            )
+            if istanbul:
+                res['state_id'] = istanbul.id
+        
+        return res
 
     @api.onchange("arac_id")
     def _onchange_arac_id(self):
-        """Araç seçildiğinde İl seçimini sıfırla."""
-        self.state_id = False
+        """Araç seçildiğinde ilçe seçimini sıfırla ve İstanbul'u otomatik seç."""
         self.ilce_id = False
-        return {"domain": {"state_id": [("country_id.code", "=", "TR")]}}
+        
+        # İstanbul'u otomatik seç
+        istanbul = self.env["res.country.state"].search(
+            [("country_id.code", "=", "TR"), ("name", "=", "Istanbul")], limit=1
+        )
+        if istanbul:
+            self.state_id = istanbul
+        
+        # İl domain'ini güncelle - sadece İstanbul
+        return {"domain": {"state_id": [("country_id.code", "=", "TR"), ("name", "=", "Istanbul")]}}
 
     @api.onchange("state_id")
     def _onchange_state_id(self):
@@ -54,7 +80,7 @@ class TeslimatAnaSayfa(models.TransientModel):
             ("teslimat_aktif", "=", True)
         ]
         
-        # İl filtresi
+        # İl filtresi (İstanbul)
         if self.state_id:
             domain.append(("state_id", "=", self.state_id.id))
         
