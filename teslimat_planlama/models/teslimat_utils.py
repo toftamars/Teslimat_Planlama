@@ -1,6 +1,8 @@
 """Teslimat Yardımcı Fonksiyonlar ve Sabitler."""
-from datetime import date
+from datetime import date, datetime
 from typing import Optional, TYPE_CHECKING
+
+import pytz
 
 if TYPE_CHECKING:
     from odoo import models
@@ -166,23 +168,138 @@ def validate_arac_ilce_eslesmesi(arac, ilce, bypass_for_manager: bool = True) ->
 
 def check_pazar_gunu_validation(tarih, bypass_for_manager: bool = True, env=None) -> None:
     """Pazar günü kontrolü yap ve hata fırlat.
-    
+
     Args:
         tarih: Kontrol edilecek tarih
         bypass_for_manager: Yöneticiler için kontrolü atla
         env: Odoo environment (yönetici kontrolü için)
-        
+
     Raises:
         ValidationError: Pazar günü ise
     """
     from odoo.exceptions import ValidationError
-    
+
     # Yönetici kontrolü
     if bypass_for_manager and env and is_manager(env):
         return  # Yöneticiler pazar günü de teslimat oluşturabilir
-    
+
     if is_pazar_gunu(tarih):
         raise ValidationError(
-                "Pazar günü teslimat yapılamaz! "
+            "Pazar günü teslimat yapılamaz! "
             "Lütfen başka bir gün seçin."
-            )
+        )
+
+
+# İstanbul timezone sabiti
+ISTANBUL_TZ = pytz.timezone('Europe/Istanbul')
+
+# Aynı gün teslimat kesim saati
+AYNI_GUN_KESIM_SAATI = 12
+
+
+def get_istanbul_time() -> datetime:
+    """İstanbul saatini döndür.
+
+    Returns:
+        datetime: İstanbul timezone'unda şimdiki zaman
+    """
+    return datetime.now(ISTANBUL_TZ)
+
+
+def check_ayni_gun_saat_kontrolu(teslimat_tarihi: date, bypass_for_manager: bool = True, env=None) -> tuple[bool, str]:
+    """Aynı gün teslimat için saat kontrolü yap.
+
+    Saat 12:00'den sonra aynı güne teslimat yazılamaz.
+
+    Args:
+        teslimat_tarihi: Teslimat tarihi
+        bypass_for_manager: Yöneticiler için kontrolü atla
+        env: Odoo environment (yönetici kontrolü için)
+
+    Returns:
+        tuple: (Geçerli mi?, Mesaj)
+    """
+    # Yönetici kontrolü
+    if bypass_for_manager and env and is_manager(env):
+        return True, "Yönetici yetkisi - saat kontrolü atlandı"
+
+    simdi = get_istanbul_time()
+    bugun = simdi.date()
+
+    if teslimat_tarihi != bugun:
+        return True, "Farklı gün - saat kontrolü gerekmiyor"
+
+    saat = simdi.hour
+    dakika = simdi.minute
+
+    if saat >= AYNI_GUN_KESIM_SAATI:
+        return False, (
+            f"⛔ Aynı gün teslimat yazılamaz!\n\n"
+            f"🕐 İstanbul Saati: {saat:02d}:{dakika:02d}\n"
+            f"Saat {AYNI_GUN_KESIM_SAATI}:00'dan sonra bugüne teslimat planlanamaz."
+        )
+
+    return True, f"Saat kontrolü geçti (şu an: {saat:02d}:{dakika:02d})"
+
+
+def check_arac_kapatma(env, arac_id: int, teslimat_tarihi: date, bypass_for_manager: bool = True) -> tuple[bool, Optional[str]]:
+    """Araç kapatma kontrolü yap.
+
+    Args:
+        env: Odoo environment
+        arac_id: Araç ID
+        teslimat_tarihi: Teslimat tarihi
+        bypass_for_manager: Yöneticiler için kontrolü atla
+
+    Returns:
+        tuple: (Geçerli mi?, Hata mesajı veya None)
+    """
+    # Yönetici kontrolü
+    if bypass_for_manager and is_manager(env):
+        return True, None
+
+    if not arac_id or not teslimat_tarihi:
+        return True, None
+
+    kapali, kapatma = env["teslimat.arac.kapatma"].arac_kapali_mi(arac_id, teslimat_tarihi)
+
+    if kapali and kapatma:
+        sebep_dict = {
+            "bakim": "Bakım",
+            "ariza": "Arıza",
+            "kaza": "Kaza",
+            "yakit": "Yakıt Sorunu",
+            "surucu_yok": "Sürücü Yok",
+            "diger": "Diğer",
+        }
+        sebep_text = sebep_dict.get(kapatma.sebep, kapatma.sebep)
+        kapatan_kisi = kapatma.kapatan_kullanici_id.name or "Bilinmiyor"
+        arac = env["teslimat.arac"].browse(arac_id)
+        arac_name = arac.name if arac else "Bilinmiyor"
+
+        mesaj = (
+            f"⛔ Bu tarihte araç kapalı!\n\n"
+            f"📅 Tarih: {teslimat_tarihi.strftime('%d.%m.%Y')}\n"
+            f"🚗 Araç: {arac_name}\n"
+            f"⚠️ Sebep: {sebep_text}\n"
+            f"👤 Kapatan: {kapatan_kisi}"
+        )
+        if kapatma.aciklama:
+            mesaj += f"\n📝 Açıklama: {kapatma.aciklama}"
+        mesaj += "\n\nLütfen başka bir tarih seçin."
+
+        return False, mesaj
+
+    return True, None
+
+
+# Haftalık program sabiti (tekrarlayan kod önleme)
+HAFTALIK_PROGRAM = {
+    "pazartesi": 0,
+    "sali": 1,
+    "carsamba": 2,
+    "persembe": 3,
+    "cuma": 4,
+    "cumartesi": 5,
+    "pazar": 6,
+}

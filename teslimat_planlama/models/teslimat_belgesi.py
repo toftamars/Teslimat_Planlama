@@ -1,6 +1,5 @@
 """Teslimat Belgesi Modeli."""
 import logging
-from typing import Optional
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
@@ -24,6 +23,9 @@ class TeslimatBelgesi(models.Model):
     _inherit = ["mail.thread", "mail.activity.mixin"]
     _order = "teslimat_tarihi desc, name"
 
+    # Performans: Composite indeksler (kapasite sorgularında kritik)
+    _sql_constraints = []
+
     name = fields.Char(
         string="Teslimat No",
         required=True,
@@ -32,7 +34,7 @@ class TeslimatBelgesi(models.Model):
         default=lambda self: _("Yeni"),
     )
     teslimat_tarihi = fields.Date(
-        string="Teslimat Tarihi", required=True, default=fields.Date.today
+        string="Teslimat Tarihi", required=True, default=fields.Date.today, index=True
     )
 
     # Müşteri Bilgileri
@@ -85,10 +87,10 @@ class TeslimatBelgesi(models.Model):
 
     # Araç ve İlçe Bilgileri
     arac_id = fields.Many2one(
-        "teslimat.arac", string="Araç", required=True, tracking=True
+        "teslimat.arac", string="Araç", required=True, tracking=True, index=True
     )
     ilce_id = fields.Many2one(
-        "teslimat.ilce", string="İlçe", required=True, tracking=True
+        "teslimat.ilce", string="İlçe", required=True, tracking=True, index=True
     )
     surucu_id = fields.Many2one(
         "res.partner",
@@ -129,6 +131,7 @@ class TeslimatBelgesi(models.Model):
         default="taslak",
         required=True,
         tracking=True,
+        index=True,
     )
 
     # Sıra
@@ -362,17 +365,8 @@ class TeslimatBelgesi(models.Model):
         from .teslimat_utils import is_pazar_gunu, get_gun_kodu, is_manager
 
         for record in self:
-            _logger.info("=" * 60)
-            _logger.info("TESLIMAT VALIDASYON KONTROLÜ")
-            _logger.info("Belge: %s", record.name)
-            _logger.info("Tarih: %s", record.teslimat_tarihi)
-            _logger.info("Araç: %s", record.arac_id.name if record.arac_id else None)
-            _logger.info("İlçe: %s", record.ilce_id.name if record.ilce_id else None)
-            _logger.info("Durum: %s", record.durum)
-
             # Teslim edilmiş veya iptal belgeleri kontrol etme
             if record.durum in ['teslim_edildi', 'iptal']:
-                _logger.info("⏭ Durum '%s' - Validasyon atlandı", record.durum)
                 continue
 
             # Aynı gün teslimat kontrolü (12:00 sonrası yasak)
@@ -382,12 +376,8 @@ class TeslimatBelgesi(models.Model):
             saat = simdi_istanbul.hour
             dakika = simdi_istanbul.minute
 
-            _logger.info("İstanbul Saati: %s:%s", saat, dakika)
-            _logger.info("Bugün: %s", bugun)
-
             # Eğer teslimat tarihi bugüne eşitse ve saat 12:00 veya sonrası ise
             if record.teslimat_tarihi == bugun and (saat >= 12):
-                _logger.error("❌ AYNI GÜN TESLİMAT YASAK (Saat 12:00 sonrası)")
                 raise ValidationError(
                     _(f"⛔ Aynı gün teslimat yazılamaz!\n\n"
                       f"🕐 İstanbul Saati: {saat:02d}:{dakika:02d}\n"
@@ -398,56 +388,27 @@ class TeslimatBelgesi(models.Model):
 
             # Pazar günü kontrolü
             if is_pazar_gunu(record.teslimat_tarihi):
-                _logger.error("❌ PAZAR GÜNÜ TESLİMAT!")
                 raise ValidationError(
                     _("⛔ Pazar günü teslimat yapılamaz!\n\n"
                       "Lütfen farklı bir gün seçin.")
                 )
-            
-            # Araç kapatma kontrolü
-            if record.teslimat_tarihi and record.arac_id:
-                teslimat_tarihi = record.teslimat_tarihi
-                arac_id = record.arac_id.id
 
-                if arac_id and teslimat_tarihi:
-                    kapali, kapatma = self.env["teslimat.arac.kapatma"].arac_kapali_mi(
-                        arac_id, teslimat_tarihi
-                    )
-                    if kapali and kapatma:
-                        sebep_dict = {
-                            "bakim": "Bakım",
-                            "ariza": "Arıza",
-                            "kaza": "Kaza",
-                            "yakit": "Yakıt Sorunu",
-                            "surucu_yok": "Sürücü Yok",
-                            "diger": "Diğer",
-                        }
-                        sebep_text = sebep_dict.get(kapatma.sebep, kapatma.sebep)
-                        kapatan_kisi = kapatma.kapatan_kullanici_id.name or "Bilinmiyor"
-                        arac_name = record.arac_id.name if record.arac_id else self.env["teslimat.arac"].browse(arac_id).name
-                        
-                        _logger.error("❌ ARAÇ KAPALI! Teslimat tarihi değiştirilemez!")
-                        raise ValidationError(
-                            _(
-                                f"⛔ Bu tarihte araç kapalı! Teslimat oluşturulamaz veya tarih değiştirilemez.\n\n"
-                                f"📅 Tarih: {teslimat_tarihi.strftime('%d.%m.%Y')}\n"
-                                f"🚗 Araç: {arac_name}\n"
-                                f"⚠️ Sebep: {sebep_text}\n"
-                                f"👤 Kapatan: {kapatan_kisi}\n"
-                                f"{('📝 Açıklama: ' + kapatma.aciklama) if kapatma.aciklama else ''}\n\n"
-                                f"Lütfen başka bir tarih seçin."
-                            )
-                        )
+            # Araç kapatma kontrolü (utils fonksiyonu kullanılıyor)
+            if record.teslimat_tarihi and record.arac_id:
+                from odoo.addons.teslimat_planlama.models.teslimat_utils import check_arac_kapatma
+                gecerli, hata_mesaji = check_arac_kapatma(
+                    self.env, record.arac_id.id, record.teslimat_tarihi, bypass_for_manager=False
+                )
+                if not gecerli:
+                    raise ValidationError(_(hata_mesaji))
 
             # Küçük araç kontrolü
             small_vehicle = record.arac_id and record.arac_id.arac_tipi in [
                 "kucuk_arac_1", "kucuk_arac_2", "ek_arac"
             ]
-            _logger.info("Küçük araç mı: %s", small_vehicle)
 
             # Yönetici mi?
             yonetici_mi = is_manager(self.env)
-            _logger.info("Yönetici mi: %s", yonetici_mi)
 
             # Araç-İlçe uyumluluğu kontrolü (yönetici ve küçük araçlar hariç)
             if not yonetici_mi and not small_vehicle and record.ilce_id and record.arac_id:
@@ -466,14 +427,12 @@ class TeslimatBelgesi(models.Model):
             # İlçe-gün eşleşmesi kontrolü (yönetici ve küçük araçlar hariç)
             if not yonetici_mi and not small_vehicle and record.ilce_id and record.arac_id:
                 gun_kodu = get_gun_kodu(record.teslimat_tarihi)
-                _logger.info("Gün kodu: %s", gun_kodu)
-                
+
                 if gun_kodu:
                     gun = self.env["teslimat.gun"].search(
                         [("gun_kodu", "=", gun_kodu)], limit=1
                     )
                     if gun:
-                        _logger.info("Gün bulundu: %s", gun.name)
                         # Genel ilçe-gün eşleşmesi kontrolü
                         gun_ilce = self.env["teslimat.gun.ilce"].search(
                             [
@@ -485,7 +444,6 @@ class TeslimatBelgesi(models.Model):
                         )
 
                         if not gun_ilce:
-                            _logger.error("❌ İLÇE-GÜN EŞLEŞME HATASI!")
                             raise ValidationError(
                                 _(f"⛔ İlçe-Gün Eşleşmesi Hatası!\n\n"
                                   f"📍 İlçe: {record.ilce_id.name}\n"
@@ -493,12 +451,6 @@ class TeslimatBelgesi(models.Model):
                                   f"Bu ilçeye bu gün teslimat yapılamaz.\n"
                                   f"Lütfen uygun bir gün seçin.")
                             )
-                        else:
-                            _logger.info("✅ İlçe-Gün eşleşmesi uygun")
-                    else:
-                        _logger.warning("⚠ Gün bulunamadı: %s", gun_kodu)
-            else:
-                _logger.info("⏭ İlçe-gün kontrolü atlandı (yönetici veya küçük araç)")
 
             # Araç kapasitesi kontrolü
             # İptal hariç TÜM durumlar kapasite doldurur (teslim_edildi dahil)
@@ -518,12 +470,9 @@ class TeslimatBelgesi(models.Model):
 
                 # +1 ekle (kendisi için)
                 toplam = mevcut_teslimat_sayisi + 1
-                
-                _logger.info("Kapasite kontrolü: %s/%s", toplam, record.arac_id.gunluk_teslimat_limiti)
 
                 if toplam > record.arac_id.gunluk_teslimat_limiti:
                     ilce_bilgi = f" - {record.ilce_id.name}" if record.ilce_id else ""
-                    _logger.error("❌ KAPASİTE AŞILDI!")
                     raise ValidationError(
                         _(f"⛔ Araç Kapasitesi Dolu!\n\n"
                           f"🚚 Araç: {record.arac_id.name}{ilce_bilgi}\n"
@@ -532,11 +481,6 @@ class TeslimatBelgesi(models.Model):
                           f"Bu tarih için araç kapasitesi dolmuştur.\n"
                           f"Lütfen farklı bir tarih veya araç seçin.")
                     )
-                else:
-                    _logger.info("✅ Kapasite uygun")
-            
-            _logger.info("✅ Tüm validasyonlar başarılı")
-            _logger.info("=" * 60)
 
     @api.depends("durum")
     def _compute_is_readonly(self) -> None:

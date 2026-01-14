@@ -25,20 +25,23 @@ class TeslimatAracKapatma(models.Model):
         string="Araç",
         required=True,
         ondelete="cascade",
+        index=True,
         help="Kapatılacak araç"
     )
-    
+
     baslangic_tarihi = fields.Date(
         string="Başlangıç Tarihi",
         required=True,
         default=fields.Date.today,
+        index=True,
         help="Araç kapatma başlangıç tarihi"
     )
-    
+
     bitis_tarihi = fields.Date(
         string="Bitiş Tarihi",
         required=True,
         default=fields.Date.today,
+        index=True,
         help="Araç kapatma bitiş tarihi"
     )
     

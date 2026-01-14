@@ -327,49 +327,31 @@ class TeslimatAnaSayfa(models.TransientModel):
                             limit=1,
                         )
                         
-                        # Genel kural yoksa haftalık programa göre otomatik oluştur
+                        # Genel kural yoksa haftalık programa göre varsayılan kapasite kullan
+                        # NOT: Compute içinde create() yapmıyoruz - veri tutarlılığı için
+                        varsayilan_kapasite = 0
                         if not gun_ilce:
                             # Haftalık programı kontrol et
-                            from ..data.turkey_data import ANADOLU_ILCELERI, AVRUPA_ILCELERI
-                            
+                            from ..data.turkey_data import HAFTALIK_PROGRAM_SCHEDULE
+
                             ilce_adi_upper = record.ilce_id.name.upper()
-                            schedule = {
-                                'pazartesi': ['MALTEPE', 'KARTAL', 'PENDİK', 'TUZLA', 'SULTANBEYLİ', 'ŞİŞLİ', 'BEŞİKTAŞ', 'BEYOĞLU', 'KAĞITHANE'],
-                                'sali': ['ÜSKÜDAR', 'KADIKÖY', 'ÜMRANİYE', 'ATAŞEHİR', 'ŞİŞLİ', 'BEŞİKTAŞ', 'BEYOĞLU', 'KAĞITHANE'],
-                                'carsamba': ['ÜSKÜDAR', 'KADIKÖY', 'ÜMRANİYE', 'ATAŞEHİR', 'BAĞCILAR', 'BAHÇELİEVLER', 'BAKIRKÖY', 'GÜNGÖREN', 'ESENLER', 'ZEYTİNBURNU', 'BAYRAMPAŞA', 'FATİH'],
-                                'persembe': ['MALTEPE', 'KARTAL', 'PENDİK', 'TUZLA', 'SULTANBEYLİ', 'BÜYÜKÇEKMECE', 'SİLİVRİ', 'ÇATALCA', 'ARNAVUTKÖY', 'BAKIRKÖY'],
-                                'cuma': ['ÜSKÜDAR', 'KADIKÖY', 'ÜMRANİYE', 'ATAŞEHİR', 'ŞİŞLİ', 'BEŞİKTAŞ', 'BEYOĞLU', 'KAĞITHANE'],
-                                'cumartesi': ['BEYKOZ', 'ÇEKMEKÖY', 'SANCAKTEPE', 'ŞİLE', 'BÜYÜKÇEKMECE', 'SİLİVRİ', 'ÇATALCA', 'ARNAVUTKÖY', 'BAKIRKÖY']
-                            }
-                            
-                            # Bugünün günü için programda bu ilçe var mı?
-                            bugun_gun_programi = schedule.get(gun_kodu, [])
-                            
+                            bugun_gun_programi = HAFTALIK_PROGRAM_SCHEDULE.get(gun_kodu, [])
+
                             # İlçe ismini normalize et (Türkçe karakterleri tolere et)
-                            ilce_programda_var_mi = False
                             for program_ilce in bugun_gun_programi:
                                 if program_ilce.upper() in ilce_adi_upper or ilce_adi_upper in program_ilce.upper():
-                                    ilce_programda_var_mi = True
+                                    varsayilan_kapasite = 7  # Programda var, varsayılan kapasite
                                     break
-                            
-                            # Eğer programda varsa otomatik oluştur
-                            if ilce_programda_var_mi:
-                                gun_ilce = self.env["teslimat.gun.ilce"].create({
-                                    'gun_id': gun.id,
-                                    'ilce_id': record.ilce_id.id,
-                                    'maksimum_teslimat': 7,  # Varsayılan kapasite
-                                    'tarih': False,  # Genel kural
-                                })
-                                _logger.info(
-                                    "✓ Otomatik gün-ilçe eşleşmesi oluşturuldu: %s - %s",
-                                    gun.name,
-                                    record.ilce_id.name
-                                )
 
                         if gun_ilce:
                             record.toplam_kapasite = gun_ilce.maksimum_teslimat
-                            record.kullanilan_kapasite = record.teslimat_sayisi  # Yukarıda hesaplanan gerçek teslimat sayısı
+                            record.kullanilan_kapasite = record.teslimat_sayisi
                             record.kalan_kapasite = record.toplam_kapasite - record.kullanilan_kapasite
+                        elif varsayilan_kapasite > 0:
+                            # Programda var ama gun_ilce kaydı yok - varsayılan kapasite kullan
+                            record.toplam_kapasite = varsayilan_kapasite
+                            record.kullanilan_kapasite = record.teslimat_sayisi
+                            record.kalan_kapasite = varsayilan_kapasite - record.teslimat_sayisi
                         else:
                             record.toplam_kapasite = 0
                             record.kullanilan_kapasite = 0
@@ -514,79 +496,66 @@ class TeslimatAnaSayfa(models.TransientModel):
                     # İlçe-gün eşleşmesi kontrol et
                     key = (gun.id, record.ilce_id.id)
                     gun_ilce = gun_ilce_dict.get(key)
-                    
-                    # Eşleşme yoksa otomatik oluştur
+
+                    # Varsayılan kapasite (programda varsa)
+                    varsayilan_kapasite = 0
                     if not gun_ilce:
-                        # Haftalık programa göre kontrol et
-                        from ..data.turkey_data import ANADOLU_ILCELERI, AVRUPA_ILCELERI
-                        
+                        # Haftalık programa göre varsayılan kapasite belirle
+                        # NOT: Compute içinde create() yapmıyoruz
+                        from ..data.turkey_data import HAFTALIK_PROGRAM_SCHEDULE
+
                         ilce_adi_upper = record.ilce_id.name.upper()
-                        schedule = {
-                            'pazartesi': ['MALTEPE', 'KARTAL', 'PENDİK', 'TUZLA', 'SULTANBEYLİ', 'ŞİŞLİ', 'BEŞİKTAŞ', 'BEYOĞLU', 'KAĞITHANE'],
-                            'sali': ['ÜSKÜDAR', 'KADIKÖY', 'ÜMRANİYE', 'ATAŞEHİR', 'ŞİŞLİ', 'BEŞİKTAŞ', 'BEYOĞLU', 'KAĞITHANE'],
-                            'carsamba': ['ÜSKÜDAR', 'KADIKÖY', 'ÜMRANİYE', 'ATAŞEHİR', 'BAĞCILAR', 'BAHÇELİEVLER', 'BAKIRKÖY', 'GÜNGÖREN', 'ESENLER', 'ZEYTİNBURNU', 'BAYRAMPAŞA', 'FATİH'],
-                            'persembe': ['MALTEPE', 'KARTAL', 'PENDİK', 'TUZLA', 'SULTANBEYLİ', 'BÜYÜKÇEKMECE', 'SİLİVRİ', 'ÇATALCA', 'ARNAVUTKÖY', 'BAKIRKÖY'],
-                            'cuma': ['ÜSKÜDAR', 'KADIKÖY', 'ÜMRANİYE', 'ATAŞEHİR', 'ŞİŞLİ', 'BEŞİKTAŞ', 'BEYOĞLU', 'KAĞITHANE'],
-                            'cumartesi': ['BEYKOZ', 'ÇEKMEKÖY', 'SANCAKTEPE', 'ŞİLE', 'BÜYÜKÇEKMECE', 'SİLİVRİ', 'ÇATALCA', 'ARNAVUTKÖY', 'BAKIRKÖY']
-                        }
-                        
-                        bugun_gun_programi = schedule.get(gun_kodu, [])
-                        ilce_programda_var_mi = False
+                        bugun_gun_programi = HAFTALIK_PROGRAM_SCHEDULE.get(gun_kodu, [])
+
                         for program_ilce in bugun_gun_programi:
                             if program_ilce.upper() in ilce_adi_upper or ilce_adi_upper in program_ilce.upper():
-                                ilce_programda_var_mi = True
+                                varsayilan_kapasite = 7
                                 break
-                        
-                        if ilce_programda_var_mi:
-                            gun_ilce = self.env["teslimat.gun.ilce"].create({
-                                'gun_id': gun.id,
-                                'ilce_id': record.ilce_id.id,
-                                'maksimum_teslimat': 7,
-                                'tarih': False,
-                            })
-                            gun_ilce_dict[key] = gun_ilce
 
                     if gun_ilce:
                         toplam_kapasite = gun_ilce.maksimum_teslimat
-                        # Kalan kapasite = Toplam - Gerçek teslimat sayısı
-                        kalan_kapasite = toplam_kapasite - teslimat_sayisi
+                    elif varsayilan_kapasite > 0:
+                        toplam_kapasite = varsayilan_kapasite
+                    else:
+                        continue  # Programda yoksa bu günü atla
 
-                        # Kapasitesi dolu ise atla (yöneticiler için göster)
-                        if kalan_kapasite <= 0 and not yonetici_mi:
-                            continue
+                    # Kalan kapasite = Toplam - Gerçek teslimat sayısı
+                    kalan_kapasite = toplam_kapasite - teslimat_sayisi
 
-                        # Araç kapatma kontrolü
-                        arac_kapali = False
-                        if record.arac_id:
-                            kapali, kapatma = self.env["teslimat.arac.kapatma"].arac_kapali_mi(
-                                record.arac_id.id, tarih
-                            )
-                            if kapali and kapatma:
-                                arac_kapali = True
+                    # Kapasitesi dolu ise atla (yöneticiler için göster)
+                    if kalan_kapasite <= 0 and not yonetici_mi:
+                        continue
 
-                        # Durum hesaplama
-                        if arac_kapali:
-                            # Araç kapalı durumu (öncelikli)
-                            durum_text = "🚫 Kapalı"
-                        elif kalan_kapasite < 0:
-                            # Aşım durumu - teslimat sayısı kapasiteyi aşmış
-                            durum_text = f"⚠️ Aşım ({teslimat_sayisi}/{toplam_kapasite})"
-                        elif kalan_kapasite > 5:
-                            durum_text = "🟢 Boş"
-                        elif kalan_kapasite > 0:
-                            durum_text = "🟡 Dolu Yakın"
-                        else:
-                            durum_text = "🔴 Dolu"
+                    # Araç kapatma kontrolü
+                    arac_kapali = False
+                    if record.arac_id:
+                        kapali, kapatma = self.env["teslimat.arac.kapatma"].arac_kapali_mi(
+                            record.arac_id.id, tarih
+                        )
+                        if kapali and kapatma:
+                            arac_kapali = True
 
-                        uygun_gunler.append({
-                            "ana_sayfa_id": record.id,  # Ana sayfa ID'si ekle
-                            "tarih": tarih,
-                            "gun_adi": gun_adi_tr,
-                            "teslimat_sayisi": teslimat_sayisi,
-                            "toplam_kapasite": toplam_kapasite,
-                            "kalan_kapasite": kalan_kapasite,
-                            "durum_text": durum_text,
-                        })
+                    # Durum hesaplama
+                    if arac_kapali:
+                        durum_text = "🚫 Kapalı"
+                    elif kalan_kapasite < 0:
+                        durum_text = f"⚠️ Aşım ({teslimat_sayisi}/{toplam_kapasite})"
+                    elif kalan_kapasite > 5:
+                        durum_text = "🟢 Boş"
+                    elif kalan_kapasite > 0:
+                        durum_text = "🟡 Dolu Yakın"
+                    else:
+                        durum_text = "🔴 Dolu"
+
+                    uygun_gunler.append({
+                        "ana_sayfa_id": record.id,
+                        "tarih": tarih,
+                        "gun_adi": gun_adi_tr,
+                        "teslimat_sayisi": teslimat_sayisi,
+                        "toplam_kapasite": toplam_kapasite,
+                        "kalan_kapasite": kalan_kapasite,
+                        "durum_text": durum_text,
+                    })
 
             # Günleri tarihe göre sırala ve kaydet
             uygun_gunler.sort(key=lambda x: x["tarih"])
@@ -618,7 +587,16 @@ class TeslimatAnaSayfa(models.TransientModel):
         return True
 
     def action_load_districts(self):
-        """İlçeleri veritabanına yükle ve haftalık programı uygula."""
+        """İlçeleri veritabanına yükle ve haftalık programı uygula.
+
+        Sadece yöneticiler bu işlemi yapabilir.
+        """
+        from .teslimat_utils import is_manager
+        from odoo.exceptions import UserError
+
+        if not is_manager(self.env):
+            raise UserError(_("Bu işlem sadece yöneticiler tarafından yapılabilir."))
+
         self.env["teslimat.ilce"].create_istanbul_districts_simple()
         self.env["teslimat.ilce"].apply_weekly_schedule()
         return {

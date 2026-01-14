@@ -90,9 +90,41 @@ ANADOLU_ILCELERI = [
 ]
 
 AVRUPA_ILCELERI = [
-    "Beyoğlu", "Şişli", "Beşiktaş", "Kağıthane", "Sarıyer", "Bakırköy", 
-    "Bahçelievler", "Güngören", "Esenler", "Bağcılar", "Eyüpsultan", 
-    "Gaziosmanpaşa", "Küçükçekmece", "Avcılar", "Başakşehir", "Sultangazi", 
-    "Arnavutköy", "Fatih", "Zeytinburnu", "Bayrampaşa", "Esenyurt", 
+    "Beyoğlu", "Şişli", "Beşiktaş", "Kağıthane", "Sarıyer", "Bakırköy",
+    "Bahçelievler", "Güngören", "Esenler", "Bağcılar", "Eyüpsultan",
+    "Gaziosmanpaşa", "Küçükçekmece", "Avcılar", "Başakşehir", "Sultangazi",
+    "Arnavutköy", "Fatih", "Zeytinburnu", "Bayrampaşa", "Esenyurt",
     "Beylikdüzü", "Silivri", "Çatalca", "Büyükçekmece"
 ]
+
+# Haftalık Teslimat Programı (DRY - tek bir yerde tanımlı)
+# Her gün için hangi ilçelere teslimat yapılabileceğini belirtir
+HAFTALIK_PROGRAM_SCHEDULE = {
+    'pazartesi': [
+        'MALTEPE', 'KARTAL', 'PENDİK', 'TUZLA', 'SULTANBEYLİ',
+        'ŞİŞLİ', 'BEŞİKTAŞ', 'BEYOĞLU', 'KAĞITHANE'
+    ],
+    'sali': [
+        'ÜSKÜDAR', 'KADIKÖY', 'ÜMRANİYE', 'ATAŞEHİR',
+        'ŞİŞLİ', 'BEŞİKTAŞ', 'BEYOĞLU', 'KAĞITHANE'
+    ],
+    'carsamba': [
+        'ÜSKÜDAR', 'KADIKÖY', 'ÜMRANİYE', 'ATAŞEHİR',
+        'BAĞCILAR', 'BAHÇELİEVLER', 'BAKIRKÖY', 'GÜNGÖREN',
+        'ESENLER', 'ZEYTİNBURNU', 'BAYRAMPAŞA', 'FATİH'
+    ],
+    'persembe': [
+        'MALTEPE', 'KARTAL', 'PENDİK', 'TUZLA', 'SULTANBEYLİ',
+        'BÜYÜKÇEKMECE', 'SİLİVRİ', 'ÇATALCA', 'ARNAVUTKÖY', 'BAKIRKÖY'
+    ],
+    'cuma': [
+        'ÜSKÜDAR', 'KADIKÖY', 'ÜMRANİYE', 'ATAŞEHİR',
+        'ŞİŞLİ', 'BEŞİKTAŞ', 'BEYOĞLU', 'KAĞITHANE'
+    ],
+    'cumartesi': [
+        'BEYKOZ', 'ÇEKMEKÖY', 'SANCAKTEPE', 'ŞİLE',
+        'BÜYÜKÇEKMECE', 'SİLİVRİ', 'ÇATALCA', 'ARNAVUTKÖY', 'BAKIRKÖY'
+    ],
+    # Pazar günü teslimat yapılmaz
+    'pazar': []
+}

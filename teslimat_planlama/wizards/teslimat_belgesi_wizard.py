@@ -1,18 +1,14 @@
 """Teslimat Belgesi Oluşturma Wizard'ı."""
-import logging
 from datetime import datetime
-from typing import Optional
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
-from odoo.addons.teslimat_planlama.models.teslimat_ilce import (
+from odoo.addons.teslimat_planlama.data.turkey_data import (
     ANADOLU_ILCELERI,
     AVRUPA_ILCELERI,
 )
 from odoo.addons.teslimat_planlama.models.teslimat_utils import is_small_vehicle
-
-_logger = logging.getLogger(__name__)
 
 
 class TeslimatBelgesiWizard(models.TransientModel):
@@ -65,16 +61,10 @@ class TeslimatBelgesiWizard(models.TransientModel):
         """Create metodunu override et - context'ten ilce_id al."""
         ctx = self.env.context
 
-        _logger.info("=== WIZARD CREATE ===")
-        _logger.info("Context: %s", ctx)
-        _logger.info("Vals before: %s", vals)
-
         # Context'ten ilce_id al ve vals'a ekle
         if ctx.get("default_ilce_id") and "ilce_id" not in vals:
             vals["ilce_id"] = ctx.get("default_ilce_id")
-            _logger.info("İlçe ID vals'a eklendi: %s", vals["ilce_id"])
 
-        _logger.info("Vals after: %s", vals)
         return super().create(vals)
 
     @api.model
@@ -90,59 +80,30 @@ class TeslimatBelgesiWizard(models.TransientModel):
         res = super(TeslimatBelgesiWizard, self).default_get(fields_list)
         ctx = self.env.context
 
-        _logger.info("=" * 80)
-        _logger.info("WIZARD DEFAULT_GET - BASLANGIC")
-        _logger.info("=" * 80)
-        _logger.info("Context keys: %s", list(ctx.keys()))
-        _logger.info("fields_list: %s", fields_list)
-
         # Tarih context'ten geliyorsa kullan
         if ctx.get("default_teslimat_tarihi"):
             tarih_str = ctx.get("default_teslimat_tarihi")
-            _logger.info("✓ Tarih bulundu: %s (type: %s)", tarih_str, type(tarih_str))
             if isinstance(tarih_str, str):
                 try:
                     tarih = datetime.strptime(tarih_str, "%Y-%m-%d").date()
                     res["teslimat_tarihi"] = tarih
-                    _logger.info("✓ Tarih parse edildi: %s", tarih)
                 except ValueError:
                     res["teslimat_tarihi"] = fields.Date.today()
-                    _logger.warning("⚠ Tarih parse edilemedi, bugün kullanıldı")
             else:
                 res["teslimat_tarihi"] = tarih_str
-        else:
-            _logger.warning("✗ Context'te default_teslimat_tarihi YOK")
 
         # Araç context'ten geliyorsa kullan
         if ctx.get("default_arac_id"):
-            arac_id = ctx.get("default_arac_id")
-            res["arac_id"] = arac_id
-            _logger.info("✓ Araç ID atandı: %s", arac_id)
-        else:
-            _logger.warning("✗ Context'te default_arac_id YOK")
+            res["arac_id"] = ctx.get("default_arac_id")
 
-        # İlçe context'ten geliyorsa kullan - ZORUNLU ATAMA
+        # İlçe context'ten geliyorsa kullan
         if ctx.get("default_ilce_id"):
             ilce_id = ctx.get("default_ilce_id")
-            
-            # İlçe kaydını doğrula
             ilce = self.env["teslimat.ilce"].browse(ilce_id)
             if ilce.exists():
                 res["ilce_id"] = ilce_id
-                _logger.info("✓✓✓ İLÇE ID ATANDI: %s - %s ✓✓✓", ilce_id, ilce.name)
-                
-                # fields_list'e ilce_id'yi ekle (Odoo'nun default_get'e dahil etmesi için)
                 if fields_list and 'ilce_id' not in fields_list:
                     fields_list.append('ilce_id')
-            else:
-                _logger.error("✗✗✗ İLÇE KAYDI BULUNAMADI: %s ✗✗✗", ilce_id)
-        else:
-            _logger.error("✗✗✗ CONTEXT'TE default_ilce_id YOK! ✗✗✗")
-
-        _logger.info("=" * 80)
-        _logger.info("WIZARD DEFAULT_GET - SONUC")
-        _logger.info("Result dict: %s", res)
-        _logger.info("=" * 80)
 
         # Transfer ID context'ten geliyorsa kullan
         if ctx.get("default_transfer_id") and "transfer_id" in (fields_list or []):
@@ -161,19 +122,6 @@ class TeslimatBelgesiWizard(models.TransientModel):
 
         return res
 
-    @api.model
-    def create(self, vals):
-        """Wizard oluşturulurken context'ten ilçe ID'sini garanti al."""
-        ctx = self.env.context
-        
-        # Eğer vals'ta ilce_id yoksa ve context'te varsa, ekle
-        if not vals.get('ilce_id') and ctx.get('default_ilce_id'):
-            ilce_id = ctx.get('default_ilce_id')
-            vals['ilce_id'] = ilce_id
-            _logger.info("🟢 CREATE: İlçe ID vals'a eklendi: %s", ilce_id)
-        
-        return super(TeslimatBelgesiWizard, self).create(vals)
-    
     @api.depends("arac_id")
     def _compute_arac_kucuk_mu(self) -> None:
         """Araç küçük araç mı kontrol et."""
@@ -185,26 +133,23 @@ class TeslimatBelgesiWizard(models.TransientModel):
             )
     
     @api.onchange("arac_id")
-    def _onchange_arac_id(self):
-        """Araç değiştiğinde context'ten ilçe ID'sini kontrol et ve ata."""
+    def _onchange_arac_id(self) -> None:
+        """Araç seçildiğinde ilçe domain'ini güncelle.
+
+        Context'ten ilçe ID'si geliyorsa atar, yoksa domain günceller.
+        Yöneticiler için tüm ilçeler gösterilir.
+        """
+        from odoo.addons.teslimat_planlama.models.teslimat_utils import is_manager
+
         # Context'ten ilçe ID'si geliyorsa ata
         ctx = self.env.context
         if ctx.get("default_ilce_id") and not self.ilce_id:
             ilce_id = ctx.get("default_ilce_id")
-            _logger.info("🔵 ONCHANGE: Context'ten ilçe atanıyor: %s", ilce_id)
             self.ilce_id = ilce_id
             return {'value': {'ilce_id': ilce_id}}
 
-    @api.onchange("arac_id")
-    def _onchange_arac_id(self) -> None:
-        """Araç seçildiğinde ilçe domain'ini güncelle.
-        
-        Yöneticiler için tüm ilçeler gösterilir.
-        """
-        from odoo.addons.teslimat_planlama.models.teslimat_utils import is_manager
-        
         self.ilce_id = False
-        
+
         if not self.arac_id:
             return {
                 "domain": {
@@ -254,18 +199,9 @@ class TeslimatBelgesiWizard(models.TransientModel):
     @api.onchange("transfer_id")
     def _onchange_transfer_id(self) -> None:
         """Transfer seçildiğinde müşteri bilgilerini otomatik doldur."""
-        import logging
-        _logger = logging.getLogger(__name__)
-
         picking = self.transfer_id
-        _logger.info("=== ONCHANGE TRANSFER_ID ===")
-        _logger.info("Picking: %s", picking)
 
         if picking:
-            _logger.info("Picking name: %s", picking.name)
-            _logger.info("Picking partner_id: %s", picking.partner_id)
-            _logger.info("Picking state: %s", picking.state)
-
             # 1. Transfer durumu kontrolü
             if picking.state in ["cancel", "draft"]:
                 return {
@@ -295,7 +231,6 @@ class TeslimatBelgesiWizard(models.TransientModel):
 
             # 3. Müşteri bilgileri
             if picking.partner_id:
-                _logger.info("Setting musteri_id to: %s", picking.partner_id)
                 self.musteri_id = picking.partner_id
                 partner = picking.partner_id
 
@@ -318,15 +253,10 @@ class TeslimatBelgesiWizard(models.TransientModel):
                 # Telefon bilgisi - partner'dan al
                 if partner.phone:
                     self.musteri_telefon = partner.phone
-                    _logger.info("Telefon bilgisi atandı: %s", partner.phone)
                 elif partner.mobile:
                     self.musteri_telefon = partner.mobile
-                    _logger.info("Mobil telefon bilgisi atandı: %s", partner.mobile)
                 else:
                     self.musteri_telefon = ""
-                    _logger.warning("Müşterinin telefon bilgisi yok")
-            else:
-                _logger.warning("Picking has no partner_id!")
 
     def action_teslimat_olustur(self) -> dict:
         """Teslimat belgesi oluştur, SMS gönder ve yönlendir.
@@ -358,38 +288,17 @@ class TeslimatBelgesiWizard(models.TransientModel):
             raise UserError(_("Müşteri seçimi zorunludur."))
 
         # Pazar günü kontrolü - Tüm araçlar pazar günü kapalıdır
-        from ..models.teslimat_utils import check_pazar_gunu_validation
-        
+        from ..models.teslimat_utils import check_pazar_gunu_validation, check_arac_kapatma
+
         check_pazar_gunu_validation(self.teslimat_tarihi)
-        
-        # Araç kapatma kontrolü
+
+        # Araç kapatma kontrolü (utils fonksiyonu kullanılıyor)
         if self.arac_id and self.teslimat_tarihi:
-            kapali, kapatma = self.env["teslimat.arac.kapatma"].arac_kapali_mi(
-                self.arac_id.id, self.teslimat_tarihi
+            gecerli, hata_mesaji = check_arac_kapatma(
+                self.env, self.arac_id.id, self.teslimat_tarihi, bypass_for_manager=False
             )
-            if kapali and kapatma:
-                sebep_dict = {
-                    "bakim": "Bakım",
-                    "ariza": "Arıza",
-                    "kaza": "Kaza",
-                    "yakit": "Yakıt Sorunu",
-                    "surucu_yok": "Sürücü Yok",
-                    "diger": "Diğer",
-                }
-                sebep_text = sebep_dict.get(kapatma.sebep, kapatma.sebep)
-                kapatan_kisi = kapatma.kapatan_kullanici_id.name or "Bilinmiyor"
-                
-                raise UserError(
-                    _(
-                        f"Bu tarihte araç kapalı!\n\n"
-                        f"📅 Tarih: {self.teslimat_tarihi.strftime('%d.%m.%Y')}\n"
-                        f"🚗 Araç: {self.arac_id.name}\n"
-                        f"⚠️ Sebep: {sebep_text}\n"
-                        f"👤 Kapatan: {kapatan_kisi}\n"
-                        f"{('📝 Açıklama: ' + kapatma.aciklama) if kapatma.aciklama else ''}\n\n"
-                        f"Lütfen başka bir tarih veya araç seçin."
-                    )
-                )
+            if not gecerli:
+                raise UserError(_(hata_mesaji))
 
         # Kapasite kontrolü - Araç + İlçe (Günlük maksimum 7 teslimat)
         # İlçe bazlı kontrol: Aynı araç aynı gün farklı ilçelere gidebilir
