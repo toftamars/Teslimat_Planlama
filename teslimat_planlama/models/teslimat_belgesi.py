@@ -404,11 +404,11 @@ class TeslimatBelgesi(models.Model):
                       "Lütfen farklı bir gün seçin.")
                 )
             
-            # Araç kapatma kontrolü - Tarih veya araç değişikliğinde kontrol et
-            if 'teslimat_tarihi' in vals or 'arac_id' in vals or record.teslimat_tarihi or record.arac_id:
-                teslimat_tarihi = vals.get('teslimat_tarihi', record.teslimat_tarihi)
-                arac_id = vals.get('arac_id', record.arac_id.id if record.arac_id else False)
-                
+            # Araç kapatma kontrolü
+            if record.teslimat_tarihi and record.arac_id:
+                teslimat_tarihi = record.teslimat_tarihi
+                arac_id = record.arac_id.id
+
                 if arac_id and teslimat_tarihi:
                     kapali, kapatma = self.env["teslimat.arac.kapatma"].arac_kapali_mi(
                         arac_id, teslimat_tarihi
