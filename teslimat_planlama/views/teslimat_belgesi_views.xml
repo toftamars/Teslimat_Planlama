@@ -76,7 +76,7 @@
                             groups="teslimat_planlama.group_teslimat_driver"/>
 
                     <!-- Sürücü: Teslimatı Tamamla (sadece yolda durumunda görünür) -->
-                    <button name="action_teslimat_tamamla" string="✅ Teslimatı Tamamla" type="object"
+                    <button name="action_teslimat_tamamla" string="✅ Teslimatı Tamamla" type="object" 
                             class="oe_highlight" icon="fa-check"
                             attrs="{'invisible': [('durum', '!=', 'yolda')]}"
                             groups="teslimat_planlama.group_teslimat_driver"/>
@@ -88,7 +88,7 @@
                             groups="teslimat_planlama.group_teslimat_manager"
                             confirm="Bu teslimatı iptal etmek istediğinizden emin misiniz?"/>
 
-                    <field name="durum" widget="statusbar"
+                    <field name="durum" widget="statusbar" 
                            statusbar_visible="taslak,bekliyor,hazir,yolda,teslim_edildi"
                            clickable="False"/>
                 </header>
@@ -162,9 +162,9 @@
                     <group string="📷 Teslimat Fotoğrafı" attrs="{'invisible': ['|', ('durum', '!=', 'teslim_edildi'), ('teslimat_fotografi', '=', False)]}">
                         <div class="text-center">
                             <field name="teslimat_fotografi" widget="image" readonly="1" nolabel="1" 
-                                   options="{'size': [600, 600], 'preview_image': true}"
+                                   options="{'size': [600, 600]}"
                                    class="oe_avatar"
-                                   style="cursor: pointer; max-width: 100%;"
+                                   style="cursor: pointer; max-width: 100%; height: auto;"
                                    title="Fotoğrafa tıklayarak büyütebilirsiniz"/>
                             <field name="fotograf_dosya_adi" invisible="1"/>
                             <p class="text-muted mt-2">

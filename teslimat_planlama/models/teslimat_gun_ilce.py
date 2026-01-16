@@ -96,8 +96,8 @@ class TeslimatGunIlce(models.Model):
                         )
                     )
                 else:
-                    raise ValidationError(
-                        _(
+                raise ValidationError(
+                    _(
                             f"Bu gün ({record.gun_id.name}) ve ilçe ({record.ilce_id.name}) "
                             f"için zaten genel bir kural mevcut."
                     )
