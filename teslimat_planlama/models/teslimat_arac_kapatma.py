@@ -4,6 +4,8 @@ import logging
 from odoo import api, fields, models
 from odoo.exceptions import ValidationError
 
+from .teslimat_utils import calculate_day_count
+
 _logger = logging.getLogger(__name__)
 
 
@@ -119,11 +121,7 @@ class TeslimatAracKapatma(models.Model):
     def _compute_gun_sayisi(self):
         """Gün sayısını hesapla."""
         for record in self:
-            if record.baslangic_tarihi and record.bitis_tarihi:
-                delta = record.bitis_tarihi - record.baslangic_tarihi
-                record.gun_sayisi = delta.days + 1
-            else:
-                record.gun_sayisi = 0
+            record.gun_sayisi = calculate_day_count(record.baslangic_tarihi, record.bitis_tarihi)
     
     @api.constrains("baslangic_tarihi", "bitis_tarihi")
     def _check_tarih_sirasi(self):
