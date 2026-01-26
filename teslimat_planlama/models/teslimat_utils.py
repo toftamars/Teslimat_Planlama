@@ -1,53 +1,52 @@
-"""Teslimat Yardımcı Fonksiyonlar ve Sabitler."""
+"""Teslimat Yardımcı Fonksiyonlar."""
 from datetime import date, datetime
 from typing import Optional, TYPE_CHECKING
 
 import pytz
 
+from .teslimat_constants import (
+    ACTIVE_STATUSES,
+    ARAC_KAPATMA_SEBEP_LABELS,
+    CANCELLED_STATUS,
+    COMPLETED_STATUS,
+    FORECAST_DAYS,
+    GUN_ESLESMESI,
+    GUN_KODU_MAP,
+    IN_TRANSIT_STATUSES,
+    ISTANBUL_TIMEZONE,
+    SAME_DAY_DELIVERY_CUTOFF_HOUR,
+    SMALL_VEHICLE_TYPES,
+    get_arac_kapatma_sebep_label,
+)
+
 if TYPE_CHECKING:
     from odoo import models
 
-# Gün kodları mapping
-GUN_KODU_MAP = {
-    0: "pazartesi",
-    1: "sali",
-    2: "carsamba",
-    3: "persembe",
-    4: "cuma",
-    5: "cumartesi",
-    6: "pazar",
-}
 
-# Gün isimleri eşleşmesi (İngilizce -> Türkçe)
-GUN_ESLESMESI = {
-    "Monday": "Pazartesi",
-    "Tuesday": "Salı",
-    "Wednesday": "Çarşamba",
-    "Thursday": "Perşembe",
-    "Friday": "Cuma",
-    "Saturday": "Cumartesi",
-    "Sunday": "Pazar",
-}
+def calculate_day_count(start_date: date, end_date: date) -> int:
+    """İki tarih arasındaki gün sayısını hesapla (başlangıç ve bitiş dahil).
 
-# Forecasting constants
-FORECAST_DAYS = 30  # Number of days to show in available days list
+    Args:
+        start_date: Başlangıç tarihi
+        end_date: Bitiş tarihi
 
-# Delivery status constants
-ACTIVE_STATUSES = ["taslak", "bekliyor", "hazir", "yolda", "teslim_edildi"]
-IN_TRANSIT_STATUSES = ["hazir", "yolda"]
-CANCELLED_STATUS = "iptal"
-COMPLETED_STATUS = "teslim_edildi"
-
-# Vehicle type constants
-SMALL_VEHICLE_TYPES = ["kucuk_arac_1", "kucuk_arac_2", "ek_arac"]
+    Returns:
+        int: Gün sayısı (0 veya pozitif)
+    """
+    if not start_date or not end_date:
+        return 0
+    if end_date < start_date:
+        return 0
+    delta = end_date - start_date
+    return delta.days + 1
 
 
 def get_gun_kodu(tarih: date) -> Optional[str]:
     """Tarih için gün kodunu döndür.
-    
+
     Args:
         tarih: Kontrol edilecek tarih
-        
+
     Returns:
         str: Gün kodu (pazartesi, sali, vb.) veya None
     """
@@ -190,11 +189,8 @@ def check_pazar_gunu_validation(tarih, bypass_for_manager: bool = True, env=None
         )
 
 
-# İstanbul timezone sabiti
-ISTANBUL_TZ = pytz.timezone('Europe/Istanbul')
-
-# Aynı gün teslimat kesim saati
-AYNI_GUN_KESIM_SAATI = 12
+# İstanbul timezone instance
+_ISTANBUL_TZ = pytz.timezone(ISTANBUL_TIMEZONE)
 
 
 def get_istanbul_time() -> datetime:
@@ -203,7 +199,7 @@ def get_istanbul_time() -> datetime:
     Returns:
         datetime: İstanbul timezone'unda şimdiki zaman
     """
-    return datetime.now(ISTANBUL_TZ)
+    return datetime.now(_ISTANBUL_TZ)
 
 
 def check_ayni_gun_saat_kontrolu(teslimat_tarihi: date, bypass_for_manager: bool = True, env=None) -> tuple[bool, str]:
@@ -232,11 +228,11 @@ def check_ayni_gun_saat_kontrolu(teslimat_tarihi: date, bypass_for_manager: bool
     saat = simdi.hour
     dakika = simdi.minute
 
-    if saat >= AYNI_GUN_KESIM_SAATI:
+    if saat >= SAME_DAY_DELIVERY_CUTOFF_HOUR:
         return False, (
-            f"⛔ Aynı gün teslimat yazılamaz!\n\n"
-            f"🕐 İstanbul Saati: {saat:02d}:{dakika:02d}\n"
-            f"Saat {AYNI_GUN_KESIM_SAATI}:00'dan sonra bugüne teslimat planlanamaz."
+            f"Aynı gün teslimat yazılamaz!\n\n"
+            f"İstanbul Saati: {saat:02d}:{dakika:02d}\n"
+            f"Saat {SAME_DAY_DELIVERY_CUTOFF_HOUR}:00'dan sonra bugüne teslimat planlanamaz."
         )
 
     return True, f"Saat kontrolü geçti (şu an: {saat:02d}:{dakika:02d})"
@@ -264,28 +260,20 @@ def check_arac_kapatma(env, arac_id: int, teslimat_tarihi: date, bypass_for_mana
     kapali, kapatma = env["teslimat.arac.kapatma"].arac_kapali_mi(arac_id, teslimat_tarihi)
 
     if kapali and kapatma:
-        sebep_dict = {
-            "bakim": "Bakım",
-            "ariza": "Arıza",
-            "kaza": "Kaza",
-            "yakit": "Yakıt Sorunu",
-            "surucu_yok": "Sürücü Yok",
-            "diger": "Diğer",
-        }
-        sebep_text = sebep_dict.get(kapatma.sebep, kapatma.sebep)
+        sebep_text = get_arac_kapatma_sebep_label(kapatma.sebep)
         kapatan_kisi = kapatma.kapatan_kullanici_id.name or "Bilinmiyor"
         arac = env["teslimat.arac"].browse(arac_id)
         arac_name = arac.name if arac else "Bilinmiyor"
 
         mesaj = (
-            f"⛔ Bu tarihte araç kapalı!\n\n"
-            f"📅 Tarih: {teslimat_tarihi.strftime('%d.%m.%Y')}\n"
-            f"🚗 Araç: {arac_name}\n"
-            f"⚠️ Sebep: {sebep_text}\n"
-            f"👤 Kapatan: {kapatan_kisi}"
+            f"Bu tarihte araç kapalı!\n\n"
+            f"Tarih: {teslimat_tarihi.strftime('%d.%m.%Y')}\n"
+            f"Araç: {arac_name}\n"
+            f"Sebep: {sebep_text}\n"
+            f"Kapatan: {kapatan_kisi}"
         )
         if kapatma.aciklama:
-            mesaj += f"\n📝 Açıklama: {kapatma.aciklama}"
+            mesaj += f"\nAçıklama: {kapatma.aciklama}"
         mesaj += "\n\nLütfen başka bir tarih seçin."
 
         return False, mesaj

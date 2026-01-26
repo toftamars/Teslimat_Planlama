@@ -1,13 +1,22 @@
 """Teslimat Belgesi Modeli."""
 import logging
+from datetime import datetime
+
+import pytz
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
 
-_logger = logging.getLogger(__name__)
+from .teslimat_constants import DAILY_DELIVERY_LIMIT, get_arac_kapatma_sebep_label
+from .teslimat_utils import (
+    check_arac_kapatma,
+    check_pazar_gunu_validation,
+    get_gun_kodu,
+    is_manager,
+    is_pazar_gunu,
+)
 
-# Günlük teslimat limiti (user grubu için)
-DAILY_DELIVERY_LIMIT = 7
+_logger = logging.getLogger(__name__)
 
 
 class TeslimatBelgesi(models.Model):
@@ -206,8 +215,6 @@ class TeslimatBelgesi(models.Model):
                 vals["sira_no"] = 1
 
         # Pazar günü kontrolü - Yöneticiler için bypass
-        from .teslimat_utils import check_pazar_gunu_validation
-        
         teslimat_tarihi = vals.get("teslimat_tarihi", fields.Date.today())
         check_pazar_gunu_validation(teslimat_tarihi, bypass_for_manager=True, env=self.env)
         
@@ -218,26 +225,18 @@ class TeslimatBelgesi(models.Model):
                 arac_id, teslimat_tarihi
             )
             if kapali and kapatma:
-                sebep_dict = {
-                    "bakim": "Bakım",
-                    "ariza": "Arıza",
-                    "kaza": "Kaza",
-                    "yakit": "Yakıt Sorunu",
-                    "surucu_yok": "Sürücü Yok",
-                    "diger": "Diğer",
-                }
-                sebep_text = sebep_dict.get(kapatma.sebep, kapatma.sebep)
+                sebep_text = get_arac_kapatma_sebep_label(kapatma.sebep)
                 kapatan_kisi = kapatma.kapatan_kullanici_id.name or "Bilinmiyor"
                 arac_name = self.env["teslimat.arac"].browse(arac_id).name
                 
                 raise ValidationError(
                     _(
                         f"Bu tarihte araç kapalı! Teslimat oluşturulamaz.\n\n"
-                        f"📅 Tarih: {teslimat_tarihi.strftime('%d.%m.%Y')}\n"
-                        f"🚗 Araç: {arac_name}\n"
-                        f"⚠️ Sebep: {sebep_text}\n"
-                        f"👤 Kapatan: {kapatan_kisi}\n"
-                        f"{('📝 Açıklama: ' + kapatma.aciklama) if kapatma.aciklama else ''}"
+                        f"Tarih: {teslimat_tarihi.strftime('%d.%m.%Y')}\n"
+                        f"Araç: {arac_name}\n"
+                        f"Sebep: {sebep_text}\n"
+                        f"Kapatan: {kapatan_kisi}\n"
+                        f"{('Açıklama: ' + kapatma.aciklama) if kapatma.aciklama else ''}"
                     )
                 )
 
@@ -271,7 +270,6 @@ class TeslimatBelgesi(models.Model):
         """
         # İptal yetkisi kontrolü - Sadece yöneticiler iptal edebilir
         if 'durum' in vals and vals['durum'] == 'iptal':
-            from .teslimat_utils import is_manager
             if not is_manager(self.env):
                 raise UserError(
                     _(
@@ -360,10 +358,6 @@ class TeslimatBelgesi(models.Model):
         - Araç kapasitesi kontrolü
         - Durum değişikliklerinde de tetiklenir (iptal -> hazir bypass önleme)
         """
-        from datetime import datetime
-        import pytz
-        from .teslimat_utils import is_pazar_gunu, get_gun_kodu, is_manager
-
         for record in self:
             # Teslim edilmiş veya iptal belgeleri kontrol etme
             if record.durum in ['teslim_edildi', 'iptal']:
@@ -395,7 +389,6 @@ class TeslimatBelgesi(models.Model):
 
             # Araç kapatma kontrolü (utils fonksiyonu kullanılıyor)
             if record.teslimat_tarihi and record.arac_id:
-                from odoo.addons.teslimat_planlama.models.teslimat_utils import check_arac_kapatma
                 gecerli, hata_mesaji = check_arac_kapatma(
                     self.env, record.arac_id.id, record.teslimat_tarihi, bypass_for_manager=False
                 )
@@ -666,7 +659,6 @@ class TeslimatBelgesi(models.Model):
         self.ensure_one()
 
         # Yönetici kontrolü (write metodunda da var ama burada da kontrol edelim)
-        from .teslimat_utils import is_manager
         if not is_manager(self.env):
             raise UserError(
                 _(
