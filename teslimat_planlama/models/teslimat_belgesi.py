@@ -273,7 +273,7 @@ class TeslimatBelgesi(models.Model):
             if not is_manager(self.env):
                 raise UserError(
                     _(
-                        "⛔ Teslimat iptal yetkisi yok!\n\n"
+                        "Teslimat iptal yetkisi yok!\n\n"
                         "Sadece yöneticiler teslimat belgelerini iptal edebilir.\n"
                         "Lütfen yöneticinizle iletişime geçin."
                     )
@@ -304,11 +304,11 @@ class TeslimatBelgesi(models.Model):
                     # Wizard dışı değişiklik - engelle
                     raise UserError(
                         _(
-                            "⛔ Teslim edilmiş teslimat belgeleri düzenlenemez!\n\n"
-                            f"📄 Belge: {record.name}\n"
-                            f"📋 Durum: Teslim Edildi\n"
-                            f"📅 Teslim Tarihi: {record.gercek_teslimat_saati or 'N/A'}\n"
-                            f"👤 Teslim Alan: {record.teslim_alan_kisi or 'N/A'}\n\n"
+                            "Teslim edilmiş teslimat belgeleri düzenlenemez!\n\n"
+                            f"Belge: {record.name}\n"
+                            f"Durum: Teslim Edildi\n"
+                            f"Teslim Tarihi: {record.gercek_teslimat_saati or 'N/A'}\n"
+                            f"Teslim Alan: {record.teslim_alan_kisi or 'N/A'}\n\n"
                             "Bu belge arşivlenmiştir ve değiştirilemez."
                         )
                     )
@@ -326,7 +326,7 @@ class TeslimatBelgesi(models.Model):
         if not self.env.user.has_group("teslimat_planlama.group_teslimat_manager"):
             raise UserError(
                 _(
-                    "⛔ Teslimat belgelerini sadece yöneticiler silebilir!\n\n"
+                    "Teslimat belgelerini sadece yöneticiler silebilir!\n\n"
                     "Yönetici yetkisi gereklidir."
                 )
             )
@@ -336,11 +336,11 @@ class TeslimatBelgesi(models.Model):
             if record.durum == 'teslim_edildi':
                 raise UserError(
                     _(
-                        "⛔ Teslim edilmiş teslimat belgeleri silinemez!\n\n"
-                        f"📄 Belge: {record.name}\n"
-                        f"📋 Durum: Teslim Edildi\n"
-                        f"📅 Teslim Tarihi: {record.gercek_teslimat_saati or 'N/A'}\n"
-                        f"👤 Teslim Alan: {record.teslim_alan_kisi or 'N/A'}\n\n"
+                        "Teslim edilmiş teslimat belgeleri silinemez!\n\n"
+                        f"Belge: {record.name}\n"
+                        f"Durum: Teslim Edildi\n"
+                        f"Teslim Tarihi: {record.gercek_teslimat_saati or 'N/A'}\n"
+                        f"Teslim Alan: {record.teslim_alan_kisi or 'N/A'}\n\n"
                         "Bu belge arşivlenmiştir ve silinemez.\n"
                         "Veri bütünlüğü için teslim edilmiş belgeler korunur."
                     )
@@ -373,9 +373,9 @@ class TeslimatBelgesi(models.Model):
             # Eğer teslimat tarihi bugüne eşitse ve saat 12:00 veya sonrası ise
             if record.teslimat_tarihi == bugun and (saat >= 12):
                 raise ValidationError(
-                    _(f"⛔ Aynı gün teslimat yazılamaz!\n\n"
-                      f"🕐 İstanbul Saati: {saat:02d}:{dakika:02d}\n"
-                      f"📅 Teslimat Tarihi: {record.teslimat_tarihi}\n\n"
+                    _(f"Aynı gün teslimat yazılamaz!\n\n"
+                      f"İstanbul Saati: {saat:02d}:{dakika:02d}\n"
+                      f"Teslimat Tarihi: {record.teslimat_tarihi}\n\n"
                       f"Saat 12:00'dan sonra bugüne teslimat planlanamaz.\n"
                       f"Lütfen yarın veya sonraki günler için teslimat planlayın.")
                 )
@@ -383,7 +383,7 @@ class TeslimatBelgesi(models.Model):
             # Pazar günü kontrolü
             if is_pazar_gunu(record.teslimat_tarihi):
                 raise ValidationError(
-                    _("⛔ Pazar günü teslimat yapılamaz!\n\n"
+                    _("Pazar günü teslimat yapılamaz!\n\n"
                       "Lütfen farklı bir gün seçin.")
                 )
 
@@ -410,9 +410,9 @@ class TeslimatBelgesi(models.Model):
                         record.arac_id.arac_tipi, record.arac_id.arac_tipi
                     )
                     raise ValidationError(
-                        _(f"⛔ Araç-İlçe Uyumsuzluğu!\n\n"
-                          f"🚚 Araç: {record.arac_id.name} ({arac_tipi_label})\n"
-                          f"📍 İlçe: {record.ilce_id.name}\n\n"
+                        _(f"Araç-İlçe Uyumsuzluğu!\n\n"
+                          f"Araç: {record.arac_id.name} ({arac_tipi_label})\n"
+                          f"İlçe: {record.ilce_id.name}\n\n"
                           f"Bu araç bu ilçeye teslimat yapamaz.\n"
                           f"Lütfen uygun bir araç veya ilçe seçin.")
                     )
@@ -438,9 +438,9 @@ class TeslimatBelgesi(models.Model):
 
                         if not gun_ilce:
                             raise ValidationError(
-                                _(f"⛔ İlçe-Gün Eşleşmesi Hatası!\n\n"
-                                  f"📍 İlçe: {record.ilce_id.name}\n"
-                                  f"📅 Gün: {gun.name}\n\n"
+                                _(f"İlçe-Gün Eşleşmesi Hatası!\n\n"
+                                  f"İlçe: {record.ilce_id.name}\n"
+                                  f"Gün: {gun.name}\n\n"
                                   f"Bu ilçeye bu gün teslimat yapılamaz.\n"
                                   f"Lütfen uygun bir gün seçin.")
                             )
@@ -467,10 +467,10 @@ class TeslimatBelgesi(models.Model):
                 if toplam > record.arac_id.gunluk_teslimat_limiti:
                     ilce_bilgi = f" - {record.ilce_id.name}" if record.ilce_id else ""
                     raise ValidationError(
-                        _(f"⛔ Araç Kapasitesi Dolu!\n\n"
-                          f"🚚 Araç: {record.arac_id.name}{ilce_bilgi}\n"
-                          f"📅 Tarih: {record.teslimat_tarihi.strftime('%d.%m.%Y')}\n"
-                          f"📦 Kapasite: {toplam}/{record.arac_id.gunluk_teslimat_limiti}\n\n"
+                        _(f"Araç Kapasitesi Dolu!\n\n"
+                          f"Araç: {record.arac_id.name}{ilce_bilgi}\n"
+                          f"Tarih: {record.teslimat_tarihi.strftime('%d.%m.%Y')}\n"
+                          f"Kapasite: {toplam}/{record.arac_id.gunluk_teslimat_limiti}\n\n"
                           f"Bu tarih için araç kapasitesi dolmuştur.\n"
                           f"Lütfen farklı bir tarih veya araç seçin.")
                     )
@@ -501,12 +501,20 @@ class TeslimatBelgesi(models.Model):
                     "warning": {
                         "title": _("Uyarı"),
                         "message": _(
-                            "Transfer belgesi bulunamadı: %s" % self.transfer_no
+                            f"Transfer belgesi bulunamadı: {self.transfer_no}"
                         ),
                     }
                 }
         except Exception as e:
-            _logger.error("Transfer no onchange hatası: %s", e)
+            _logger.exception("Transfer no onchange hatası:")
+            return {
+                "warning": {
+                    "title": _("Hata"),
+                    "message": _(
+                        f"Transfer bilgileri alınırken hata oluştu: {str(e)}"
+                    ),
+                }
+            }
 
     @api.onchange("stock_picking_id")
     def _onchange_stock_picking(self) -> None:
@@ -528,7 +536,15 @@ class TeslimatBelgesi(models.Model):
             # Transfer ürünlerini güncelle
             self._update_transfer_urunleri(picking)
         except Exception as e:
-            _logger.error("Stock picking onchange hatası: %s", e)
+            _logger.exception("Stock picking onchange hatası:")
+            return {
+                "warning": {
+                    "title": _("Hata"),
+                    "message": _(
+                        f"Transfer belgesi bilgileri alınırken hata oluştu: {str(e)}"
+                    ),
+                }
+            }
 
     @api.onchange("musteri_id")
     def _onchange_musteri(self) -> None:
@@ -536,12 +552,9 @@ class TeslimatBelgesi(models.Model):
         if not self.musteri_id:
             return
 
-        try:
-            # Müşteri adres bilgileri varsa kullanılabilir
-            # Buraya ek bilgiler eklenebilir
-            pass
-        except Exception as e:
-            _logger.error("Müşteri onchange hatası: %s", e)
+        # Müşteri adres bilgileri varsa kullanılabilir
+        # Buraya ek bilgiler eklenebilir
+        pass
 
     def _update_transfer_urunleri(self, picking: "stock.picking") -> None:
         """Transfer belgesindeki ürünleri güncelle (Bellek içi komutlar kullanarak).
