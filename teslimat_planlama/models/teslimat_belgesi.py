@@ -534,13 +534,21 @@ class TeslimatBelgesi(models.Model):
                         ),
                     }
                 }
+        except (UserError, ValidationError) as e:
+            _logger.exception("Transfer no onchange - validasyon hatası:")
+            return {
+                "warning": {
+                    "title": _("Validasyon Hatası"),
+                    "message": _(str(e)),
+                }
+            }
         except Exception as e:
-            _logger.exception("Transfer no onchange hatası:")
+            _logger.exception("Transfer no onchange - beklenmeyen hata:")
             return {
                 "warning": {
                     "title": _("Hata"),
                     "message": _(
-                        f"Transfer bilgileri alınırken hata oluştu: {str(e)}"
+                        f"Transfer bilgileri alınırken beklenmeyen hata oluştu: {str(e)}"
                     ),
                 }
             }
@@ -564,13 +572,21 @@ class TeslimatBelgesi(models.Model):
 
             # Transfer ürünlerini güncelle
             self._update_transfer_urunleri(picking)
+        except (UserError, ValidationError) as e:
+            _logger.exception("Stock picking onchange - validasyon hatası:")
+            return {
+                "warning": {
+                    "title": _("Validasyon Hatası"),
+                    "message": _(str(e)),
+                }
+            }
         except Exception as e:
-            _logger.exception("Stock picking onchange hatası:")
+            _logger.exception("Stock picking onchange - beklenmeyen hata:")
             return {
                 "warning": {
                     "title": _("Hata"),
                     "message": _(
-                        f"Transfer belgesi bilgileri alınırken hata oluştu: {str(e)}"
+                        f"Transfer belgesi bilgileri alınırken beklenmeyen hata oluştu: {str(e)}"
                     ),
                 }
             }
