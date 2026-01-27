@@ -464,6 +464,7 @@ class TeslimatAnaSayfa(models.TransientModel):
         bitis_tarihi = bugun + timedelta(days=forecast_days)
         
         # read_group kullanarak tek sorguda tüm teslimat sayılarını al
+        # NOT: groupby="teslimat_tarihi:day" kullanarak günlük gruplama yapıyoruz
         result = self.env["teslimat.belgesi"].read_group(
             domain=[
                 ("teslimat_tarihi", ">=", bugun),
@@ -473,7 +474,8 @@ class TeslimatAnaSayfa(models.TransientModel):
                 ("durum", "!=", CANCELLED_STATUS),
             ],
             fields=["teslimat_tarihi"],
-            groupby=["teslimat_tarihi"],
+            groupby=["teslimat_tarihi:day"],
+            lazy=False,
         )
         
         # DEBUG: Kapasite hesaplama
@@ -485,10 +487,17 @@ class TeslimatAnaSayfa(models.TransientModel):
                 arac.name, ilce.name, len(result)
             )
         
-        return {
-            fields.Date.from_string(item["teslimat_tarihi"]): item["teslimat_tarihi_count"]
-            for item in result
-        }
+        # read_group ile groupby="field:day" kullanınca "field:day" key'i döner
+        teslimat_sayisi_dict = {}
+        for item in result:
+            # "teslimat_tarihi:day" key'inden tarihi al
+            tarih_str = item.get("teslimat_tarihi:day")
+            if tarih_str:
+                # Tarih formatı: "2026-01-27" şeklinde gelir
+                tarih = fields.Date.from_string(tarih_str)
+                teslimat_sayisi_dict[tarih] = item["__count"]
+        
+        return teslimat_sayisi_dict
     
     def _get_gun_ilce_mappings_batch(self, ilce_id: int) -> tuple:
         """Gün ve ilçe-gün eşleşmelerini batch olarak al.
