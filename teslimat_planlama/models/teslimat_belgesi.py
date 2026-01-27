@@ -71,28 +71,10 @@ class TeslimatBelgesi(models.Model):
     @api.depends("musteri_id")
     def _compute_musteri_adres(self):
         """Müşteri adresini hesapla."""
+        from .teslimat_utils import format_partner_address
+        
         for record in self:
-            if record.musteri_id:
-                adres_parcalari = []
-                if record.musteri_id.street:
-                    adres_parcalari.append(record.musteri_id.street)
-                if record.musteri_id.street2:
-                    adres_parcalari.append(record.musteri_id.street2)
-                if record.musteri_id.city:
-                    adres_parcalari.append(record.musteri_id.city)
-                if record.musteri_id.state_id:
-                    adres_parcalari.append(record.musteri_id.state_id.name)
-                if record.musteri_id.zip:
-                    adres_parcalari.append(record.musteri_id.zip)
-                if record.musteri_id.country_id:
-                    adres_parcalari.append(record.musteri_id.country_id.name)
-                
-                if adres_parcalari:
-                    record.musteri_adres = ", ".join(adres_parcalari)
-                else:
-                    record.musteri_adres = "Adres bilgisi bulunamadı"
-            else:
-                record.musteri_adres = ""
+            record.musteri_adres = format_partner_address(record.musteri_id)
 
     # Araç ve İlçe Bilgileri
     arac_id = fields.Many2one(

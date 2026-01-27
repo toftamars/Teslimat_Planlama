@@ -234,18 +234,11 @@ class TeslimatBelgesiWizard(models.TransientModel):
                 self.musteri_id = picking.partner_id
                 partner = picking.partner_id
 
-                # Adres bilgisi - partner'dan al
-                adres_parts = []
-                if partner.street:
-                    adres_parts.append(partner.street)
-                if partner.street2:
-                    adres_parts.append(partner.street2)
-                if partner.city:
-                    adres_parts.append(partner.city)
-                if partner.state_id:
-                    adres_parts.append(partner.state_id.name)
-                if adres_parts:
-                    self.adres = ", ".join(adres_parts)
+                # Adres bilgisi - utility fonksiyonu kullan
+                from ..models.teslimat_utils import format_partner_address
+                adres = format_partner_address(partner)
+                if adres and adres != "Adres bilgisi bulunamadı":
+                    self.adres = adres
                 else:
                     # Fallback - contact_address kullan
                     self.adres = partner.contact_address or partner.name
@@ -260,56 +253,98 @@ class TeslimatBelgesiWizard(models.TransientModel):
 
     def action_teslimat_olustur(self) -> dict:
         """Teslimat belgesi oluştur, SMS gönder ve yönlendir.
+        
+        Bu metod tüm validasyonları yapar, teslimat belgesi oluşturur ve
+        kullanıcıyı oluşturulan belgeye yönlendirir.
 
         Returns:
             dict: Teslimat belgeleri list view'ı
+            
+        Raises:
+            UserError: Validasyon hatası durumunda
         """
         self.ensure_one()
-
-        # Validasyonlar
+        
+        # 1. Temel alan validasyonları
+        self._validate_basic_fields()
+        
+        # 2. Tarih ve araç kısıtlamaları
+        self._validate_date_and_vehicle_constraints()
+        
+        # 3. Kapasite kontrolü
+        self._validate_capacity()
+        
+        # 4. İlçe-araç ve ilçe-gün uyumluluğu
+        self._validate_ilce_arac_gun_compatibility()
+        
+        # 5. Teslimat belgesi oluştur ve SMS gönder
+        teslimat = self._create_teslimat_belgesi()
+        
+        # 6. Kullanıcıyı oluşturulan belgeye yönlendir
+        return self._redirect_to_teslimat(teslimat)
+    
+    def _validate_basic_fields(self) -> None:
+        """Temel alanların dolu olup olmadığını kontrol et.
+        
+        Raises:
+            UserError: Zorunlu alan eksikse
+        """
+        from ..models.teslimat_constants import SMALL_VEHICLE_TYPES
+        
         if not self.arac_id:
             raise UserError(_("Araç seçimi zorunludur."))
-
+        
         # Küçük araç değilse ilçe zorunlu
-        small_vehicle = self.arac_id.arac_tipi in [
-            "kucuk_arac_1",
-            "kucuk_arac_2",
-            "ek_arac",
-        ]
-        if not small_vehicle and not self.ilce_id:
+        if self.arac_id.arac_tipi not in SMALL_VEHICLE_TYPES and not self.ilce_id:
             raise UserError(_("Yaka bazlı araçlar için ilçe seçimi zorunludur."))
-
-        # Transfer zorunlu
+        
         if not self.transfer_id:
             raise UserError(_("Transfer belgesi seçimi zorunludur."))
-
-        # Müşteri zorunlu
+        
         if not self.musteri_id:
             raise UserError(_("Müşteri seçimi zorunludur."))
-
-        # Pazar günü kontrolü - Tüm araçlar pazar günü kapalıdır
+    
+    def _validate_date_and_vehicle_constraints(self) -> None:
+        """Tarih ve araç kısıtlamalarını kontrol et.
+        
+        Pazar günü ve araç kapatma durumlarını kontrol eder.
+        
+        Raises:
+            UserError: Tarih veya araç uygun değilse
+        """
         from ..models.teslimat_utils import check_pazar_gunu_validation, check_arac_kapatma
-
+        
+        # Pazar günü kontrolü
         check_pazar_gunu_validation(self.teslimat_tarihi)
-
-        # Araç kapatma kontrolü (utils fonksiyonu kullanılıyor)
+        
+        # Araç kapatma kontrolü
         if self.arac_id and self.teslimat_tarihi:
             gecerli, hata_mesaji = check_arac_kapatma(
-                self.env, self.arac_id.id, self.teslimat_tarihi, bypass_for_manager=False
+                self.env, self.arac_id.id, self.teslimat_tarihi, 
+                bypass_for_manager=False
             )
             if not gecerli:
                 raise UserError(_(hata_mesaji))
-
-        # Kapasite kontrolü - Araç + İlçe (Günlük maksimum 7 teslimat)
-        # İlçe bazlı kontrol: Aynı araç aynı gün farklı ilçelere gidebilir
-        # İptal hariç TÜM durumlar kapasite doldurur (teslim_edildi dahil)
+    
+    def _validate_capacity(self) -> None:
+        """Araç ve ilçe-gün kapasitelerini kontrol et.
+        
+        İki seviyeli kapasite kontrolü yapar:
+        1. Araç kapasitesi (günlük teslimat limiti)
+        2. İlçe-gün kapasitesi (eğer ilçe seçiliyse)
+        
+        Raises:
+            UserError: Kapasite dolu ise
+        """
+        from ..models.teslimat_constants import CANCELLED_STATUS
+        
+        # 1. Araç kapasitesi kontrolü
         domain = [
             ("teslimat_tarihi", "=", self.teslimat_tarihi),
             ("arac_id", "=", self.arac_id.id),
-            ("durum", "!=", "iptal"),  # Sadece iptal hariç
+            ("durum", "!=", CANCELLED_STATUS),
         ]
         
-        # Eğer ilçe seçiliyse ilçe bazlı kontrol yap
         if self.ilce_id:
             domain.append(("ilce_id", "=", self.ilce_id.id))
             bugun_teslimatlar = self.env["teslimat.belgesi"].search_count(domain)
@@ -333,75 +368,120 @@ class TeslimatBelgesiWizard(models.TransientModel):
                         f"{bugun_teslimatlar}/{self.arac_id.gunluk_teslimat_limiti}"
                     )
                 )
-
-        # Kapasite kontrolü - İlçe-Gün (eğer ilçe seçiliyse)
+        
+        # 2. İlçe-gün kapasitesi kontrolü
         if self.ilce_id:
-            from ..models.teslimat_utils import get_gun_kodu
+            self._validate_ilce_gun_capacity()
+    
+    def _validate_ilce_gun_capacity(self) -> None:
+        """İlçe-gün kapasitesini kontrol et.
+        
+        Raises:
+            UserError: İlçe-gün kapasitesi dolu ise
+        """
+        from ..models.teslimat_utils import get_gun_kodu
+        
+        gun_kodu = get_gun_kodu(self.teslimat_tarihi)
+        if not gun_kodu:
+            return
+        
+        gun = self.env["teslimat.gun"].search(
+            [("gun_kodu", "=", gun_kodu)], limit=1
+        )
+        if not gun:
+            return
+        
+        gun_ilce = self.env["teslimat.gun.ilce"].search(
+            [
+                ("gun_id", "=", gun.id),
+                ("ilce_id", "=", self.ilce_id.id),
+                ("tarih", "=", self.teslimat_tarihi),
+            ],
+            limit=1,
+        )
+        
+        if gun_ilce and gun_ilce.kalan_kapasite <= 0:
+            raise UserError(
+                _(
+                    f"İlçe-gün kapasitesi dolu! "
+                    f"Seçilen tarih için {self.ilce_id.name} ilçesi "
+                    f"{gun.name} günü kapasitesi dolu."
+                )
+            )
+    
+    def _validate_ilce_arac_gun_compatibility(self) -> None:
+        """İlçe-araç ve ilçe-gün uyumluluğunu kontrol et.
+        
+        Küçük araçlar için bu kontroller atlanır.
+        
+        Raises:
+            UserError: Uyumluluk yoksa
+        """
+        from ..models.teslimat_constants import SMALL_VEHICLE_TYPES
+        
+        small_vehicle = self.arac_id.arac_tipi in SMALL_VEHICLE_TYPES
+        
+        if small_vehicle or not self.ilce_id:
+            return
+        
+        # 1. İlçe-araç uyumluluğu
+        if self.ilce_id not in self.arac_id.uygun_ilceler:
+            arac_tipi_label = dict(
+                self.arac_id._fields["arac_tipi"].selection
+            ).get(self.arac_id.arac_tipi, self.arac_id.arac_tipi)
             
-            gun_kodu = get_gun_kodu(self.teslimat_tarihi)
-            if gun_kodu:
-                gun = self.env["teslimat.gun"].search(
-                    [("gun_kodu", "=", gun_kodu)], limit=1
+            raise UserError(
+                _(
+                    f"{self.arac_id.name} ({arac_tipi_label}) "
+                    f"{self.ilce_id.name} ilçesine uygun değil! "
+                    "Lütfen uygun bir araç seçin."
                 )
-                if gun:
-                    gun_ilce = self.env["teslimat.gun.ilce"].search(
-                        [
-                            ("gun_id", "=", gun.id),
-                            ("ilce_id", "=", self.ilce_id.id),
-                            ("tarih", "=", self.teslimat_tarihi),
-                        ],
-                        limit=1,
-                    )
-                    if gun_ilce and gun_ilce.kalan_kapasite <= 0:
-                        raise UserError(
-                            _(
-                                f"İlçe-gün kapasitesi dolu! "
-                                f"Seçilen tarih için {self.ilce_id.name} ilçesi "
-                                f"{gun.name} günü kapasitesi dolu."
-                            )
-                        )
-
-        # İlçe-Araç uyumluluğu kontrolü (Many2many ilişkisini kullanarak)
-        if not small_vehicle and self.ilce_id and self.arac_id:
-            if self.ilce_id not in self.arac_id.uygun_ilceler:
-                arac_tipi_label = dict(self.arac_id._fields["arac_tipi"].selection).get(
-                    self.arac_id.arac_tipi, self.arac_id.arac_tipi
+            )
+        
+        # 2. İlçe-gün uyumluluğu
+        self._validate_ilce_gun_matching()
+    
+    def _validate_ilce_gun_matching(self) -> None:
+        """İlçe-gün eşleşmesinin olup olmadığını kontrol et.
+        
+        Raises:
+            UserError: İlçe-gün eşleşmesi yoksa
+        """
+        from ..models.teslimat_utils import get_gun_kodu
+        
+        gun_kodu = get_gun_kodu(self.teslimat_tarihi)
+        if not gun_kodu:
+            return
+        
+        gun = self.env["teslimat.gun"].search(
+            [("gun_kodu", "=", gun_kodu)], limit=1
+        )
+        if not gun:
+            return
+        
+        gun_ilce = self.env["teslimat.gun.ilce"].search(
+            [
+                ("gun_id", "=", gun.id),
+                ("ilce_id", "=", self.ilce_id.id),
+            ],
+            limit=1,
+        )
+        
+        if not gun_ilce:
+            raise UserError(
+                _(
+                    f"Seçilen tarih ({gun.name}) için "
+                    f"{self.ilce_id.name} ilçesine teslimat yapılamaz! "
+                    f"İlçe-gün eşleştirmesi yok."
                 )
-                raise UserError(
-                    _(
-                        f"{self.arac_id.name} ({arac_tipi_label}) "
-                        f"{self.ilce_id.name} ilçesine uygun değil! "
-                        "Lütfen uygun bir araç seçin."
-                    )
-                )
-
-        # İlçe-Gün uyumluluğu kontrolü (küçük araçlar hariç)
-        if not small_vehicle and self.ilce_id:
-            from ..models.teslimat_utils import get_gun_kodu
-            
-            gun_kodu = get_gun_kodu(self.teslimat_tarihi)
-            if gun_kodu:
-                gun = self.env["teslimat.gun"].search(
-                    [("gun_kodu", "=", gun_kodu)], limit=1
-                )
-                if gun:
-                    gun_ilce = self.env["teslimat.gun.ilce"].search(
-                        [
-                            ("gun_id", "=", gun.id),
-                            ("ilce_id", "=", self.ilce_id.id),
-                        ],
-                        limit=1,
-                    )
-                    if not gun_ilce:
-                        raise UserError(
-                            _(
-                                f"Seçilen tarih ({gun.name}) için "
-                                f"{self.ilce_id.name} ilçesine teslimat yapılamaz! "
-                                f"İlçe-gün eşleştirmesi yok."
-                            )
-                        )
-
-        # Teslimat belgesi oluştur
+            )
+    
+    def _create_teslimat_belgesi(self):
+        """Teslimat belgesini oluştur ve SMS gönder.
+        
+        Returns:
+            teslimat.belgesi: Oluşturulan teslimat belgesi
+        """
         vals = {
             "teslimat_tarihi": self.teslimat_tarihi,
             "arac_id": self.arac_id.id,
@@ -409,20 +489,30 @@ class TeslimatBelgesiWizard(models.TransientModel):
             "musteri_id": self.musteri_id.id if self.musteri_id else False,
             "stock_picking_id": self.transfer_id.id if self.transfer_id else False,
             "transfer_no": self.transfer_id.name if self.transfer_id else False,
-            "durum": "hazir",  # Teslimat belgesi hazır durumunda oluşturulur
-            "manuel_telefon": self.manuel_telefon if self.manuel_telefon else False,  # Opsiyonel telefon
+            "durum": "hazir",
+            "manuel_telefon": self.manuel_telefon if self.manuel_telefon else False,
         }
-
+        
         teslimat = self.env["teslimat.belgesi"].create(vals)
-
+        
         # Transfer ürünlerini güncelle
         if self.transfer_id:
             teslimat._update_transfer_urunleri(self.transfer_id)
-
+        
         # SMS gönder
         teslimat.send_teslimat_sms()
-
-        # Teslimat belgeleri listesine yönlendir
+        
+        return teslimat
+    
+    def _redirect_to_teslimat(self, teslimat) -> dict:
+        """Kullanıcıyı oluşturulan teslimat belgesine yönlendir.
+        
+        Args:
+            teslimat: Oluşturulan teslimat belgesi
+            
+        Returns:
+            dict: Window action dictionary
+        """
         return {
             "type": "ir.actions.act_window",
             "name": _("Teslimat Belgeleri"),

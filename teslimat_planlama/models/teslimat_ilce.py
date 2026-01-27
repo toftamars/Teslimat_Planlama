@@ -112,9 +112,11 @@ class TeslimatIlce(models.Model):
             ]
         }
 
-        # Tüm araçların ve günlerin limitlerini 7 yap
-        self.env['teslimat.arac'].search([]).write({'gunluk_teslimat_limiti': 7})
-        self.env['teslimat.gun'].search([('aktif', '=', True)]).write({'gunluk_maksimum_teslimat': 7})
+        # Tüm araçların ve günlerin limitlerini varsayılan değere ayarla
+        from .teslimat_constants import DAILY_DELIVERY_LIMIT
+        
+        self.env['teslimat.arac'].search([]).write({'gunluk_teslimat_limiti': DAILY_DELIVERY_LIMIT})
+        self.env['teslimat.gun'].search([('aktif', '=', True)]).write({'gunluk_maksimum_teslimat': DAILY_DELIVERY_LIMIT})
 
         for gun_kodu, ilce_isimleri in schedule.items():
             gun = self.env['teslimat.gun'].search([('gun_kodu', '=', gun_kodu)], limit=1)

@@ -385,8 +385,15 @@ class TeslimatAnaSayfa(models.TransientModel):
 
     @api.depends("ilce_id", "arac_id", "ilce_uygun_mu")
     def _compute_uygun_gunler(self) -> None:
-        """Seçilen ilçe ve araç için uygun günleri hesapla."""
-        from .teslimat_utils import is_manager, GUN_ESLESMESI, GUN_KODU_MAP
+        """Seçilen ilçe ve araç için uygun günleri hesapla.
+        
+        Bu metod sonraki 30 günü analiz eder ve her gün için:
+        - İlçe-gün uygunluğunu kontrol eder
+        - Kapasite durumunu hesaplar
+        - Araç kapatma durumunu kontrol eder
+        """
+        from .teslimat_utils import is_manager
+        from .teslimat_constants import FORECAST_DAYS, SAME_DAY_DELIVERY_CUTOFF_HOUR
         
         for record in self:
             if not record.ilce_id or not record.arac_id or not record.ilce_uygun_mu:
@@ -395,172 +402,305 @@ class TeslimatAnaSayfa(models.TransientModel):
             
             yonetici_mi = is_manager(self.env)
             small_vehicle = record.arac_kucuk_mu
-            
-            # Sonraki 30 günü kontrol et (Pazar günleri hariç)
             bugun = fields.Date.today()
-            bitis_tarihi = bugun + timedelta(days=30)
-            uygun_gunler = []
-
-            # Performans optimizasyonu: Batch sorgulama
-            # İptal hariç TÜM durumlar kapasite doldurur (teslim_edildi dahil)
-            teslimat_domain = [
-                ("teslimat_tarihi", ">=", bugun),
-                ("teslimat_tarihi", "<=", bitis_tarihi),
-                ("arac_id", "=", record.arac_id.id),
-                ("ilce_id", "=", record.ilce_id.id),
-                ("durum", "!=", "iptal"),  # Sadece iptal hariç
-            ]
-
-            # DEBUG: Kapasite hesaplama (production'da kapatılmalı)
-            if _logger.isEnabledFor(logging.DEBUG):
-                _logger.debug("Capacity calc: vehicle=%s, district=%s",
-                            record.arac_id.name, record.ilce_id.name)
-
-            tum_teslimatlar = self.env["teslimat.belgesi"].search(teslimat_domain)
-
-            teslimat_sayisi_dict = {}
-            for teslimat in tum_teslimatlar:
-                tarih = teslimat.teslimat_tarihi
-                teslimat_sayisi_dict[tarih] = teslimat_sayisi_dict.get(tarih, 0) + 1
-
-            # Gün kodları için mapping
-            gun_kodu_map = GUN_KODU_MAP
-            gun_eslesmesi = GUN_ESLESMESI
             
-            # Tüm günleri önceden çek
-            gun_kodlari = list(gun_kodu_map.values())
-            gunler = self.env["teslimat.gun"].search([("gun_kodu", "in", gun_kodlari)])
-            gun_dict = {gun.gun_kodu: gun for gun in gunler}
-
-            # İlçe-gün eşleşmelerini batch olarak çek
-            gun_ilce_dict = {}
-            gun_ilce_kayitlari = self.env["teslimat.gun.ilce"].search(
-                [
-                    ("ilce_id", "=", record.ilce_id.id),
-                    ("gun_id", "in", gunler.ids),
-                    ("tarih", "=", False),  # Genel kurallar
-                ]
+            # 1. Teslimat sayılarını batch olarak al (N+1 query önleme)
+            teslimat_sayisi_by_date = self._get_teslimat_sayilari_batch(
+                record.arac_id.id, record.ilce_id.id, bugun, FORECAST_DAYS
             )
             
-            for gun_ilce in gun_ilce_kayitlari:
-                key = (gun_ilce.gun_id.id, record.ilce_id.id)
-                gun_ilce_dict[key] = gun_ilce
-
-            # Saat kontrolü için İstanbul saati
-            from datetime import datetime
-            import pytz
-            istanbul_tz = pytz.timezone('Europe/Istanbul')
-            simdi_istanbul = datetime.now(istanbul_tz)
+            # 2. Gün ve ilçe-gün eşleşmelerini batch olarak al
+            gun_dict, gun_ilce_dict = self._get_gun_ilce_mappings_batch(record.ilce_id.id)
+            
+            # 3. Saat kontrolü için İstanbul saati
+            from .teslimat_utils import get_istanbul_time
+            simdi_istanbul = get_istanbul_time()
             saat = simdi_istanbul.hour
-
-            # 30 günü loop et - Pazar günleri hariç
-            for i in range(30):
+            
+            # 4. Her günü kontrol et ve uygun günleri topla
+            uygun_gunler = []
+            for i in range(FORECAST_DAYS):
                 tarih = bugun + timedelta(days=i)
-
-                # Pazar gününü atla
-                from .teslimat_utils import is_pazar_gunu
-                if is_pazar_gunu(tarih):
-                    continue
-
-                # Aynı gün kontrolü: Saat 12:00 veya sonrası ise bugünü atla
-                if tarih == bugun and saat >= 12:
-                    _logger.info("Bugün atlandı (Saat 12:00 sonrası): %s", tarih)
+                
+                # Temel kontroller (Pazar, aynı gün saat kontrolü)
+                if not self._is_date_available(tarih, bugun, saat, SAME_DAY_DELIVERY_CUTOFF_HOUR):
                     continue
                 
-                gun_adi = tarih.strftime("%A")
-                gun_adi_tr = gun_eslesmesi.get(gun_adi, gun_adi)
-
-                # İlçe-gün uygunluğunu kontrol et
-                ilce_uygun_mu = (
-                    True
-                    if (yonetici_mi or small_vehicle)
-                    else self._check_ilce_gun_uygunlugu(record.ilce_id, tarih)
+                # İlçe-gün uygunluğu
+                if not (yonetici_mi or small_vehicle):
+                    if not self._check_ilce_gun_uygunlugu(record.ilce_id, tarih):
+                        continue
+                
+                # Kapasite ve durum hesaplama
+                gun_data = self._calculate_day_capacity_status(
+                    record, tarih, teslimat_sayisi_by_date, gun_dict, 
+                    gun_ilce_dict, yonetici_mi
                 )
-
-                # Sadece uygun günleri ekle
-                if ilce_uygun_mu:
-                    teslimat_sayisi = teslimat_sayisi_dict.get(tarih, 0)
-
-                    # Araç kapasitesi kontrolü
-                    if teslimat_sayisi >= record.arac_id.gunluk_teslimat_limiti:
-                        continue
-
-                    gun_kodu = gun_kodu_map.get(tarih.weekday())
-                    if not gun_kodu:
-                        continue
-
-                    gun = gun_dict.get(gun_kodu)
-                    if not gun:
-                        continue
-
-                    # İlçe-gün eşleşmesi kontrol et
-                    key = (gun.id, record.ilce_id.id)
-                    gun_ilce = gun_ilce_dict.get(key)
-
-                    # Varsayılan kapasite (programda varsa)
-                    varsayilan_kapasite = 0
-                    if not gun_ilce:
-                        # Haftalık programa göre varsayılan kapasite belirle
-                        # NOT: Compute içinde create() yapmıyoruz
-                        from ..data.turkey_data import HAFTALIK_PROGRAM_SCHEDULE
-
-                        ilce_adi_upper = record.ilce_id.name.upper()
-                        bugun_gun_programi = HAFTALIK_PROGRAM_SCHEDULE.get(gun_kodu, [])
-
-                        for program_ilce in bugun_gun_programi:
-                            if program_ilce.upper() in ilce_adi_upper or ilce_adi_upper in program_ilce.upper():
-                                varsayilan_kapasite = 7
-                                break
-
-                    if gun_ilce:
-                        toplam_kapasite = gun_ilce.maksimum_teslimat
-                    elif varsayilan_kapasite > 0:
-                        toplam_kapasite = varsayilan_kapasite
-                    else:
-                        continue  # Programda yoksa bu günü atla
-
-                    # Kalan kapasite = Toplam - Gerçek teslimat sayısı
-                    kalan_kapasite = toplam_kapasite - teslimat_sayisi
-
-                    # Kapasitesi dolu ise atla (yöneticiler için göster)
-                    if kalan_kapasite <= 0 and not yonetici_mi:
-                        continue
-
-                    # Araç kapatma kontrolü
-                    arac_kapali = False
-                    if record.arac_id:
-                        kapali, kapatma = self.env["teslimat.arac.kapatma"].arac_kapali_mi(
-                            record.arac_id.id, tarih
-                        )
-                        if kapali and kapatma:
-                            arac_kapali = True
-
-                    # Durum hesaplama
-                    if arac_kapali:
-                        durum_text = "🚫 Kapalı"
-                    elif kalan_kapasite < 0:
-                        durum_text = f"⚠️ Aşım ({teslimat_sayisi}/{toplam_kapasite})"
-                    elif kalan_kapasite > 5:
-                        durum_text = "🟢 Boş"
-                    elif kalan_kapasite > 0:
-                        durum_text = "🟡 Dolu Yakın"
-                    else:
-                        durum_text = "🔴 Dolu"
-
-                    uygun_gunler.append({
-                        "ana_sayfa_id": record.id,
-                        "tarih": tarih,
-                        "gun_adi": gun_adi_tr,
-                        "teslimat_sayisi": teslimat_sayisi,
-                        "toplam_kapasite": toplam_kapasite,
-                        "kalan_kapasite": kalan_kapasite,
-                        "durum_text": durum_text,
-                    })
-
-            # Günleri tarihe göre sırala ve kaydet
+                
+                if gun_data:
+                    uygun_gunler.append(gun_data)
+            
+            # 5. Günleri tarihe göre sırala ve kaydet
             uygun_gunler.sort(key=lambda x: x["tarih"])
             gun_komutlari = [(0, 0, data) for data in uygun_gunler]
             record.uygun_gunler = [(5, 0, 0)] + gun_komutlari
+    
+    def _get_teslimat_sayilari_batch(
+        self, arac_id: int, ilce_id: int, bugun: date, forecast_days: int
+    ) -> dict:
+        """Teslimat sayılarını batch olarak al (N+1 query önleme).
+        
+        Args:
+            arac_id: Araç ID
+            ilce_id: İlçe ID
+            bugun: Bugünün tarihi
+            forecast_days: Kaç gün ilerisi kontrol edilecek
+            
+        Returns:
+            dict: {tarih: teslimat_sayisi} mapping
+        """
+        from .teslimat_constants import CANCELLED_STATUS
+        
+        bitis_tarihi = bugun + timedelta(days=forecast_days)
+        
+        # read_group kullanarak tek sorguda tüm teslimat sayılarını al
+        result = self.env["teslimat.belgesi"].read_group(
+            domain=[
+                ("teslimat_tarihi", ">=", bugun),
+                ("teslimat_tarihi", "<=", bitis_tarihi),
+                ("arac_id", "=", arac_id),
+                ("ilce_id", "=", ilce_id),
+                ("durum", "!=", CANCELLED_STATUS),
+            ],
+            fields=["teslimat_tarihi"],
+            groupby=["teslimat_tarihi"],
+        )
+        
+        # DEBUG: Kapasite hesaplama
+        if _logger.isEnabledFor(logging.DEBUG):
+            arac = self.env["teslimat.arac"].browse(arac_id)
+            ilce = self.env["teslimat.ilce"].browse(ilce_id)
+            _logger.debug(
+                "Capacity calc: vehicle=%s, district=%s, dates=%d",
+                arac.name, ilce.name, len(result)
+            )
+        
+        return {
+            fields.Date.from_string(item["teslimat_tarihi"]): item["teslimat_tarihi_count"]
+            for item in result
+        }
+    
+    def _get_gun_ilce_mappings_batch(self, ilce_id: int) -> tuple:
+        """Gün ve ilçe-gün eşleşmelerini batch olarak al.
+        
+        Args:
+            ilce_id: İlçe ID
+            
+        Returns:
+            tuple: (gun_dict, gun_ilce_dict)
+                gun_dict: {gun_kodu: gun_record}
+                gun_ilce_dict: {(gun_id, ilce_id): gun_ilce_record}
+        """
+        from .teslimat_constants import GUN_KODU_MAP
+        
+        # Tüm günleri önceden çek
+        gun_kodlari = list(GUN_KODU_MAP.values())
+        gunler = self.env["teslimat.gun"].search([("gun_kodu", "in", gun_kodlari)])
+        gun_dict = {gun.gun_kodu: gun for gun in gunler}
+        
+        # İlçe-gün eşleşmelerini batch olarak çek
+        gun_ilce_kayitlari = self.env["teslimat.gun.ilce"].search([
+            ("ilce_id", "=", ilce_id),
+            ("gun_id", "in", gunler.ids),
+            ("tarih", "=", False),  # Genel kurallar
+        ])
+        
+        gun_ilce_dict = {
+            (gun_ilce.gun_id.id, ilce_id): gun_ilce
+            for gun_ilce in gun_ilce_kayitlari
+        }
+        
+        return gun_dict, gun_ilce_dict
+    
+    def _is_date_available(
+        self, tarih: date, bugun: date, saat: int, cutoff_hour: int
+    ) -> bool:
+        """Tarihin teslimat için uygun olup olmadığını kontrol et.
+        
+        Args:
+            tarih: Kontrol edilecek tarih
+            bugun: Bugünün tarihi
+            saat: Şu anki saat (İstanbul)
+            cutoff_hour: Aynı gün teslimat için son saat
+            
+        Returns:
+            bool: Tarih uygunsa True
+        """
+        from .teslimat_utils import is_pazar_gunu
+        
+        # Pazar gününü atla
+        if is_pazar_gunu(tarih):
+            return False
+        
+        # Aynı gün kontrolü: Saat cutoff'tan sonra ise bugünü atla
+        if tarih == bugun and saat >= cutoff_hour:
+            _logger.info("Bugün atlandı (Saat %d:00 sonrası): %s", cutoff_hour, tarih)
+            return False
+        
+        return True
+    
+    def _calculate_day_capacity_status(
+        self,
+        record,
+        tarih: date,
+        teslimat_sayisi_by_date: dict,
+        gun_dict: dict,
+        gun_ilce_dict: dict,
+        yonetici_mi: bool,
+    ) -> dict:
+        """Belirli bir gün için kapasite durumunu hesapla.
+        
+        Args:
+            record: Ana sayfa kaydı
+            tarih: Hesaplanacak tarih
+            teslimat_sayisi_by_date: Teslimat sayıları mapping
+            gun_dict: Gün kayıtları mapping
+            gun_ilce_dict: İlçe-gün eşleşmeleri mapping
+            yonetici_mi: Kullanıcı yönetici mi
+            
+        Returns:
+            dict: Gün bilgileri veya None (uygun değilse)
+        """
+        from .teslimat_constants import GUN_KODU_MAP, GUN_ESLESMESI, DAILY_DELIVERY_LIMIT
+        
+        teslimat_sayisi = teslimat_sayisi_by_date.get(tarih, 0)
+        
+        # Araç kapasitesi kontrolü
+        if teslimat_sayisi >= record.arac_id.gunluk_teslimat_limiti:
+            return None
+        
+        gun_kodu = GUN_KODU_MAP.get(tarih.weekday())
+        if not gun_kodu:
+            return None
+        
+        gun = gun_dict.get(gun_kodu)
+        if not gun:
+            return None
+        
+        # İlçe-gün eşleşmesi ve kapasite hesaplama
+        key = (gun.id, record.ilce_id.id)
+        gun_ilce = gun_ilce_dict.get(key)
+        
+        toplam_kapasite = self._get_toplam_kapasite(
+            gun_ilce, gun_kodu, record.ilce_id.name, DAILY_DELIVERY_LIMIT
+        )
+        
+        if toplam_kapasite == 0:
+            return None  # Programda yoksa bu günü atla
+        
+        kalan_kapasite = toplam_kapasite - teslimat_sayisi
+        
+        # Kapasitesi dolu ise atla (yöneticiler için göster)
+        if kalan_kapasite <= 0 and not yonetici_mi:
+            return None
+        
+        # Araç kapatma kontrolü
+        arac_kapali = self._check_arac_kapali(record.arac_id.id, tarih)
+        
+        # Durum hesaplama
+        durum_text = self._get_durum_text(
+            arac_kapali, kalan_kapasite, teslimat_sayisi, toplam_kapasite
+        )
+        
+        # Gün adını Türkçe'ye çevir
+        gun_adi = tarih.strftime("%A")
+        gun_adi_tr = GUN_ESLESMESI.get(gun_adi, gun_adi)
+        
+        return {
+            "ana_sayfa_id": record.id,
+            "tarih": tarih,
+            "gun_adi": gun_adi_tr,
+            "teslimat_sayisi": teslimat_sayisi,
+            "toplam_kapasite": toplam_kapasite,
+            "kalan_kapasite": kalan_kapasite,
+            "durum_text": durum_text,
+        }
+    
+    def _get_toplam_kapasite(
+        self, gun_ilce, gun_kodu: str, ilce_adi: str, default_limit: int
+    ) -> int:
+        """İlçe-gün için toplam kapasiteyi hesapla.
+        
+        Args:
+            gun_ilce: İlçe-gün eşleşme kaydı (varsa)
+            gun_kodu: Gün kodu (pazartesi, sali, vb.)
+            ilce_adi: İlçe adı
+            default_limit: Varsayılan limit
+            
+        Returns:
+            int: Toplam kapasite (0 ise programda yok)
+        """
+        if gun_ilce:
+            return gun_ilce.maksimum_teslimat
+        
+        # Haftalık programa göre varsayılan kapasite belirle
+        from ..data.turkey_data import HAFTALIK_PROGRAM_SCHEDULE
+        
+        ilce_adi_upper = ilce_adi.upper()
+        bugun_gun_programi = HAFTALIK_PROGRAM_SCHEDULE.get(gun_kodu, [])
+        
+        for program_ilce in bugun_gun_programi:
+            if (program_ilce.upper() in ilce_adi_upper or 
+                ilce_adi_upper in program_ilce.upper()):
+                return default_limit
+        
+        return 0  # Programda yoksa
+    
+    def _check_arac_kapali(self, arac_id: int, tarih: date) -> bool:
+        """Aracın belirtilen tarihte kapalı olup olmadığını kontrol et.
+        
+        Args:
+            arac_id: Araç ID
+            tarih: Kontrol edilecek tarih
+            
+        Returns:
+            bool: Araç kapalı ise True
+        """
+        if not arac_id:
+            return False
+        
+        kapali, kapatma = self.env["teslimat.arac.kapatma"].arac_kapali_mi(
+            arac_id, tarih
+        )
+        return kapali and kapatma
+    
+    def _get_durum_text(
+        self, arac_kapali: bool, kalan_kapasite: int, 
+        teslimat_sayisi: int, toplam_kapasite: int
+    ) -> str:
+        """Kapasite durumu için metin oluştur.
+        
+        Args:
+            arac_kapali: Araç kapalı mı
+            kalan_kapasite: Kalan kapasite
+            teslimat_sayisi: Mevcut teslimat sayısı
+            toplam_kapasite: Toplam kapasite
+            
+        Returns:
+            str: Durum metni
+        """
+        from .teslimat_constants import LOW_CAPACITY_THRESHOLD
+        
+        if arac_kapali:
+            return "Kapalı"
+        elif kalan_kapasite < 0:
+            return f"Aşım ({teslimat_sayisi}/{toplam_kapasite})"
+        elif kalan_kapasite > LOW_CAPACITY_THRESHOLD:
+            return "Boş"
+        elif kalan_kapasite > 0:
+            return "Dolu Yakın"
+        else:
+            return "Dolu"
 
     def action_sorgula(self) -> None:
         """Kapasite sorgulamasını yenile.

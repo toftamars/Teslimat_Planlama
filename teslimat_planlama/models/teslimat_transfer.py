@@ -72,6 +72,8 @@ class TeslimatTransfer(models.Model):
     @api.onchange("transfer_no")
     def _onchange_transfer_no(self) -> None:
         """Transfer no değiştiğinde otomatik bilgi doldur."""
+        from odoo.exceptions import AccessError, MissingError
+        
         if not self.transfer_no:
             return
 
@@ -93,13 +95,33 @@ class TeslimatTransfer(models.Model):
                         ),
                     }
                 }
+        except (AccessError, MissingError) as e:
+            _logger.exception("Transfer no onchange - erişim hatası:")
+            return {
+                "warning": {
+                    "title": _("Erişim Hatası"),
+                    "message": _(
+                        "Transfer belgesine erişim izniniz yok veya kayıt bulunamadı."
+                    ),
+                }
+            }
+        except (ValueError, TypeError) as e:
+            _logger.exception("Transfer no onchange - veri hatası:")
+            return {
+                "warning": {
+                    "title": _("Veri Hatası"),
+                    "message": _(
+                        f"Transfer bilgileri işlenirken hata oluştu: {str(e)}"
+                    ),
+                }
+            }
         except Exception as e:
-            _logger.exception("Transfer no onchange hatası:")
+            _logger.exception("Transfer no onchange - beklenmeyen hata:")
             return {
                 "warning": {
                     "title": _("Hata"),
                     "message": _(
-                        f"Transfer bilgileri alınırken hata oluştu: {str(e)}"
+                        f"Beklenmeyen hata oluştu: {str(e)}"
                     ),
                 }
             }
@@ -107,19 +129,41 @@ class TeslimatTransfer(models.Model):
     @api.onchange("stock_picking_id")
     def _onchange_stock_picking(self) -> None:
         """Stock picking seçildiğinde otomatik bilgi doldur."""
+        from odoo.exceptions import AccessError, MissingError
+        
         if not self.stock_picking_id:
             return
 
         try:
             picking = self.stock_picking_id
             self._update_picking_data(picking)
+        except (AccessError, MissingError) as e:
+            _logger.exception("Stock picking onchange - erişim hatası:")
+            return {
+                "warning": {
+                    "title": _("Erişim Hatası"),
+                    "message": _(
+                        "Transfer belgesine erişim izniniz yok veya kayıt bulunamadı."
+                    ),
+                }
+            }
+        except (ValueError, TypeError) as e:
+            _logger.exception("Stock picking onchange - veri hatası:")
+            return {
+                "warning": {
+                    "title": _("Veri Hatası"),
+                    "message": _(
+                        f"Transfer bilgileri işlenirken hata oluştu: {str(e)}"
+                    ),
+                }
+            }
         except Exception as e:
-            _logger.exception("Stock picking onchange hatası:")
+            _logger.exception("Stock picking onchange - beklenmeyen hata:")
             return {
                 "warning": {
                     "title": _("Hata"),
                     "message": _(
-                        f"Transfer belgesi bilgileri alınırken hata oluştu: {str(e)}"
+                        f"Beklenmeyen hata oluştu: {str(e)}"
                     ),
                 }
             }
