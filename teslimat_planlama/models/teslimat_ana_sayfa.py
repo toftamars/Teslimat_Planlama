@@ -1,6 +1,6 @@
 """Teslimat Ana Sayfa - Kapasite Sorgulama Modeli."""
 import logging
-from datetime import timedelta
+from datetime import date, timedelta
 from typing import Optional
 
 from odoo import _, api, fields, models
