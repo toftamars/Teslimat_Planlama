@@ -283,6 +283,68 @@ class TeslimatArac(models.Model):
                         )
                     )
 
+    def action_update_uygun_ilceler(self) -> dict:
+        """Tek bir aracın ilçe eşleştirmesini güncelle (Yöneticiler için).
+        
+        Returns:
+            dict: Bilgilendirme mesajı
+        """
+        self.ensure_one()
+        
+        eski_sayisi = len(self.uygun_ilceler)
+        self._update_uygun_ilceler()
+        yeni_sayisi = len(self.uygun_ilceler)
+        
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": _("İlçe Eşleştirmesi Güncellendi"),
+                "message": _(
+                    f"Araç: {self.name}\n"
+                    f"Araç Tipi: {dict(self._fields['arac_tipi'].selection).get(self.arac_tipi)}\n"
+                    f"Önceki İlçe Sayısı: {eski_sayisi}\n"
+                    f"Yeni İlçe Sayısı: {yeni_sayisi}\n\n"
+                    f"✓ Eşleştirme başarıyla güncellendi!"
+                ),
+                "type": "success",
+                "sticky": False,
+            },
+        }
+    
+    @api.model
+    def action_sync_all_arac_ilce(self) -> dict:
+        """Tüm araçların ilçe eşleştirmelerini güncelle (Yöneticiler için).
+        
+        Tree view'dan toplu olarak çağrılır.
+        
+        Returns:
+            dict: Bilgilendirme mesajı
+        """
+        result = self.sync_all_arac_ilce_eslesmesi()
+        
+        mesaj = (
+            f"✓ Senkronizasyon Tamamlandı!\n\n"
+            f"Güncellenen Araç Sayısı: {result['guncellenen_sayisi']}\n"
+            f"Hata Sayısı: {result['hata_sayisi']}\n\n"
+        )
+        
+        if result['detaylar']:
+            mesaj += "Detaylar:\n" + "\n".join(result['detaylar'][:10])
+            if len(result['detaylar']) > 10:
+                mesaj += f"\n... ve {len(result['detaylar']) - 10} araç daha"
+        
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": _("Toplu Senkronizasyon Tamamlandı"),
+                "message": _(mesaj),
+                "type": "success",
+                "sticky": True,
+            },
+        }
+
     def action_gecici_kapat(self) -> dict:
         """Aracı geçici olarak kapatma wizard'ını aç (Yöneticiler için).
 
