@@ -28,9 +28,14 @@ class TeslimatKonumWizard(models.TransientModel):
     @api.onchange("enlem", "boylam")
     def _onchange_konum(self) -> None:
         """Konum değiştiğinde validasyon yap."""
+        from ..models.teslimat_constants import ISTANBUL_LAT_RANGE, ISTANBUL_LON_RANGE
+        
         if self.enlem and self.boylam:
             # Basit validasyon: İstanbul koordinatları aralığı
-            if not (40.5 <= self.enlem <= 41.3):
+            lat_min, lat_max = ISTANBUL_LAT_RANGE
+            lon_min, lon_max = ISTANBUL_LON_RANGE
+            
+            if not (lat_min <= self.enlem <= lat_max):
                 return {
                     "warning": {
                         "title": _("Koordinat Uyarısı"),
@@ -39,7 +44,7 @@ class TeslimatKonumWizard(models.TransientModel):
                         ),
                     }
                 }
-            if not (27.5 <= self.boylam <= 29.9):
+            if not (lon_min <= self.boylam <= lon_max):
                 return {
                     "warning": {
                         "title": _("Koordinat Uyarısı"),

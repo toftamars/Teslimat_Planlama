@@ -41,6 +41,41 @@ def calculate_day_count(start_date: date, end_date: date) -> int:
     return delta.days + 1
 
 
+def format_partner_address(partner) -> str:
+    """Müşteri adresini formatla.
+    
+    Müşterinin tüm adres bilgilerini birleştirerek tek bir string döndürür.
+    
+    Args:
+        partner: res.partner kaydı
+        
+    Returns:
+        str: Formatlanmış adres string'i veya "Adres bilgisi bulunamadı"
+    """
+    if not partner:
+        return ""
+    
+    adres_parcalari = []
+    
+    if partner.street:
+        adres_parcalari.append(partner.street)
+    if partner.street2:
+        adres_parcalari.append(partner.street2)
+    if partner.city:
+        adres_parcalari.append(partner.city)
+    if partner.state_id:
+        adres_parcalari.append(partner.state_id.name)
+    if partner.zip:
+        adres_parcalari.append(partner.zip)
+    if partner.country_id:
+        adres_parcalari.append(partner.country_id.name)
+    
+    if adres_parcalari:
+        return ", ".join(adres_parcalari)
+    
+    return "Adres bilgisi bulunamadı"
+
+
 def get_gun_kodu(tarih: date) -> Optional[str]:
     """Tarih için gün kodunu döndür.
 
@@ -64,9 +99,11 @@ def is_pazar_gunu(tarih: date) -> bool:
     Returns:
         bool: Pazar günü ise True
     """
+    from .teslimat_constants import PAZAR_WEEKDAY
+    
     if not tarih:
         return False
-    return tarih.weekday() == 6  # 6 = Pazar
+    return tarih.weekday() == PAZAR_WEEKDAY
 
 
 def is_manager(env) -> bool:

@@ -100,6 +100,24 @@ SMALL_VEHICLE_TYPES = ["kucuk_arac_1", "kucuk_arac_2", "ek_arac"]
 # Müsait günler listesinde gösterilecek gün sayısı
 FORECAST_DAYS = 30
 
+# Düşük kapasite eşiği (bu değerin üstündeyse "Boş" olarak gösterilir)
+LOW_CAPACITY_THRESHOLD = 5
+
+# ============================================================================
+# KONUM VE COĞRAFİ SABİTLER
+# ============================================================================
+
+# İstanbul koordinat aralıkları (enlem, boylam)
+ISTANBUL_LAT_RANGE = (40.5, 41.3)
+ISTANBUL_LON_RANGE = (27.5, 29.9)
+
+# ============================================================================
+# GÜN KODLARI - WEEKDAY MAPPING
+# ============================================================================
+
+# Pazar günü weekday değeri
+PAZAR_WEEKDAY = 6
+
 # ============================================================================
 # YARDIMCI FONKSİYONLAR
 # ============================================================================
