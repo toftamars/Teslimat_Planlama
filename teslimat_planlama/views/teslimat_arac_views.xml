@@ -8,6 +8,13 @@
         <field name="model">teslimat.arac</field>
         <field name="arch" type="xml">
             <tree string="Araçlar">
+                <header>
+                    <button name="action_sync_all_arac_ilce" string="🔄 Tüm Araç-İlçe Eşleştirmelerini Güncelle" 
+                            type="object" 
+                            class="btn-primary"
+                            groups="teslimat_planlama.group_teslimat_manager"
+                            help="Tüm araçların ilçe eşleştirmelerini araç tipine göre otomatik günceller"/>
+                </header>
                 <field name="name"/>
                 <field name="arac_tipi"/>
                 <field name="gunluk_teslimat_limiti" groups="teslimat_planlama.group_teslimat_manager"/>
@@ -15,6 +22,10 @@
                 <field name="kalan_kapasite"/>
                 <field name="aktif"/>
                 <field name="gecici_kapatma"/>
+                <button name="action_update_uygun_ilceler" string="🔄 İlçeleri Güncelle" type="object" 
+                        class="btn-info"
+                        groups="teslimat_planlama.group_teslimat_manager"
+                        help="Bu aracın ilçe eşleştirmesini güncelle"/>
                 <button name="action_aktif_et" string="Aktif Et" type="object" 
                         class="btn-primary"
                         invisible="not gecici_kapatma"
@@ -34,6 +45,10 @@
         <field name="arch" type="xml">
             <form string="Teslimat Aracı">
                 <header>
+                    <button name="action_update_uygun_ilceler" string="🔄 İlçe Eşleştirmesini Güncelle" type="object" 
+                            class="btn-info"
+                            groups="teslimat_planlama.group_teslimat_manager"
+                            help="Araç tipine göre uygun ilçeleri otomatik günceller"/>
                     <button name="action_aktif_et" string="Aktif Et" type="object" 
                             class="oe_highlight"
                             invisible="not gecici_kapatma"
