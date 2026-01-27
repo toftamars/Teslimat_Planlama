@@ -21,18 +21,18 @@
                 <field name="mevcut_kapasite"/>
                 <field name="kalan_kapasite"/>
                 <field name="aktif"/>
-                <field name="gecici_kapatma"/>
+                <field name="gecici_kapatma" invisible="1"/>
                 <button name="action_update_uygun_ilceler" string="🔄 İlçeleri Güncelle" type="object" 
                         class="btn-info"
                         groups="teslimat_planlama.group_teslimat_manager"
                         help="Bu aracın ilçe eşleştirmesini güncelle"/>
                 <button name="action_aktif_et" string="Aktif Et" type="object" 
                         class="btn-primary"
-                        invisible="not gecici_kapatma"
+                        attrs="{'invisible': [('gecici_kapatma', '=', False)]}"
                         groups="teslimat_planlama.group_teslimat_manager"/>
                 <button name="action_gecici_kapat" string="Kapat" type="object" 
                         class="btn-secondary"
-                        invisible="gecici_kapatma"
+                        attrs="{'invisible': [('gecici_kapatma', '=', True)]}"
                         groups="teslimat_planlama.group_teslimat_manager"/>
             </tree>
         </field>
@@ -51,11 +51,11 @@
                             help="Araç tipine göre uygun ilçeleri otomatik günceller"/>
                     <button name="action_aktif_et" string="Aktif Et" type="object" 
                             class="oe_highlight"
-                            invisible="not gecici_kapatma"
+                            attrs="{'invisible': [('gecici_kapatma', '=', False)]}"
                             groups="teslimat_planlama.group_teslimat_manager"/>
                     <button name="action_gecici_kapat" string="Geçici Kapat" type="object" 
                             class="btn-secondary"
-                            invisible="gecici_kapatma"
+                            attrs="{'invisible': [('gecici_kapatma', '=', True)]}"
                             groups="teslimat_planlama.group_teslimat_manager"/>
                 </header>
                 <sheet>
@@ -77,7 +77,7 @@
                             <field name="kalan_kapasite" readonly="1"/>
                         </group>
                     </group>
-                    <group string="Kapatma Bilgileri" invisible="not gecici_kapatma">
+                    <group string="Kapatma Bilgileri" attrs="{'invisible': [('gecici_kapatma', '=', False)]}">
                         <group>
                             <field name="kapatma_baslangic" readonly="1"/>
                             <field name="kapatma_bitis" readonly="1"/>
