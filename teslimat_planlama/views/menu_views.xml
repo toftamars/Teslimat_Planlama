@@ -31,6 +31,14 @@
               sequence="25"
               groups="teslimat_planlama.group_teslimat_driver"/>
 
+    <!-- Araçlar (Yöneticiler) -->
+    <menuitem id="menu_teslimat_arac"
+              name="🚗 Araçlar"
+              parent="menu_teslimat_planlama_root"
+              action="action_teslimat_arac"
+              sequence="80"
+              groups="teslimat_planlama.group_teslimat_manager"/>
+
     <!-- Araç Kapatma (Yöneticiler) -->
     <menuitem id="menu_teslimat_arac_kapatma"
               name="🔧 Araç Kapatma"
