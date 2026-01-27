@@ -1,4 +1,6 @@
 # from . import teslimat_sehir  # Deprecated - using res.country.state instead
+from . import teslimat_constants
+from . import teslimat_utils
 from . import teslimat_ilce
 from . import teslimat_gun
 from . import teslimat_gun_ilce

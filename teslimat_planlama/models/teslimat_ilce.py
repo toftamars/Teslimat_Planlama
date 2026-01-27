@@ -3,7 +3,7 @@ import logging
 from typing import Optional
 
 from odoo import api, fields, models
-from odoo.exceptions import ValidationError
+from odoo.exceptions import UserError, ValidationError
 
 _logger = logging.getLogger(__name__)
 
@@ -350,9 +350,12 @@ class TeslimatIlce(models.Model):
                 
             # İstanbul özelinde yaka tiplerini güncelle
             self._update_istanbul_yaka_tipleri()
-            
+
         except Exception as e:
-            _logger.error("İlçe oluşturma hatası: %s", e)
+            _logger.exception("İlçe oluşturma hatası:")
+            raise UserError(
+                f"İlçe oluşturma işlemi sırasında hata oluştu:\n{str(e)}"
+            )
 
     def _update_istanbul_yaka_tipleri(self):
         """İstanbul ilçelerinin yaka tiplerini güncelle."""

@@ -89,16 +89,18 @@ class TeslimatTransfer(models.Model):
                     "warning": {
                         "title": _("Uyarı"),
                         "message": _(
-                            "Transfer belgesi bulunamadı: %s" % self.transfer_no
+                            f"Transfer belgesi bulunamadı: {self.transfer_no}"
                         ),
                     }
                 }
         except Exception as e:
-            _logger.error("Transfer no onchange hatası: %s", e)
+            _logger.exception("Transfer no onchange hatası:")
             return {
                 "warning": {
                     "title": _("Hata"),
-                    "message": _("Transfer bilgileri alınırken hata oluştu."),
+                    "message": _(
+                        f"Transfer bilgileri alınırken hata oluştu: {str(e)}"
+                    ),
                 }
             }
 
@@ -112,7 +114,15 @@ class TeslimatTransfer(models.Model):
             picking = self.stock_picking_id
             self._update_picking_data(picking)
         except Exception as e:
-            _logger.error("Stock picking onchange hatası: %s", e)
+            _logger.exception("Stock picking onchange hatası:")
+            return {
+                "warning": {
+                    "title": _("Hata"),
+                    "message": _(
+                        f"Transfer belgesi bilgileri alınırken hata oluştu: {str(e)}"
+                    ),
+                }
+            }
 
     def _update_picking_data(self, picking: "stock.picking") -> None:
         """Transfer belgesi bilgilerini güncelle.

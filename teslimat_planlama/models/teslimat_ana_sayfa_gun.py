@@ -5,6 +5,8 @@ from typing import Optional
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
+from .teslimat_constants import get_arac_kapatma_sebep_label
+
 
 class TeslimatAnaSayfaGun(models.TransientModel):
     """Teslimat Ana Sayfa Gün - Uygun günler listesi."""
@@ -80,15 +82,6 @@ class TeslimatAnaSayfaGun(models.TransientModel):
     @api.depends("tarih", "ana_sayfa_id.arac_id")
     def _compute_arac_kapatma(self):
         """Araç kapatma bilgilerini hesapla."""
-        sebep_dict = {
-            "bakim": "Bakım",
-            "ariza": "Arıza",
-            "kaza": "Kaza",
-            "yakit": "Yakıt Sorunu",
-            "surucu_yok": "Sürücü Yok",
-            "diger": "Diğer",
-        }
-        
         for rec in self:
             if not rec.tarih or not rec.ana_sayfa_id.arac_id:
                 rec.arac_kapali_mi = False
@@ -96,16 +89,16 @@ class TeslimatAnaSayfaGun(models.TransientModel):
                 rec.kapatma_aciklama = ""
                 rec.kapatan_kisi = ""
                 continue
-            
+
             # Araç kapatma kontrolü
             kapali, kapatma = self.env["teslimat.arac.kapatma"].arac_kapali_mi(
                 rec.ana_sayfa_id.arac_id.id,
                 rec.tarih
             )
-            
+
             if kapali and kapatma:
                 rec.arac_kapali_mi = True
-                rec.kapatma_sebep = sebep_dict.get(kapatma.sebep, kapatma.sebep)
+                rec.kapatma_sebep = get_arac_kapatma_sebep_label(kapatma.sebep)
                 rec.kapatma_aciklama = kapatma.aciklama or ""
                 rec.kapatan_kisi = kapatma.kapatan_kullanici_id.name or ""
             else:
