@@ -217,7 +217,7 @@ class TeslimatAnaSayfa(models.TransientModel):
                 record.ilce_uygun_mu = True
                 if record.arac_kucuk_mu:
                     record.uygunluk_mesaji = (
-                        f"✅ {record.ilce_id.name} ilçesine "
+                        f"{record.ilce_id.name} ilçesine "
                         f"{record.arac_id.name} ile teslimat yapılabilir "
                         "(Küçük araç - tüm ilçelere gidebilir)"
                     )
@@ -226,7 +226,7 @@ class TeslimatAnaSayfa(models.TransientModel):
                         record.arac_id.arac_tipi, record.arac_id.arac_tipi
                     )
                     record.uygunluk_mesaji = (
-                        f"✅ {record.ilce_id.name} ilçesine "
+                        f"{record.ilce_id.name} ilçesine "
                         f"{record.arac_id.name} ile teslimat yapılabilir "
                         f"({arac_tipi_label})"
                     )

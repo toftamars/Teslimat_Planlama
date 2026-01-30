@@ -42,6 +42,7 @@ class TeslimatBelgesi(models.Model):
         "mail.thread",
         "mail.activity.mixin",
         "teslimat.belgesi.validators",  # Validasyon mixin
+        "teslimat.belgesi.actions",  # Action ve onchange mixin
     ]
     _order = "teslimat_tarihi desc, name"
 
@@ -80,32 +81,6 @@ class TeslimatBelgesi(models.Model):
         store=False,
         help="Müşterinin tam adresi"
     )
-    
-    @api.depends("musteri_id")
-    def _compute_musteri_adres(self):
-        """Müşteri adresini hesapla."""
-        for record in self:
-            if record.musteri_id:
-                adres_parcalari = []
-                if record.musteri_id.street:
-                    adres_parcalari.append(record.musteri_id.street)
-                if record.musteri_id.street2:
-                    adres_parcalari.append(record.musteri_id.street2)
-                if record.musteri_id.city:
-                    adres_parcalari.append(record.musteri_id.city)
-                if record.musteri_id.state_id:
-                    adres_parcalari.append(record.musteri_id.state_id.name)
-                if record.musteri_id.zip:
-                    adres_parcalari.append(record.musteri_id.zip)
-                if record.musteri_id.country_id:
-                    adres_parcalari.append(record.musteri_id.country_id.name)
-                
-                if adres_parcalari:
-                    record.musteri_adres = ", ".join(adres_parcalari)
-                else:
-                    record.musteri_adres = "Adres bilgisi bulunamadı"
-            else:
-                record.musteri_adres = ""
 
     # Araç ve İlçe Bilgileri
     arac_id = fields.Many2one(
@@ -227,7 +202,7 @@ class TeslimatBelgesi(models.Model):
                 vals.get("teslimat_tarihi", fields.Date.today())
             )
 
-    def _get_next_sira_no(self, arac_id, teslimat_tarihi):
+    def _get_next_sira_no(self, arac_id: int, teslimat_tarihi: fields.Date) -> int:
         """Aynı araç ve tarih için sıradaki sıra numarasını döndür.
 
         Args:
@@ -251,7 +226,7 @@ class TeslimatBelgesi(models.Model):
 
         return son_teslimat.sira_no + 1 if son_teslimat else 1
 
-    def _check_arac_kapatma_on_create(self, arac_id, teslimat_tarihi):
+    def _check_arac_kapatma_on_create(self, arac_id: int, teslimat_tarihi: fields.Date) -> None:
         """Create sırasında araç kapatma kontrolü yap.
 
         Args:
@@ -284,7 +259,7 @@ class TeslimatBelgesi(models.Model):
                 )
             )
 
-    def _check_daily_limit(self, teslimat_tarihi):
+    def _check_daily_limit(self, teslimat_tarihi: fields.Date) -> None:
         """Günlük teslimat limiti kontrolü (sadece user grubu için).
 
         Args:
@@ -313,8 +288,11 @@ class TeslimatBelgesi(models.Model):
                 )
             )
     
-    def write(self, vals):
+    def write(self, vals: dict) -> bool:
         """Teslimat belgesi güncelleme.
+
+        Args:
+            vals: Güncellenecek değerler
 
         Returns:
             bool: Başarılı ise True
@@ -404,7 +382,7 @@ class TeslimatBelgesi(models.Model):
                 )
             )
     
-    def unlink(self):
+    def unlink(self) -> bool:
         """Teslimat belgesi silme - Kısıtlamalar.
 
         Returns:
@@ -449,298 +427,4 @@ class TeslimatBelgesi(models.Model):
                     "Veri bütünlüğü için teslim edilmiş belgeler korunur."
                 )
             )
-
-    @api.constrains("teslimat_tarihi", "arac_id", "ilce_id", "durum")
-
-    @api.depends("durum")
-    def _compute_is_readonly(self) -> None:
-        """Teslim edilmiş belgeler salt okunurdur."""
-        for record in self:
-            record.is_readonly = record.durum == 'teslim_edildi'
-    
-    @api.onchange("transfer_no")
-    def _onchange_transfer_no(self) -> None:
-        """Transfer no değiştiğinde otomatik bilgi doldur."""
-        if not self.transfer_no:
-            return
-
-        try:
-            # Transfer belgesini bul
-            picking = self.env["stock.picking"].search(
-                [("name", "=", self.transfer_no)], limit=1
-            )
-
-            if picking:
-                self.stock_picking_id = picking
-                self._onchange_stock_picking()
-            else:
-                return {
-                    "warning": {
-                        "title": _("Uyarı"),
-                        "message": _(
-                            f"Transfer belgesi bulunamadı: {self.transfer_no}"
-                        ),
-                    }
-                }
-        except Exception as e:
-            _logger.exception("Transfer no onchange hatası:")
-            return {
-                "warning": {
-                    "title": _("Hata"),
-                    "message": _(
-                        f"Transfer bilgileri alınırken hata oluştu: {str(e)}"
-                    ),
-                }
-            }
-
-    @api.onchange("stock_picking_id")
-    def _onchange_stock_picking(self) -> None:
-        """Stock picking seçildiğinde otomatik bilgi doldur."""
-        if not self.stock_picking_id:
-            return
-
-        try:
-            picking = self.stock_picking_id
-
-            # Müşteri bilgisi
-            if picking.partner_id:
-                self.musteri_id = picking.partner_id
-
-            # Transfer no
-            if picking.name:
-                self.transfer_no = picking.name
-
-            # Transfer ürünlerini güncelle
-            self._update_transfer_urunleri(picking)
-        except Exception as e:
-            _logger.exception("Stock picking onchange hatası:")
-            return {
-                "warning": {
-                    "title": _("Hata"),
-                    "message": _(
-                        f"Transfer belgesi bilgileri alınırken hata oluştu: {str(e)}"
-                    ),
-                }
-            }
-
-    @api.onchange("musteri_id")
-    def _onchange_musteri(self) -> None:
-        """Müşteri değiştiğinde bilgileri güncelle."""
-        if not self.musteri_id:
-            return
-
-        # Müşteri adres bilgileri varsa kullanılabilir
-        # Buraya ek bilgiler eklenebilir
-        pass
-
-    def _update_transfer_urunleri(self, picking: "stock.picking") -> None:
-        """Transfer belgesindeki ürünleri güncelle (Bellek içi komutlar kullanarak).
-        
-        Onchange içinde veritabanına create/unlink işlemi yapmak işlemi kilitler.
-        O yüzden Odoo komutlarını kullanıyoruz.
-        """
-        lines = []
-        sequence = 1
-        for move in picking.move_ids_without_package:
-            lines.append((0, 0, {
-                "sequence": sequence,
-                "urun_id": move.product_id.id,
-                "miktar": move.quantity_done or move.product_uom_qty,
-                "birim": move.product_uom.id,
-                "stock_move_id": move.id,
-            }))
-            sequence += 1
-        
-        self.transfer_urun_ids = [(5, 0, 0)] + lines
-
-    def action_yolda_yap(self) -> None:
-        """Teslimat durumunu 'yolda' yap (sürücüler için).
-
-        Sürücü yola çıktığında bu butona basar.
-        Durum 'hazir' → 'yolda' olur.
-        """
-        self.ensure_one()
-
-        if self.durum != "hazir":
-            raise UserError(
-                _("Sadece 'Hazır' durumundaki teslimatlar yola çıkarılabilir.")
-            )
-
-        # Durumu yolda yap
-        self.durum = "yolda"
-
-        # Chatter'a not ekle
-        self.message_post(
-            body=_("Sürücü yola çıktı. Teslimat yolda."),
-            subject=_("Teslimat Yolda"),
-        )
-
-    def action_teslimat_tamamla(self) -> dict:
-        """Teslimat tamamlama wizard'ını aç."""
-        self.ensure_one()
-
-        if self.durum not in ["hazir", "yolda"]:
-            raise UserError(
-                _("Sadece 'Hazır' veya 'Yolda' durumundaki teslimatlar tamamlanabilir.")
-            )
-
-        # Wizard'ı aç
-        return {
-            "name": _("Teslimatı Tamamla"),
-            "type": "ir.actions.act_window",
-            "res_model": "teslimat.tamamlama.wizard",
-            "view_mode": "form",
-            "target": "new",
-            "context": {
-                "default_teslimat_belgesi_id": self.id,
-            },
-        }
-
-    def action_yol_tarifi(self) -> dict:
-        """Müşteri konumuna Google Maps ile yol tarifi başlat.
-
-        Returns:
-            dict: Google Maps URL action
-        """
-        self.ensure_one()
-        
-        if not self.musteri_id:
-            raise UserError(_("Müşteri bilgisi bulunamadı. Yol tarifi başlatılamaz."))
-        
-        # Müşteri adres bilgilerini topla
-        partner = self.musteri_id
-        adres_parcalari = []
-        
-        if partner.street:
-            adres_parcalari.append(partner.street)
-        if partner.street2:
-            adres_parcalari.append(partner.street2)
-        if partner.city:
-            adres_parcalari.append(partner.city)
-        if partner.state_id:
-            adres_parcalari.append(partner.state_id.name)
-        if partner.country_id:
-            adres_parcalari.append(partner.country_id.name)
-        
-        # Adres oluştur
-        if adres_parcalari:
-            adres = ", ".join(adres_parcalari)
-        else:
-            # Adres yoksa sadece müşteri adını kullan
-            adres = partner.name
-        
-        # Google Maps URL oluştur (directions API)
-        import urllib.parse
-        encoded_address = urllib.parse.quote(adres)
-        google_maps_url = f"https://www.google.com/maps/dir/?api=1&destination={encoded_address}"
-        
-        return {
-            "type": "ir.actions.act_url",
-            "url": google_maps_url,
-            "target": "new",
-        }
-
-    def action_iptal_et(self) -> None:
-        """Teslimatı iptal et (sadece yöneticiler).
-
-        Yöneticiler bu butona basarak teslimatı iptal edebilir.
-        Durum 'iptal' olur ve chatter'a not eklenir.
-        """
-        self.ensure_one()
-
-        # Yönetici kontrolü (write metodunda da var ama burada da kontrol edelim)
-        if not is_manager(self.env):
-            raise UserError(
-                _(
-                    "Teslimat iptal yetkisi yok!\n\n"
-                    "Sadece yöneticiler teslimat belgelerini iptal edebilir.\n"
-                    "Lütfen yöneticinizle iletişime geçin."
-                )
-            )
-
-        # Zaten iptal veya teslim edilmiş ise hata ver
-        if self.durum == "iptal":
-            raise UserError(_("Bu teslimat zaten iptal edilmiş."))
-
-        if self.durum == "teslim_edildi":
-            raise UserError(
-                _("Teslim edilmiş teslimat iptal edilemez!")
-            )
-
-        # Durumu iptal yap
-        self.durum = "iptal"
-
-        # Chatter'a not ekle
-        self.message_post(
-            body=_("Teslimat yönetici tarafından iptal edildi."),
-            subject=_("Teslimat İptal Edildi"),
-        )
-
-    def send_teslimat_sms(self) -> bool:
-        """Teslimat SMS'i gönder ve chatter'a kaydet.
-
-        Returns:
-            bool: SMS gönderimi başarılı ise True
-        """
-        self.ensure_one()
-
-        if not self.musteri_id:
-            _logger.warning("SMS gönderilemedi: Müşteri bilgisi yok")
-            return False
-
-        if not self.musteri_telefon:
-            _logger.warning("SMS gönderilemedi: Müşteri telefon numarası yok")
-            self.message_post(
-                body=_(
-                    "SMS gönderilemedi: Müşteri telefon numarası bulunamadı."
-                ),
-                subject=_("SMS Gönderim Hatası"),
-            )
-            return False
-
-        # Tarih formatı
-        tarih_formati = self.teslimat_tarihi.strftime("%d.%m.%Y")
-
-        # SMS içeriği
-        sms_icerigi = (
-            f"Sayın {self.musteri_id.name}, "
-            f"teslimatınız {tarih_formati} tarihinde planlanmıştır. "
-            f"Teslimat No: {self.name}. "
-            f"Bilgilendirme için teşekkür ederiz."
-        )
-
-        try:
-            # SMS gönderme (mock - gerçek implementasyonda SMS API kullanılabilir)
-            # Örnek: self.env['sms.api'].send_sms(phone, message)
-            _logger.info(
-                "SMS gönderiliyor: %s -> %s", self.musteri_telefon, sms_icerigi
-            )
-
-            # SMS gönderim bilgisini chatter'a ekle
-            self.message_post(
-                body=_(
-                    f"📱 SMS Gönderildi\n"
-                    f"Alıcı: {self.musteri_id.name}\n"
-                    f"Telefon: {self.musteri_telefon}\n"
-                    f"Mesaj: {sms_icerigi}\n"
-                    f"Tarih: {fields.Datetime.now().strftime('%d.%m.%Y %H:%M')}"
-                ),
-                subject=_("Teslimat Planlama SMS"),
-                message_type="notification",
-            )
-
-            return True
-
-        except Exception as e:
-            _logger.error("SMS gönderim hatası: %s", e)
-            self.message_post(
-                body=_(
-                    f"SMS gönderilemedi: {str(e)}\n"
-                    f"Alıcı: {self.musteri_id.name}\n"
-                    f"Telefon: {self.musteri_telefon}"
-                ),
-                subject=_("SMS Gönderim Hatası"),
-                message_type="notification",
-            )
-            return False
 

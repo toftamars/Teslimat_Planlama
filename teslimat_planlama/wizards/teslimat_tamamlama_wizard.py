@@ -70,12 +70,12 @@ class TeslimatTamamlamaWizard(models.TransientModel):
         
         # Fotoğraf varsa belgede göster
         if self.teslimat_fotografi:
-            _logger.info("📷 Fotoğraf yükleniyor - Boyut: %s bytes", len(self.teslimat_fotografi) if self.teslimat_fotografi else 0)
+            _logger.info("Fotoğraf yükleniyor - Boyut: %s bytes", len(self.teslimat_fotografi) if self.teslimat_fotografi else 0)
             vals['teslimat_fotografi'] = self.teslimat_fotografi
             vals['fotograf_dosya_adi'] = self.fotograf_dosya_adi or 'teslimat_fotografi.jpg'
-            _logger.info("✓ Fotoğraf vals'e eklendi: %s", vals.get('fotograf_dosya_adi'))
+            _logger.info("Fotoğraf vals'e eklendi: %s", vals.get('fotograf_dosya_adi'))
         else:
-            _logger.warning("⚠️ Fotoğraf yok - teslimat_fotografi boş")
+            _logger.warning("Fotoğraf yok - teslimat_fotografi boş")
         
         # Not ekle
         if self.tamamlama_notu:
@@ -89,9 +89,9 @@ class TeslimatTamamlamaWizard(models.TransientModel):
         # Fotoğrafın kaydedildiğini doğrula
         teslimat.invalidate_cache(['teslimat_fotografi'])
         if teslimat.teslimat_fotografi:
-            _logger.info("✅ Fotoğraf başarıyla kaydedildi - Boyut: %s bytes", len(teslimat.teslimat_fotografi) if teslimat.teslimat_fotografi else 0)
+            _logger.info("Fotoğraf başarıyla kaydedildi - Boyut: %s bytes", len(teslimat.teslimat_fotografi) if teslimat.teslimat_fotografi else 0)
         else:
-            _logger.error("❌ Fotoğraf kaydedilemedi - teslimat_fotografi hala boş!")
+            _logger.error("Fotoğraf kaydedilemedi - teslimat_fotografi hala boş!")
         
         # Fotoğraf varsa chatter'a da ekle
         if self.teslimat_fotografi:
@@ -110,13 +110,13 @@ class TeslimatTamamlamaWizard(models.TransientModel):
                 attachment_ids=[attachment.id],
             )
             
-            _logger.info("✓ Teslimat tamamlandı (Fotoğraflı): %s", teslimat.name)
+            _logger.info("Teslimat tamamlandı (Fotoğraflı): %s", teslimat.name)
         else:
             # Fotoğraf yoksa sadece chatter'a mesaj
             teslimat.message_post(
                 body=_("Teslimat tamamlandı"),
             )
-            _logger.info("✓ Teslimat tamamlandı: %s", teslimat.name)
+            _logger.info("Teslimat tamamlandı: %s", teslimat.name)
 
         # Belgeyi aç ve wizard'ı kapat
         return {
