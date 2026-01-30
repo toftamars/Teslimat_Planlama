@@ -31,11 +31,18 @@ class TeslimatBelgesi(models.Model):
     Teslimat belgeleri ve durum takibi.
     User grubu günlük max 7 teslimat oluşturabilir.
     Manager grubu sınırsız teslimat oluşturabilir.
+
+    Mixin'ler:
+        - teslimat.belgesi.validators: Tüm validasyon metodları
     """
 
     _name = "teslimat.belgesi"
     _description = "Teslimat Belgesi"
-    _inherit = ["mail.thread", "mail.activity.mixin"]
+    _inherit = [
+        "mail.thread",
+        "mail.activity.mixin",
+        "teslimat.belgesi.validators",  # Validasyon mixin
+    ]
     _order = "teslimat_tarihi desc, name"
 
     # Performans: Composite indeksler (kapasite sorgularında kritik)
@@ -444,138 +451,6 @@ class TeslimatBelgesi(models.Model):
             )
 
     @api.constrains("teslimat_tarihi", "arac_id", "ilce_id", "durum")
-    def _check_teslimat_validations(self):
-        """Teslimat belgesi validasyonları.
-
-        Tüm kritik validasyonları çalıştırır.
-        """
-        for record in self:
-            # Teslim edilmiş veya iptal belgeleri kontrol etme
-            if record.durum in [COMPLETED_STATUS, CANCELLED_STATUS]:
-                continue
-
-            # Validasyon kontrollerini sırayla çalıştır
-            record._validate_ayni_gun_teslimat()
-            record._validate_pazar_gunu()
-            record._validate_arac_kapatma()
-
-            # Yönetici ve küçük araç kontrolü (birçok validasyonda kullanılıyor)
-            yonetici_mi = is_manager(self.env)
-            small_vehicle = record.arac_id and record.arac_id.arac_tipi in SMALL_VEHICLE_TYPES
-
-            # Yönetici ve küçük araçlar için bazı kontroller atlanır
-            if not yonetici_mi and not small_vehicle:
-                record._validate_arac_ilce_uyumlulugu()
-                record._validate_ilce_gun_eslesmesi()
-
-            record._validate_arac_kapasitesi()
-
-    def _validate_ayni_gun_teslimat(self):
-        """Aynı gün teslimat kontrolü (12:00 sonrası yasak)."""
-        istanbul_tz = pytz.timezone('Europe/Istanbul')
-        simdi_istanbul = datetime.now(istanbul_tz)
-        bugun = simdi_istanbul.date()
-        saat = simdi_istanbul.hour
-        dakika = simdi_istanbul.minute
-
-        if self.teslimat_tarihi == bugun and (saat >= 12):
-            raise ValidationError(
-                _(f"Aynı gün teslimat yazılamaz!\n\n"
-                  f"İstanbul Saati: {saat:02d}:{dakika:02d}\n"
-                  f"Teslimat Tarihi: {self.teslimat_tarihi}\n\n"
-                  f"Saat 12:00'dan sonra bugüne teslimat planlanamaz.\n"
-                  f"Lütfen yarın veya sonraki günler için teslimat planlayın.")
-            )
-
-    def _validate_pazar_gunu(self):
-        """Pazar günü kontrolü."""
-        if is_pazar_gunu(self.teslimat_tarihi):
-            raise ValidationError(
-                _("Pazar günü teslimat yapılamaz!\n\n"
-                  "Lütfen farklı bir gün seçin.")
-            )
-
-    def _validate_arac_kapatma(self):
-        """Araç kapatma kontrolü."""
-        if self.teslimat_tarihi and self.arac_id:
-            gecerli, hata_mesaji = check_arac_kapatma(
-                self.env, self.arac_id.id, self.teslimat_tarihi, bypass_for_manager=False
-            )
-            if not gecerli:
-                raise ValidationError(_(hata_mesaji))
-
-    def _validate_arac_ilce_uyumlulugu(self):
-        """Araç-İlçe uyumluluğu kontrolü."""
-        if self.ilce_id and self.arac_id:
-            if self.ilce_id not in self.arac_id.uygun_ilceler:
-                arac_tipi_label = dict(self.arac_id._fields["arac_tipi"].selection).get(
-                    self.arac_id.arac_tipi, self.arac_id.arac_tipi
-                )
-                raise ValidationError(
-                    _(f"Araç-İlçe Uyumsuzluğu!\n\n"
-                      f"Araç: {self.arac_id.name} ({arac_tipi_label})\n"
-                      f"İlçe: {self.ilce_id.name}\n\n"
-                      f"Bu araç bu ilçeye teslimat yapamaz.\n"
-                      f"Lütfen uygun bir araç veya ilçe seçin.")
-                )
-
-    def _validate_ilce_gun_eslesmesi(self):
-        """İlçe-gün eşleşmesi kontrolü."""
-        if self.ilce_id and self.arac_id:
-            gun_kodu = get_gun_kodu(self.teslimat_tarihi)
-
-            if gun_kodu:
-                gun = self.env["teslimat.gun"].search(
-                    [("gun_kodu", "=", gun_kodu)], limit=1
-                )
-                if gun:
-                    gun_ilce = self.env["teslimat.gun.ilce"].search(
-                        [
-                            ("gun_id", "=", gun.id),
-                            ("ilce_id", "=", self.ilce_id.id),
-                            ("tarih", "=", False),  # Genel kurallar
-                        ],
-                        limit=1,
-                    )
-
-                    if not gun_ilce:
-                        raise ValidationError(
-                            _(f"İlçe-Gün Eşleşmesi Hatası!\n\n"
-                              f"İlçe: {self.ilce_id.name}\n"
-                              f"Gün: {gun.name}\n\n"
-                              f"Bu ilçeye bu gün teslimat yapılamaz.\n"
-                              f"Lütfen uygun bir gün seçin.")
-                        )
-
-    def _validate_arac_kapasitesi(self):
-        """Araç kapasitesi kontrolü."""
-        if self.arac_id and self.teslimat_tarihi:
-            domain = [
-                ("teslimat_tarihi", "=", self.teslimat_tarihi),
-                ("arac_id", "=", self.arac_id.id),
-                ("durum", "!=", "iptal"),  # Sadece iptal hariç
-                ("id", "!=", self.id),  # Kendisini hariç tut
-            ]
-
-            # İlçe bazlı kontrol
-            if self.ilce_id:
-                domain.append(("ilce_id", "=", self.ilce_id.id))
-
-            mevcut_teslimat_sayisi = self.env["teslimat.belgesi"].search_count(domain)
-
-            # +1 ekle (kendisi için)
-            toplam = mevcut_teslimat_sayisi + 1
-
-            if toplam > self.arac_id.gunluk_teslimat_limiti:
-                ilce_bilgi = f" - {self.ilce_id.name}" if self.ilce_id else ""
-                raise ValidationError(
-                    _(f"Araç Kapasitesi Dolu!\n\n"
-                      f"Araç: {self.arac_id.name}{ilce_bilgi}\n"
-                      f"Tarih: {self.teslimat_tarihi.strftime('%d.%m.%Y')}\n"
-                      f"Kapasite: {toplam}/{self.arac_id.gunluk_teslimat_limiti}\n\n"
-                      f"Bu tarih için araç kapasitesi dolmuştur.\n"
-                      f"Lütfen farklı bir tarih veya araç seçin.")
-                )
 
     @api.depends("durum")
     def _compute_is_readonly(self) -> None:
