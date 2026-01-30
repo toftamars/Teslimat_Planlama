@@ -7,7 +7,13 @@ import pytz
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
 
-from .teslimat_constants import DAILY_DELIVERY_LIMIT, get_arac_kapatma_sebep_label
+from .teslimat_constants import (
+    CANCELLED_STATUS,
+    COMPLETED_STATUS,
+    DAILY_DELIVERY_LIMIT,
+    SMALL_VEHICLE_TYPES,
+    get_arac_kapatma_sebep_label,
+)
 from .teslimat_utils import (
     check_arac_kapatma,
     check_pazar_gunu_validation,
@@ -394,7 +400,7 @@ class TeslimatBelgesi(models.Model):
         """
         for record in self:
             # Teslim edilmiş veya iptal belgeleri kontrol etme
-            if record.durum in ['teslim_edildi', 'iptal']:
+            if record.durum in [COMPLETED_STATUS, CANCELLED_STATUS]:
                 continue
 
             # Validasyon kontrollerini sırayla çalıştır
@@ -404,9 +410,7 @@ class TeslimatBelgesi(models.Model):
 
             # Yönetici ve küçük araç kontrolü (birçok validasyonda kullanılıyor)
             yonetici_mi = is_manager(self.env)
-            small_vehicle = record.arac_id and record.arac_id.arac_tipi in [
-                "kucuk_arac_1", "kucuk_arac_2", "ek_arac"
-            ]
+            small_vehicle = record.arac_id and record.arac_id.arac_tipi in SMALL_VEHICLE_TYPES
 
             # Yönetici ve küçük araçlar için bazı kontroller atlanır
             if not yonetici_mi and not small_vehicle:
@@ -641,7 +645,7 @@ class TeslimatBelgesi(models.Model):
 
         # Chatter'a not ekle
         self.message_post(
-            body=_("🚗 Sürücü yola çıktı. Teslimat yolda."),
+            body=_("Sürücü yola çıktı. Teslimat yolda."),
             subject=_("Teslimat Yolda"),
         )
 
@@ -722,7 +726,7 @@ class TeslimatBelgesi(models.Model):
         if not is_manager(self.env):
             raise UserError(
                 _(
-                    "⛔ Teslimat iptal yetkisi yok!\n\n"
+                    "Teslimat iptal yetkisi yok!\n\n"
                     "Sadece yöneticiler teslimat belgelerini iptal edebilir.\n"
                     "Lütfen yöneticinizle iletişime geçin."
                 )
@@ -742,7 +746,7 @@ class TeslimatBelgesi(models.Model):
 
         # Chatter'a not ekle
         self.message_post(
-            body=_("❌ Teslimat yönetici tarafından iptal edildi."),
+            body=_("Teslimat yönetici tarafından iptal edildi."),
             subject=_("Teslimat İptal Edildi"),
         )
 
@@ -805,7 +809,7 @@ class TeslimatBelgesi(models.Model):
             _logger.error("SMS gönderim hatası: %s", e)
             self.message_post(
                 body=_(
-                    f"❌ SMS gönderilemedi: {str(e)}\n"
+                    f"SMS gönderilemedi: {str(e)}\n"
                     f"Alıcı: {self.musteri_id.name}\n"
                     f"Telefon: {self.musteri_telefon}"
                 ),

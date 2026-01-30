@@ -218,7 +218,7 @@ class TeslimatArac(models.Model):
                 )
             
             _logger.info(
-                "✓ Araç oluşturuldu: %s (%s) - %s ilçe eşleştirildi",
+                "Araç oluşturuldu: %s (%s) - %s ilçe eşleştirildi",
                 record.name,
                 record.arac_tipi,
                 len(record.uygun_ilceler)
@@ -235,7 +235,7 @@ class TeslimatArac(models.Model):
                 record._update_uygun_ilceler()
                 yeni_ilce_sayisi = len(record.uygun_ilceler)
                 _logger.info(
-                    "✓ Araç güncellendi: %s (%s) - İlçe eşleştirmesi: %s → %s",
+                    "Araç güncellendi: %s (%s) - İlçe eşleştirmesi: %s → %s",
                     record.name,
                     record.arac_tipi,
                     eski_ilce_sayisi,
@@ -380,10 +380,10 @@ class TeslimatArac(models.Model):
                     
                     if eski_sayisi != yeni_sayisi:
                         detaylar.append(
-                            f"✓ {arac.name} ({arac.arac_tipi}): {eski_sayisi} → {yeni_sayisi} ilçe"
+                            f"{arac.name} ({arac.arac_tipi}): {eski_sayisi} → {yeni_sayisi} ilçe"
                         )
                         _logger.info(
-                            "✓ %s (%s): %s → %s ilçe",
+                            "%s (%s): %s → %s ilçe",
                             arac.name,
                             arac.arac_tipi,
                             eski_sayisi,
@@ -397,7 +397,7 @@ class TeslimatArac(models.Model):
                 _logger.exception("%s: Senkronizasyon hatası", arac.name)
         
         _logger.info("=" * 60)
-        _logger.info("✓ Senkronizasyon Tamamlandı")
+        _logger.info("Senkronizasyon Tamamlandı")
         _logger.info("  - Güncellenen: %s araç", guncellenen_sayisi)
         _logger.info("  - Hata: %s araç", hata_sayisi)
         _logger.info("=" * 60)

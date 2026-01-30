@@ -239,17 +239,17 @@ class TeslimatAnaSayfa(models.TransientModel):
                 # Detaylı hata mesajı
                 if not gecerli:
                     record.uygunluk_mesaji = (
-                        f"❌ {record.ilce_id.name} ilçesine "
+                        f"{record.ilce_id.name} ilçesine "
                         f"{record.arac_id.name} ile teslimat yapılamaz.\n\n"
                         f"Sebep: {mesaj}\n\n"
                         f"İlçe Yaka Tipi: {record.ilce_id.yaka_tipi}\n"
                         f"Araç Tipi: {arac_tipi_label}\n\n"
-                        f"💡 Çözüm: Lütfen '🔄 Araç-İlçe Senkronizasyonu' menüsünden "
+                        f"Çözüm: Lütfen 'Araç-İlçe Senkronizasyonu' menüsünden "
                         f"eşleştirmeleri güncelleyin."
                     )
                 else:
                     record.uygunluk_mesaji = (
-                        f"❌ {record.ilce_id.name} ilçesine "
+                        f"{record.ilce_id.name} ilçesine "
                         f"{record.arac_id.name} ile teslimat yapılamaz. "
                         f"Bu araç ({arac_tipi_label}) bu ilçeye uygun değil."
                     )
@@ -537,15 +537,15 @@ class TeslimatAnaSayfa(models.TransientModel):
 
                     # Durum hesaplama
                     if arac_kapali:
-                        durum_text = "🚫 Kapalı"
+                        durum_text = "Kapalı"
                     elif kalan_kapasite < 0:
-                        durum_text = f"⚠️ Aşım ({teslimat_sayisi}/{toplam_kapasite})"
+                        durum_text = f"Aşım ({teslimat_sayisi}/{toplam_kapasite})"
                     elif kalan_kapasite > 5:
-                        durum_text = "🟢 Boş"
+                        durum_text = "Boş"
                     elif kalan_kapasite > 0:
-                        durum_text = "🟡 Dolu Yakın"
+                        durum_text = "Dolu Yakın"
                     else:
-                        durum_text = "🔴 Dolu"
+                        durum_text = "Dolu"
 
                     uygun_gunler.append({
                         "ana_sayfa_id": record.id,
