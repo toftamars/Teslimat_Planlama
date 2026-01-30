@@ -236,7 +236,7 @@ class TeslimatIlce(models.Model):
             if record.state_id and 'istanbul' in record.state_id.name.lower():
                 if record.yaka_tipi == "belirsiz":
                     _logger.warning(
-                        "⚠ İstanbul ilçesi '%s' için yaka tipi belirsiz! "
+                        "İstanbul ilçesi '%s' için yaka tipi belirsiz! "
                         "Constraint tarafından engellenecek.",
                         record.name
                     )
@@ -245,7 +245,7 @@ class TeslimatIlce(models.Model):
             record._update_arac_ilce_eslesmesi()
             
             _logger.info(
-                "✓ İlçe oluşturuldu: %s (%s) - Yaka: %s",
+                "İlçe oluşturuldu: %s (%s) - Yaka: %s",
                 record.name,
                 record.state_id.name if record.state_id else "N/A",
                 record.yaka_tipi
@@ -260,7 +260,7 @@ class TeslimatIlce(models.Model):
             self._update_arac_ilce_eslesmesi()
             for record in self:
                 _logger.info(
-                    "✓ İlçe güncellendi: %s - Yaka: %s",
+                    "İlçe güncellendi: %s - Yaka: %s",
                     record.name,
                     record.yaka_tipi
                 )

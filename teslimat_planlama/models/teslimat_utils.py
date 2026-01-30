@@ -143,7 +143,7 @@ def validate_arac_ilce_eslesmesi(arac, ilce, bypass_for_manager: bool = True) ->
     
     # Yönetici kontrolü - Yöneticiler her şeyi yapabilir
     if bypass_for_manager and hasattr(arac, 'env') and is_manager(arac.env):
-        return True, "Yönetici yetkisi - tüm eşleştirmeler geçerli ✓"
+        return True, "Yönetici yetkisi - tüm eşleştirmeler geçerli"
     
     # Küçük araçlar her yere gidebilir
     if arac.arac_tipi in SMALL_VEHICLE_TYPES:
@@ -152,13 +152,13 @@ def validate_arac_ilce_eslesmesi(arac, ilce, bypass_for_manager: bool = True) ->
     # Yaka bazlı kontrol
     if arac.arac_tipi == "anadolu_yakasi":
         if ilce.yaka_tipi == "anadolu":
-            return True, "Anadolu Yakası araç - Anadolu Yakası ilçe ✓"
+            return True, "Anadolu Yakası araç - Anadolu Yakası ilçe"
         else:
             return False, f"Anadolu Yakası araç sadece Anadolu Yakası ilçelerine gidebilir (İlçe: {ilce.yaka_tipi})"
     
     elif arac.arac_tipi == "avrupa_yakasi":
         if ilce.yaka_tipi == "avrupa":
-            return True, "Avrupa Yakası araç - Avrupa Yakası ilçe ✓"
+            return True, "Avrupa Yakası araç - Avrupa Yakası ilçe"
         else:
             return False, f"Avrupa Yakası araç sadece Avrupa Yakası ilçelerine gidebilir (İlçe: {ilce.yaka_tipi})"
     
