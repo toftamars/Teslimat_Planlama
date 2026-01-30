@@ -307,13 +307,29 @@ class TeslimatBelgesi(models.Model):
             )
     
     def write(self, vals):
-        """Teslimat belgesi güncelleme - Teslim edilmiş belgelerde kısıtlama.
+        """Teslimat belgesi güncelleme.
 
-        Teslim edilmiş belgeler düzenlenemez (sadece yöneticiler için izin var).
-        İptal işlemi sadece yöneticiler tarafından yapılabilir.
+        Returns:
+            bool: Başarılı ise True
         """
-        # İptal yetkisi kontrolü - Sadece yöneticiler iptal edebilir
-        if 'durum' in vals and vals['durum'] == 'iptal':
+        self._check_iptal_yetkisi(vals)
+        self._log_write_debug(vals)
+
+        for record in self:
+            record._check_archived_record_edit(vals)
+
+        return super(TeslimatBelgesi, self).write(vals)
+
+    def _check_iptal_yetkisi(self, vals: dict) -> None:
+        """İptal yetkisi kontrolü - sadece yöneticiler iptal edebilir.
+
+        Args:
+            vals: Write değerleri
+
+        Raises:
+            UserError: Yetkisiz iptal denemesi
+        """
+        if 'durum' in vals and vals['durum'] == CANCELLED_STATUS:
             if not is_manager(self.env):
                 raise UserError(
                     _(
@@ -323,74 +339,109 @@ class TeslimatBelgesi(models.Model):
                     )
                 )
 
-        # DEBUG: Write işlemlerini logla (Production'da kapatılmalı)
+    def _log_write_debug(self, vals: dict) -> None:
+        """Write işlemini debug log'la.
+
+        Args:
+            vals: Write değerleri
+        """
         if _logger.isEnabledFor(logging.DEBUG):
-            _logger.debug("WRITE: Records=%s, Keys=%s", [r.name for r in self], list(vals.keys()))
+            _logger.debug(
+                "WRITE: Records=%s, Keys=%s",
+                [r.name for r in self],
+                list(vals.keys())
+            )
 
-        for record in self:
-            # Teslim edilmiş ve iptal edilmiş belgelerde değişiklik yapılamaz
-            # AMA: Eğer wizard tamamlama işleminden geliyorsa (durum değişikliği), izin ver
-            if record.durum in ['teslim_edildi', 'iptal']:
-                if _logger.isEnabledFor(logging.DEBUG):
-                    _logger.debug("WRITE to archived: %s (status=%s)", record.name, record.durum)
+    def _check_archived_record_edit(self, vals: dict) -> None:
+        """Arşivlenmiş kayıt düzenleme kontrolü.
 
-                # Sadece wizard'dan gelen alanları kontrol et
-                # message_main_attachment_id: mail modülünden, message_post çağrısı sonrası otomatik eklenir
-                wizard_fields = {
-                    'durum', 'gercek_teslimat_saati', 'teslim_alan_kisi',
-                    'teslimat_fotografi', 'fotograf_dosya_adi', 'notlar',
-                    'message_main_attachment_id'  # mail.thread - message_post sonrası otomatik
-                }
-                extra_fields = set(vals.keys()) - wizard_fields
+        Args:
+            vals: Write değerleri
 
-                if extra_fields:
-                    _logger.warning("Archived record edit attempt: %s, extra_fields=%s", record.name, extra_fields)
-                    # Wizard dışı değişiklik - engelle
-                    raise UserError(
-                        _(
-                            "Teslim edilmiş teslimat belgeleri düzenlenemez!\n\n"
-                            f"Belge: {record.name}\n"
-                            f"Durum: Teslim Edildi\n"
-                            f"Teslim Tarihi: {record.gercek_teslimat_saati or 'N/A'}\n"
-                            f"Teslim Alan: {record.teslim_alan_kisi or 'N/A'}\n\n"
-                            "Bu belge arşivlenmiştir ve değiştirilemez."
-                        )
-                    )
-                # Whitelist OK - no log needed
+        Raises:
+            UserError: Yetkisiz arşivlenmiş kayıt düzenleme
+        """
+        if self.durum not in [COMPLETED_STATUS, CANCELLED_STATUS]:
+            return  # Arşivlenmemiş, kontrol gereksiz
 
-        return super(TeslimatBelgesi, self).write(vals)
+        if _logger.isEnabledFor(logging.DEBUG):
+            _logger.debug(
+                "WRITE to archived: %s (status=%s)",
+                self.name,
+                self.durum
+            )
+
+        # Wizard'dan gelen alanlar (izin verilen)
+        wizard_fields = {
+            'durum', 'gercek_teslimat_saati', 'teslim_alan_kisi',
+            'teslimat_fotografi', 'fotograf_dosya_adi', 'notlar',
+            'message_main_attachment_id'  # mail.thread otomatik alan
+        }
+
+        extra_fields = set(vals.keys()) - wizard_fields
+
+        if extra_fields:
+            _logger.warning(
+                "Archived record edit attempt: %s, extra_fields=%s",
+                self.name,
+                extra_fields
+            )
+            raise UserError(
+                _(
+                    "Teslim edilmiş teslimat belgeleri düzenlenemez!\n\n"
+                    f"Belge: {self.name}\n"
+                    f"Durum: Teslim Edildi\n"
+                    f"Teslim Tarihi: {self.gercek_teslimat_saati or 'N/A'}\n"
+                    f"Teslim Alan: {self.teslim_alan_kisi or 'N/A'}\n\n"
+                    "Bu belge arşivlenmiştir ve değiştirilemez."
+                )
+            )
     
     def unlink(self):
         """Teslimat belgesi silme - Kısıtlamalar.
-        
-        - Sadece yöneticiler silebilir
-        - Teslim edilmiş belgeler silinemez (yönetici bile)
+
+        Returns:
+            bool: Başarılı ise True
         """
-        # Yönetici kontrolü
-        if not self.env.user.has_group("teslimat_planlama.group_teslimat_manager"):
+        self._check_unlink_yetkisi()
+
+        for record in self:
+            record._check_completed_record_unlink()
+
+        return super(TeslimatBelgesi, self).unlink()
+
+    def _check_unlink_yetkisi(self) -> None:
+        """Silme yetkisi kontrolü - sadece yöneticiler silebilir.
+
+        Raises:
+            UserError: Yetkisiz silme denemesi
+        """
+        if not is_manager(self.env):
             raise UserError(
                 _(
                     "Teslimat belgelerini sadece yöneticiler silebilir!\n\n"
                     "Yönetici yetkisi gereklidir."
                 )
             )
-        
-        # Teslim edilmiş belge kontrolü
-        for record in self:
-            if record.durum == 'teslim_edildi':
-                raise UserError(
-                    _(
-                        "Teslim edilmiş teslimat belgeleri silinemez!\n\n"
-                        f"Belge: {record.name}\n"
-                        f"Durum: Teslim Edildi\n"
-                        f"Teslim Tarihi: {record.gercek_teslimat_saati or 'N/A'}\n"
-                        f"Teslim Alan: {record.teslim_alan_kisi or 'N/A'}\n\n"
-                        "Bu belge arşivlenmiştir ve silinemez.\n"
-                        "Veri bütünlüğü için teslim edilmiş belgeler korunur."
-                    )
+
+    def _check_completed_record_unlink(self) -> None:
+        """Tamamlanmış kayıt silme kontrolü.
+
+        Raises:
+            UserError: Tamamlanmış kayıt silme denemesi
+        """
+        if self.durum == COMPLETED_STATUS:
+            raise UserError(
+                _(
+                    "Teslim edilmiş teslimat belgeleri silinemez!\n\n"
+                    f"Belge: {self.name}\n"
+                    f"Durum: Teslim Edildi\n"
+                    f"Teslim Tarihi: {self.gercek_teslimat_saati or 'N/A'}\n"
+                    f"Teslim Alan: {self.teslim_alan_kisi or 'N/A'}\n\n"
+                    "Bu belge arşivlenmiştir ve silinemez.\n"
+                    "Veri bütünlüğü için teslim edilmiş belgeler korunur."
                 )
-        
-        return super(TeslimatBelgesi, self).unlink()
+            )
 
     @api.constrains("teslimat_tarihi", "arac_id", "ilce_id", "durum")
     def _check_teslimat_validations(self):
