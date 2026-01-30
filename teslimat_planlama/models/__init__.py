@@ -7,6 +7,7 @@ from . import teslimat_arac_kapatma
 from . import teslimat_planlama
 from . import teslimat_transfer
 from . import teslimat_belgesi_validators  # Mixin: Validasyon metodları
+from . import teslimat_belgesi_actions  # Mixin: Action ve onchange metodları
 from . import teslimat_belgesi
 from . import teslimat_belgesi_urun
 from . import teslimat_ana_sayfa

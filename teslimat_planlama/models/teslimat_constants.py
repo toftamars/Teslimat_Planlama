@@ -80,11 +80,13 @@ ACTIVE_STATUSES = ["taslak", "bekliyor", "hazir", "yolda", "teslim_edildi"]
 # Yolda olan teslimat durumları
 IN_TRANSIT_STATUSES = ["hazir", "yolda"]
 
-# İptal durumu
-CANCELLED_STATUS = "iptal"
-
-# Tamamlanmış durum
+# Durum sabitleri
+DRAFT_STATUS = "taslak"
+WAITING_STATUS = "bekliyor"
+READY_STATUS = "hazir"
+IN_TRANSIT_STATUS = "yolda"
 COMPLETED_STATUS = "teslim_edildi"
+CANCELLED_STATUS = "iptal"
 
 # ============================================================================
 # ARAÇ TİPLERİ
