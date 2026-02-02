@@ -151,22 +151,26 @@ class TeslimatBelgesiActions(models.AbstractModel):
             picking: Stock picking kaydı
         """
         # Mevcut ürünleri temizle (Command.clear)
-        self.teslimat_urunleri = [(5, 0, 0)]
+        self.transfer_urun_ids = [(5, 0, 0)]
 
         # Transfer belgesi ürünlerini ekle
         if picking and picking.move_ids_without_package:
-            for move in picking.move_ids_without_package:
-                self.teslimat_urunleri = [
+            lines = []
+            for seq, move in enumerate(picking.move_ids_without_package, start=1):
+                lines.append(
                     (
                         0,
                         0,
                         {
+                            "sequence": seq,
                             "urun_id": move.product_id.id,
-                            "miktar": move.product_uom_qty,
-                            "birim_id": move.product_uom.id,
+                            "miktar": move.quantity_done or move.product_uom_qty,
+                            "birim": move.product_uom.id,
+                            "stock_move_id": move.id,
                         },
                     )
-                ]
+                )
+            self.transfer_urun_ids = [(5, 0, 0)] + lines
 
     # =========================================================================
     # ACTION METHODS
