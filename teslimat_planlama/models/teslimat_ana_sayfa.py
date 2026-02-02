@@ -217,7 +217,7 @@ class TeslimatAnaSayfa(models.TransientModel):
                 record.ilce_uygun_mu = True
                 if record.arac_kucuk_mu:
                     record.uygunluk_mesaji = (
-                        f"✅ {record.ilce_id.name} ilçesine "
+                        f"{record.ilce_id.name} ilçesine "
                         f"{record.arac_id.name} ile teslimat yapılabilir "
                         "(Küçük araç - tüm ilçelere gidebilir)"
                     )
@@ -226,7 +226,7 @@ class TeslimatAnaSayfa(models.TransientModel):
                         record.arac_id.arac_tipi, record.arac_id.arac_tipi
                     )
                     record.uygunluk_mesaji = (
-                        f"✅ {record.ilce_id.name} ilçesine "
+                        f"{record.ilce_id.name} ilçesine "
                         f"{record.arac_id.name} ile teslimat yapılabilir "
                         f"({arac_tipi_label})"
                     )
@@ -239,17 +239,17 @@ class TeslimatAnaSayfa(models.TransientModel):
                 # Detaylı hata mesajı
                 if not gecerli:
                     record.uygunluk_mesaji = (
-                        f"❌ {record.ilce_id.name} ilçesine "
+                        f"{record.ilce_id.name} ilçesine "
                         f"{record.arac_id.name} ile teslimat yapılamaz.\n\n"
                         f"Sebep: {mesaj}\n\n"
                         f"İlçe Yaka Tipi: {record.ilce_id.yaka_tipi}\n"
                         f"Araç Tipi: {arac_tipi_label}\n\n"
-                        f"💡 Çözüm: Lütfen '🔄 Araç-İlçe Senkronizasyonu' menüsünden "
+                        f"Çözüm: Lütfen 'Araç-İlçe Senkronizasyonu' menüsünden "
                         f"eşleştirmeleri güncelleyin."
                     )
                 else:
                     record.uygunluk_mesaji = (
-                        f"❌ {record.ilce_id.name} ilçesine "
+                        f"{record.ilce_id.name} ilçesine "
                         f"{record.arac_id.name} ile teslimat yapılamaz. "
                         f"Bu araç ({arac_tipi_label}) bu ilçeye uygun değil."
                     )
@@ -436,10 +436,10 @@ class TeslimatAnaSayfa(models.TransientModel):
                     record, tarih, teslimat_sayisi_by_date, gun_dict, 
                     gun_ilce_dict, yonetici_mi
                 )
-                
+
                 if gun_data:
                     uygun_gunler.append(gun_data)
-            
+
             # 5. Günleri tarihe göre sırala ve kaydet
             uygun_gunler.sort(key=lambda x: x["tarih"])
             gun_komutlari = [(0, 0, data) for data in uygun_gunler]
