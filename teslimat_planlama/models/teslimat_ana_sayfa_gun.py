@@ -121,9 +121,9 @@ class TeslimatAnaSayfaGun(models.TransientModel):
         if self.arac_kapali_mi:
             raise UserError(
                 f"Bu tarihte araç kapalı!\n\n"
-                f"📅 Tarih: {self.tarih_str}\n"
-                f"⚠️ Sebep: {self.kapatma_sebep}\n"
-                f"👤 Kapatan: {self.kapatan_kisi}\n\n"
+                f"Tarih: {self.tarih_str}\n"
+                f"Sebep: {self.kapatma_sebep}\n"
+                f"Kapatan: {self.kapatan_kisi}\n\n"
                 f"Lütfen başka bir tarih veya araç seçin."
             )
 

@@ -25,13 +25,13 @@ def post_init_hook(cr, registry):
             if ilce_sayisi < 10:  # Çok az ilçe varsa yükle
                 _logger.info("İstanbul ilçeleri yükleniyor...")
                 ilce_model.create_istanbul_districts_simple()
-                _logger.info("✓ İstanbul ilçeleri yüklendi")
+                _logger.info("İstanbul ilçeleri yüklendi")
 
             # Haftalık programı uygula
             _logger.info("Haftalık program uygulanıyor...")
             ilce_model.apply_weekly_schedule()
             cr.commit()
-            _logger.info("✓ Haftalık program uygulandı")
+            _logger.info("Haftalık program uygulandı")
         else:
             _logger.warning("İstanbul ili bulunamadı")
 
@@ -49,7 +49,7 @@ def post_init_hook(cr, registry):
                     user.write({'groups_id': [(4, teslimat_user_group.id)]})
 
             cr.commit()
-            _logger.info("✓ %s kullanıcıya Teslimat Kullanıcısı grubu atandı", len(internal_users))
+            _logger.info("%s kullanıcıya Teslimat Kullanıcısı grubu atandı", len(internal_users))
         except Exception as e:
             _logger.warning("Grup atama hatası (ignored): %s", e)
 
