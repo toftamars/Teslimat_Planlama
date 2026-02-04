@@ -164,17 +164,28 @@ class TeslimatAracKapatma(models.Model):
     @api.model
     def arac_kapali_mi(self, arac_id, tarih):
         """Belirli bir tarihte araç kapalı mı kontrol et.
-        
+
         Args:
-            arac_id: Araç ID
-            tarih: Kontrol edilecek tarih
-            
+            arac_id: Araç ID (integer veya Many2one tuple'dan id)
+            tarih: Kontrol edilecek tarih (date veya ISO string)
+
         Returns:
             tuple: (Kapalı mı?, Kapatma kaydı veya None)
         """
         if not arac_id or not tarih:
             return False, None
-        
+
+        # RPC/JSON'dan string veya tuple gelebilir; domain karşılaştırması için normalleştir
+        if isinstance(arac_id, tuple):
+            arac_id = arac_id[0] if arac_id else None
+        if arac_id is not None and not isinstance(arac_id, int):
+            arac_id = int(arac_id)
+        if isinstance(tarih, str):
+            tarih = fields.Date.from_string(tarih)
+
+        if not arac_id or not tarih:
+            return False, None
+
         kapatma = self.search([
             ("arac_id", "=", arac_id),
             ("baslangic_tarihi", "<=", tarih),
