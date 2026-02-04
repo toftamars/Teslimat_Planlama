@@ -49,17 +49,15 @@ class TeslimatBelgesiWizard(models.TransientModel):
     musteri_telefon = fields.Char(string="Telefon", readonly=True, help="Transfer belgesindeki müşteri telefon numarası")
     manuel_telefon = fields.Char(string="Telefon (Opsiyonel)", required=False, help="İsteğe bağlı - farklı bir telefon numarası girebilirsiniz")
 
-    # Transfer belgesinden gelen ek bilgiler
+    # Kullanıcının elle doldurduğu alanlar
     transfer_olusturan_id = fields.Many2one(
         "res.users",
-        string="Transferi oluşturan",
-        readonly=True,
-        help="Transfer belgesini oluşturan personel/kullanıcı",
+        string="Sorumlu Personel",
+        help="İsteğe bağlı - sorumlu personel/kullanıcı",
     )
     analytic_account_adi = fields.Char(
         string="Analitik hesap",
-        readonly=True,
-        help="Transfer belgesindeki analitik hesap bilgisi (varsa)",
+        help="İsteğe bağlı - analitik hesap bilgisi",
     )
 
     # Hesaplanan alanlar
@@ -71,13 +69,24 @@ class TeslimatBelgesiWizard(models.TransientModel):
 
     @api.model
     def create(self, vals):
-        """Create metodunu override et - context'ten ilce_id al."""
+        """Create metodunu override et - context'ten veya Ana Sayfa kaydından ilce_id al."""
         ctx = self.env.context
-
-        # Context'ten ilce_id al ve vals'a ekle
-        if ctx.get("default_ilce_id") and "ilce_id" not in vals:
-            vals["ilce_id"] = ctx.get("default_ilce_id")
-
+        if "ilce_id" not in vals or not vals.get("ilce_id"):
+            ilce_id = None
+            if ctx.get("default_ana_sayfa_res_id"):
+                try:
+                    ana = self.env["teslimat.ana.sayfa"].browse(int(ctx["default_ana_sayfa_res_id"]))
+                    if ana.exists() and ana.ilce_id:
+                        ilce_id = ana.ilce_id.id
+                except (TypeError, ValueError):
+                    pass
+            if ilce_id is None and ctx.get("default_ilce_id"):
+                try:
+                    ilce_id = int(ctx["default_ilce_id"])
+                except (TypeError, ValueError):
+                    pass
+            if ilce_id:
+                vals["ilce_id"] = ilce_id
         return super().create(vals)
 
     @api.model
@@ -109,30 +118,37 @@ class TeslimatBelgesiWizard(models.TransientModel):
         if ctx.get("default_arac_id"):
             res["arac_id"] = ctx.get("default_arac_id")
 
-        # İlçe: Ana Sayfa'dan (Uygun Günler tıklanınca) context ile otomatik atanır
-        default_ilce = ctx.get("default_ilce_id")
-        if default_ilce:
+        # İlçe: Ana Sayfa'dan (Uygun Günler tıklanınca) otomatik atanır.
+        # Önce Ana Sayfa kaydından sunucuda oku (en güvenilir), yoksa context default_ilce_id kullan.
+        ilce_id = None
+        ana_sayfa_res_id = ctx.get("default_ana_sayfa_res_id")
+        if ana_sayfa_res_id:
             try:
-                ilce_id = int(default_ilce)
+                ana_id = int(ana_sayfa_res_id)
+            except (TypeError, ValueError):
+                ana_id = None
+            if ana_id:
+                ana = self.env["teslimat.ana.sayfa"].browse(ana_id)
+                if ana.exists() and ana.ilce_id:
+                    ilce_id = ana.ilce_id.id
+        if ilce_id is None and ctx.get("default_ilce_id"):
+            try:
+                ilce_id = int(ctx.get("default_ilce_id"))
             except (TypeError, ValueError):
                 ilce_id = None
-            if ilce_id:
-                ilce = self.env["teslimat.ilce"].browse(ilce_id)
-                if ilce.exists():
-                    res["ilce_id"] = ilce_id
-                    if fields_list and "ilce_id" not in fields_list:
-                        fields_list.append("ilce_id")
+        if ilce_id:
+            ilce = self.env["teslimat.ilce"].browse(ilce_id)
+            if ilce.exists():
+                res["ilce_id"] = ilce_id
+                if fields_list and "ilce_id" not in fields_list:
+                    fields_list.append("ilce_id")
 
-        # Transfer ID context'ten geliyorsa kullan
+        # Transfer ID context'ten geliyorsa kullan (Analitik hesap ve Sorumlu Personel otomatik atanmaz, kullanıcı doldurur)
         if ctx.get("default_transfer_id") and "transfer_id" in (fields_list or []):
             picking_id = ctx.get("default_transfer_id")
             picking = self.env["stock.picking"].browse(picking_id)
             if picking.exists():
                 res["transfer_id"] = picking_id
-                if picking.create_uid:
-                    res["transfer_olusturan_id"] = picking.create_uid.id
-                if hasattr(picking, "analytic_account_id") and picking.analytic_account_id:
-                    res["analytic_account_adi"] = picking.analytic_account_id.name
                 if "teslimat_tarihi" in (fields_list or []) and not res.get(
                     "teslimat_tarihi"
                 ):
@@ -220,11 +236,9 @@ class TeslimatBelgesiWizard(models.TransientModel):
 
     @api.onchange("transfer_id")
     def _onchange_transfer_id(self) -> None:
-        """Transfer seçildiğinde müşteri, analitik hesap ve transferi oluşturan bilgisini doldur."""
+        """Transfer seçildiğinde sadece müşteri bilgilerini doldur. Analitik hesap ve Sorumlu Personel kullanıcı doldurur."""
         picking = self.transfer_id
         if not picking:
-            self.transfer_olusturan_id = False
-            self.analytic_account_adi = False
             return
 
         # 1. Transfer durumu kontrolü
@@ -275,16 +289,6 @@ class TeslimatBelgesiWizard(models.TransientModel):
                 self.musteri_telefon = partner.mobile
             else:
                 self.musteri_telefon = ""
-
-        # 4. Transferi oluşturan kullanıcı (create_uid)
-        if picking.create_uid:
-            self.transfer_olusturan_id = picking.create_uid
-
-        # 5. Analitik hesap (transfer başka modülle analitik alanı kullanıyorsa)
-        if hasattr(picking, "analytic_account_id") and picking.analytic_account_id:
-            self.analytic_account_adi = picking.analytic_account_id.name
-        else:
-            self.analytic_account_adi = False
 
     def action_teslimat_olustur(self) -> dict:
         """Teslimat belgesi oluştur, SMS gönder ve yönlendir.

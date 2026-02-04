@@ -166,29 +166,37 @@ odoo.define('teslimat_planlama.uygun_gunler_click', function (require) {
 
                 // Find parent form (teslimat.ana.sayfa)
                 var parentForm = this._findParentForm();
-                if (!parentForm || !parentForm.state || !parentForm.state.data) {
+                if (!parentForm || !parentForm.state) {
                     Dialog.alert(this, 'Ana form bilgisi alınamadı.');
                     return;
                 }
 
-                // Ana Sayfa formundaki Araç ve İlçe (bazen state.data tek kayıt, bazen liste)
+                // Ana Sayfa kayıt ID (wizard sunucuda bu kayıttan ilçe okuyacak)
+                var anaSayfaResId = parentForm.state.res_id || parentForm.state.id || null;
+                if (Array.isArray(anaSayfaResId)) {
+                    anaSayfaResId = anaSayfaResId[0] != null ? anaSayfaResId[0] : null;
+                }
+
+                // Araç ve İlçe: state.data'dan al (bazen tek kayıt objesi, bazen kayıt dizisi)
                 var formData = parentForm.state.data;
+                if (!formData) {
+                    Dialog.alert(this, 'Ana form verisi alınamadı.');
+                    return;
+                }
                 if (Array.isArray(formData) && formData.length > 0) {
                     formData = formData[0];
                 }
                 var aracField = formData.arac_id;
                 var ilceField = formData.ilce_id;
 
-                // Validate vehicle selection
                 if (!aracField) {
                     Dialog.alert(this, 'Araç seçimi gereklidir.');
                     return;
                 }
 
-                // Extract IDs from Many2one fields (İlçe wizard'da otomatik atanacak)
                 var aracId = this._extractMany2oneId(aracField);
                 var ilceId = this._extractMany2oneId(ilceField);
-                if (ilceId && typeof ilceId !== 'number') {
+                if (ilceId != null && typeof ilceId !== 'number') {
                     ilceId = parseInt(ilceId, 10) || null;
                 }
 
@@ -197,11 +205,12 @@ odoo.define('teslimat_planlama.uygun_gunler_click', function (require) {
                     return;
                 }
 
-                // Wizard context: tarih, araç ve Ana Sayfa'daki İlçe mutlaka geçirilir
+                // Wizard context: tarih, araç, ilçe ve Ana Sayfa res_id (sunucuda ilçe oradan da okunur)
                 var context = {
                     default_teslimat_tarihi: tarih,
                     default_arac_id: aracId,
                     default_ilce_id: ilceId || false,
+                    default_ana_sayfa_res_id: anaSayfaResId || false,
                 };
 
                 // Open teslimat belgesi wizard with pre-filled values

@@ -171,13 +171,11 @@ class TeslimatBelgesiValidators(models.AbstractModel):
     def _validate_ilce_gun_kapasitesi(self):
         """İlçe-gün kapasitesi kontrolü (çakışma / aşım engeli).
 
-        Ana Sayfa'da görünen 'son X kapasite' ile aynı kural: aynı (araç, ilçe, tarih)
-        için kayıt sayısı ilçe-gün maksimum_teslimat'ı aşmasın. Başka personel aynı
-        güne teslimat yazdıysa kaydetmek isteyen kullanıcıya uyarı verilir.
-        Yönetici bypass edilir (acil durum override).
+        Ana Sayfa'da görünen kapasite ile aynı kural: aynı (araç, ilçe, tarih)
+        için kayıt sayısı ilçe-gün maksimum_teslimat'ı (ve araç günlük limiti) aşmasın.
+        Düzenle ile tarih değiştirildiğinde de kontrol edilir; yönetici dahil kimse
+        dolu güne kayıt yazamaz.
         """
-        if is_manager(self.env):
-            return
         if not self.ilce_id or not self.arac_id or not self.teslimat_tarihi:
             return
         tarih = fields.Date.to_date(self.teslimat_tarihi)
@@ -198,6 +196,10 @@ class TeslimatBelgesiValidators(models.AbstractModel):
         if not gun_ilce:
             return
         maksimum = gun_ilce.maksimum_teslimat
+        # Araç günlük limiti de uygula (Ana Sayfa ile aynı etkin kapasite)
+        arac_limiti = (self.arac_id.gunluk_teslimat_limiti or 0)
+        if arac_limiti > 0:
+            maksimum = min(maksimum, arac_limiti)
         domain = [
             ("teslimat_tarihi", "=", tarih),
             ("arac_id", "=", self.arac_id.id),
