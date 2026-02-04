@@ -100,6 +100,16 @@ class TeslimatBelgesi(models.Model):
         domain=[("state", "in", ["waiting", "confirmed", "assigned", "done"])],
         tracking=True,
     )
+    transfer_olusturan_id = fields.Many2one(
+        "res.users",
+        string="Transferi oluşturan",
+        help="Transfer belgesini oluşturan personel/kullanıcı",
+        tracking=True,
+    )
+    analytic_account_adi = fields.Char(
+        string="Analitik hesap",
+        help="Transfer belgesindeki analitik hesap bilgisi (varsa)",
+    )
 
     # Ürün Bilgileri (Transfer belgesindeki tüm ürünler)
     transfer_urun_ids = fields.One2many(

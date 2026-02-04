@@ -108,9 +108,8 @@ odoo.define('teslimat_planlama.uygun_gunler_click', function (require) {
         _findParentForm: function () {
             var parent = this.getParent();
             while (parent) {
-                if (parent.state &&
-                    parent.state.model === 'teslimat.ana.sayfa' &&
-                    parent.state.data) {
+                var model = parent.state && (parent.state.model || parent.state.resModel);
+                if (model === 'teslimat.ana.sayfa' && parent.state && parent.state.data) {
                     return parent;
                 }
                 parent = parent.getParent && parent.getParent();
@@ -172,8 +171,13 @@ odoo.define('teslimat_planlama.uygun_gunler_click', function (require) {
                     return;
                 }
 
-                var aracField = parentForm.state.data.arac_id;
-                var ilceField = parentForm.state.data.ilce_id;
+                // Ana Sayfa formundaki Araç ve İlçe (bazen state.data tek kayıt, bazen liste)
+                var formData = parentForm.state.data;
+                if (Array.isArray(formData) && formData.length > 0) {
+                    formData = formData[0];
+                }
+                var aracField = formData.arac_id;
+                var ilceField = formData.ilce_id;
 
                 // Validate vehicle selection
                 if (!aracField) {
@@ -181,25 +185,24 @@ odoo.define('teslimat_planlama.uygun_gunler_click', function (require) {
                     return;
                 }
 
-                // Extract IDs from Many2one fields
+                // Extract IDs from Many2one fields (İlçe wizard'da otomatik atanacak)
                 var aracId = this._extractMany2oneId(aracField);
                 var ilceId = this._extractMany2oneId(ilceField);
+                if (ilceId && typeof ilceId !== 'number') {
+                    ilceId = parseInt(ilceId, 10) || null;
+                }
 
                 if (!aracId) {
                     Dialog.alert(this, 'Araç bilgisi alınamadı.');
                     return;
                 }
 
-                // Build context for wizard
+                // Wizard context: tarih, araç ve Ana Sayfa'daki İlçe mutlaka geçirilir
                 var context = {
                     default_teslimat_tarihi: tarih,
                     default_arac_id: aracId,
+                    default_ilce_id: ilceId || false,
                 };
-
-                // Add district if available
-                if (ilceId) {
-                    context.default_ilce_id = ilceId;
-                }
 
                 // Open teslimat belgesi wizard with pre-filled values
                 this.do_action({

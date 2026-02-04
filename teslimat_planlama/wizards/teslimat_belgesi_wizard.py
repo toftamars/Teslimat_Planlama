@@ -49,6 +49,19 @@ class TeslimatBelgesiWizard(models.TransientModel):
     musteri_telefon = fields.Char(string="Telefon", readonly=True, help="Transfer belgesindeki müşteri telefon numarası")
     manuel_telefon = fields.Char(string="Telefon (Opsiyonel)", required=False, help="İsteğe bağlı - farklı bir telefon numarası girebilirsiniz")
 
+    # Transfer belgesinden gelen ek bilgiler
+    transfer_olusturan_id = fields.Many2one(
+        "res.users",
+        string="Transferi oluşturan",
+        readonly=True,
+        help="Transfer belgesini oluşturan personel/kullanıcı",
+    )
+    analytic_account_adi = fields.Char(
+        string="Analitik hesap",
+        readonly=True,
+        help="Transfer belgesindeki analitik hesap bilgisi (varsa)",
+    )
+
     # Hesaplanan alanlar
     arac_kucuk_mu = fields.Boolean(
         string="Küçük Araç",
@@ -96,14 +109,19 @@ class TeslimatBelgesiWizard(models.TransientModel):
         if ctx.get("default_arac_id"):
             res["arac_id"] = ctx.get("default_arac_id")
 
-        # İlçe context'ten geliyorsa kullan
-        if ctx.get("default_ilce_id"):
-            ilce_id = ctx.get("default_ilce_id")
-            ilce = self.env["teslimat.ilce"].browse(ilce_id)
-            if ilce.exists():
-                res["ilce_id"] = ilce_id
-                if fields_list and 'ilce_id' not in fields_list:
-                    fields_list.append('ilce_id')
+        # İlçe: Ana Sayfa'dan (Uygun Günler tıklanınca) context ile otomatik atanır
+        default_ilce = ctx.get("default_ilce_id")
+        if default_ilce:
+            try:
+                ilce_id = int(default_ilce)
+            except (TypeError, ValueError):
+                ilce_id = None
+            if ilce_id:
+                ilce = self.env["teslimat.ilce"].browse(ilce_id)
+                if ilce.exists():
+                    res["ilce_id"] = ilce_id
+                    if fields_list and "ilce_id" not in fields_list:
+                        fields_list.append("ilce_id")
 
         # Transfer ID context'ten geliyorsa kullan
         if ctx.get("default_transfer_id") and "transfer_id" in (fields_list or []):
@@ -111,6 +129,10 @@ class TeslimatBelgesiWizard(models.TransientModel):
             picking = self.env["stock.picking"].browse(picking_id)
             if picking.exists():
                 res["transfer_id"] = picking_id
+                if picking.create_uid:
+                    res["transfer_olusturan_id"] = picking.create_uid.id
+                if hasattr(picking, "analytic_account_id") and picking.analytic_account_id:
+                    res["analytic_account_adi"] = picking.analytic_account_id.name
                 if "teslimat_tarihi" in (fields_list or []) and not res.get(
                     "teslimat_tarihi"
                 ):
@@ -198,58 +220,71 @@ class TeslimatBelgesiWizard(models.TransientModel):
 
     @api.onchange("transfer_id")
     def _onchange_transfer_id(self) -> None:
-        """Transfer seçildiğinde müşteri bilgilerini otomatik doldur."""
+        """Transfer seçildiğinde müşteri, analitik hesap ve transferi oluşturan bilgisini doldur."""
         picking = self.transfer_id
+        if not picking:
+            self.transfer_olusturan_id = False
+            self.analytic_account_adi = False
+            return
 
-        if picking:
-            # 1. Transfer durumu kontrolü
-            if picking.state in ["cancel", "draft"]:
-                return {
-                    "warning": {
-                        "title": _("Transfer Durumu Uyarısı"),
-                        "message": _(
-                            "Seçilen transfer iptal veya taslak durumunda. "
-                            "Teslimat belgesi oluşturulamaz."
-                        ),
-                    }
+        # 1. Transfer durumu kontrolü
+        if picking.state in ["cancel", "draft"]:
+            return {
+                "warning": {
+                    "title": _("Transfer Durumu Uyarısı"),
+                    "message": _(
+                        "Seçilen transfer iptal veya taslak durumunda. "
+                        "Teslimat belgesi oluşturulamaz."
+                    ),
                 }
+            }
 
-            # 2. Mükerrer kontrol
-            existing = self.env["teslimat.belgesi"].search(
-                [("stock_picking_id", "=", picking.id)], limit=1
-            )
-            if existing:
-                return {
-                    "warning": {
-                        "title": _("Mükerrer Teslimat"),
-                        "message": _(
-                            "Bu transfer için zaten bir teslimat belgesi mevcut: %s"
-                            % existing.name
-                        ),
-                    }
+        # 2. Mükerrer kontrol
+        existing = self.env["teslimat.belgesi"].search(
+            [("stock_picking_id", "=", picking.id)], limit=1
+        )
+        if existing:
+            return {
+                "warning": {
+                    "title": _("Mükerrer Teslimat"),
+                    "message": _(
+                        "Bu transfer için zaten bir teslimat belgesi mevcut: %s"
+                        % existing.name
+                    ),
                 }
+            }
 
-            # 3. Müşteri bilgileri
-            if picking.partner_id:
-                self.musteri_id = picking.partner_id
-                partner = picking.partner_id
+        # 3. Müşteri bilgileri
+        if picking.partner_id:
+            self.musteri_id = picking.partner_id
+            partner = picking.partner_id
 
-                # Adres bilgisi - utility fonksiyonu kullan
-                from ..models.teslimat_utils import format_partner_address
-                adres = format_partner_address(partner)
-                if adres and adres != "Adres bilgisi bulunamadı":
-                    self.adres = adres
-                else:
-                    # Fallback - contact_address kullan
-                    self.adres = partner.contact_address or partner.name
+            # Adres bilgisi - utility fonksiyonu kullan
+            from ..models.teslimat_utils import format_partner_address
+            adres = format_partner_address(partner)
+            if adres and adres != "Adres bilgisi bulunamadı":
+                self.adres = adres
+            else:
+                # Fallback - contact_address kullan
+                self.adres = partner.contact_address or partner.name
 
-                # Telefon bilgisi - partner'dan al
-                if partner.phone:
-                    self.musteri_telefon = partner.phone
-                elif partner.mobile:
-                    self.musteri_telefon = partner.mobile
-                else:
-                    self.musteri_telefon = ""
+            # Telefon bilgisi - partner'dan al
+            if partner.phone:
+                self.musteri_telefon = partner.phone
+            elif partner.mobile:
+                self.musteri_telefon = partner.mobile
+            else:
+                self.musteri_telefon = ""
+
+        # 4. Transferi oluşturan kullanıcı (create_uid)
+        if picking.create_uid:
+            self.transfer_olusturan_id = picking.create_uid
+
+        # 5. Analitik hesap (transfer başka modülle analitik alanı kullanıyorsa)
+        if hasattr(picking, "analytic_account_id") and picking.analytic_account_id:
+            self.analytic_account_adi = picking.analytic_account_id.name
+        else:
+            self.analytic_account_adi = False
 
     def action_teslimat_olustur(self) -> dict:
         """Teslimat belgesi oluştur, SMS gönder ve yönlendir.
@@ -491,6 +526,8 @@ class TeslimatBelgesiWizard(models.TransientModel):
             "transfer_no": self.transfer_id.name if self.transfer_id else False,
             "durum": "hazir",
             "manuel_telefon": self.manuel_telefon if self.manuel_telefon else False,
+            "transfer_olusturan_id": self.transfer_olusturan_id.id if self.transfer_olusturan_id else False,
+            "analytic_account_adi": self.analytic_account_adi or False,
         }
         
         teslimat = self.env["teslimat.belgesi"].create(vals)

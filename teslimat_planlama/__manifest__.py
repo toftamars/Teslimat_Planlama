@@ -79,6 +79,7 @@
         'web.assets_backend': [
             'teslimat_planlama/static/src/js/uygun_gunler_click.js',
             'teslimat_planlama/static/src/js/fotograf_zoom.js',
+            'teslimat_planlama/static/src/js/teslimat_belgesi_vazgec.js',
         ],
     },
 }

@@ -34,6 +34,8 @@
                                options="{'no_create': True}"
                                placeholder="DEPO/OUT/00085 yazarak arayın"
                                required="1"/>
+                        <field name="transfer_olusturan_id" readonly="1" string="Transferi oluşturan"/>
+                        <field name="analytic_account_adi" readonly="1" string="Analitik hesap"/>
                     </group>
                     <!-- Müşteri ve Adres (otomatik) -->
                     <group string="Müşteri Bilgileri">
