@@ -187,8 +187,10 @@ class TeslimatBelgesiValidators(models.AbstractModel):
             toplam = mevcut_teslimat_sayisi + 1
             arac_rec = arac if hasattr(arac, "gunluk_teslimat_limiti") else self.env["teslimat.arac"].browse(arac)
             limit = arac_rec.gunluk_teslimat_limiti
-
-            if toplam > limit:
+            if limit is None:
+                limit = 0
+            # Limit yoksa (0) sadece ilçe-gün kapasitesi devreye girer; limit varsa aşımı engelle
+            if limit > 0 and toplam > limit:
                 ilce_rec = ilce if hasattr(ilce, "name") else (self.env["teslimat.ilce"].browse(ilce) if ilce else None)
                 ilce_bilgi = f" - {ilce_rec.name}" if ilce_rec else ""
                 raise ValidationError(

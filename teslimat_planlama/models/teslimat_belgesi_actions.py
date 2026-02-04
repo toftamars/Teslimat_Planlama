@@ -18,6 +18,7 @@ from .teslimat_constants import (
     get_arac_kapatma_sebep_label,
 )
 from .teslimat_utils import is_manager
+from . import sms_helper
 
 _logger = logging.getLogger(__name__)
 
@@ -177,10 +178,7 @@ class TeslimatBelgesiActions(models.AbstractModel):
     # =========================================================================
 
     def action_yolda_yap(self) -> None:
-        """Teslimat durumunu 'yolda' yap.
-
-        Hazır durumundaki teslimatları yola çıkarır.
-        """
+        """Teslimat durumunu 'yolda' yap ve müşteriye yolda SMS'i gönder."""
         self.ensure_one()
 
         if self.durum != READY_STATUS:
@@ -193,6 +191,9 @@ class TeslimatBelgesiActions(models.AbstractModel):
             body=_("Sürücü yola çıktı. Teslimat yolda."),
             subject=_("Teslimat Yola Çıktı"),
         )
+
+        # Müşteriye 1. SMS: Yolda bilgisi
+        self.send_sms_yolda()
 
     def action_teslimat_tamamla(self) -> dict:
         """Teslimat tamamlama wizard'ını aç.
@@ -271,50 +272,88 @@ class TeslimatBelgesiActions(models.AbstractModel):
             subject=_("Teslimat İptal Edildi"),
         )
 
-    def send_teslimat_sms(self) -> bool:
-        """Müşteriye teslimat SMS'i gönder.
-
-        Returns:
-            bool: Başarılı ise True
-        """
+    def _get_sms_telefon(self) -> str:
+        """SMS için kullanılacak telefon numarası (manuel veya müşteri)."""
         self.ensure_one()
+        return (self.manuel_telefon or self.musteri_telefon or "").strip() or (
+            self.musteri_id.mobile or self.musteri_id.phone or ""
+        ).strip()
 
-        if not self.musteri_telefon:
-            raise UserError(_("Müşteri telefon numarası bulunamadı!"))
-
-        try:
-            # SMS içeriği
-            mesaj = _(
-                f"Sayın {self.musteri_id.name},\n\n"
-                f"Teslimat No: {self.name}\n"
-                f"Tarih: {self.teslimat_tarihi.strftime('%d.%m.%Y')}\n"
-                f"Araç: {self.arac_id.name}\n\n"
-                f"Teslimatınız yola çıkmıştır."
-            )
-
-            # SMS gönderme modülü (varsa)
-            # TODO: Gerçek SMS entegrasyonu eklenebilir
-            _logger.info("SMS gönderildi: %s - %s", self.musteri_telefon, mesaj)
-
-            # Chatter'a not ekle
+    def _send_sms_mesaj(self, mesaj: str, konu: str = "SMS Gönderildi") -> bool:
+        """Müşteriye SMS metnini gönder (Odoo sms.sms ile), chatter'a not düş."""
+        self.ensure_one()
+        telefon = self._get_sms_telefon()
+        if not telefon:
+            _logger.warning("SMS atlanıyor: telefon yok (teslimat %s)", self.name)
+            return False
+        if not self.musteri_id:
+            _logger.warning("SMS atlanıyor: müşteri yok (teslimat %s)", self.name)
+            return False
+        # Odoo sms modülü ile gönder (Arıza Onarım ile aynı sistem)
+        sms_sent = sms_helper.SMSHelper.send_sms(
+            self.sudo().env,
+            self.musteri_id,
+            mesaj,
+            record_name=self.name,
+            phone_override=telefon,
+        )
+        if sms_sent:
             self.message_post(
-                body=_(f"SMS gönderildi: {self.musteri_telefon}"),
-                subject=_("SMS Gönderildi"),
+                body=_("SMS gönderildi: %s\n\n%s") % (telefon, mesaj),
+                subject=_(konu),
                 message_type="notification",
             )
-
-            return True
-
-        except Exception as e:
-            _logger.error("SMS gönderim hatası: %s", e)
+        else:
             self.message_post(
-                body=_(
-                    f"SMS gönderilemedi: {str(e)}\n"
-                    f"Alıcı: {self.musteri_id.name}\n"
-                    f"Telefon: {self.musteri_telefon}"
-                ),
+                body=_("SMS gönderilemedi (servis hatası). Alıcı: %s, Telefon: %s")
+                % (self.musteri_id.name or "-", telefon),
                 subject=_("SMS Gönderim Hatası"),
                 message_type="notification",
             )
+        return sms_sent
 
+    def send_sms_yolda(self) -> bool:
+        """Müşteriye 'yolda' SMS'i gönder (1. SMS).
+
+        Ekiplerimiz ürün teslimatı ve kurulum için adresinize doğru yola çıkmıştır.
+        """
+        self.ensure_one()
+        telefon = self._get_sms_telefon()
+        if not telefon:
+            raise UserError(_("Müşteri telefon numarası bulunamadı! SMS gönderilemedi."))
+        mesaj = _(
+            "Sayın %(musteri)s, ekiplerimiz ürün teslimatı ve kurulum için "
+            "adresinize doğru yola çıkmıştır. Teslimat No: %(no)s"
+        ) % {"musteri": self.musteri_id.name or "Müşteri", "no": self.name}
+        return self._send_sms_mesaj(mesaj, konu="SMS (Yolda) Gönderildi")
+
+    def send_sms_tamamlandi(self) -> bool:
+        """Müşteriye 'teslimat tamamlandı' SMS'i gönder (2. SMS)."""
+        self.ensure_one()
+        telefon = self._get_sms_telefon()
+        if not telefon:
+            _logger.warning("Tamamlandı SMS atlanıyor: telefon yok (teslimat %s)", self.name)
             return False
+        mesaj = _(
+            "Sayın %(musteri)s, ürün teslimatınız ve kurulumunuz tamamlanmıştır. "
+            "Bizi tercih ettiğiniz için teşekkür ederiz. Teslimat No: %(no)s"
+        ) % {"musteri": self.musteri_id.name or "Müşteri", "no": self.name}
+        return self._send_sms_mesaj(mesaj, konu="SMS (Tamamlandı) Gönderildi")
+
+    def send_teslimat_sms(self) -> bool:
+        """Müşteriye teslimat oluşturulduğunda SMS'i gönder (wizard sonrası)."""
+        self.ensure_one()
+        telefon = self._get_sms_telefon()
+        if not telefon:
+            raise UserError(_("Müşteri telefon numarası bulunamadı!"))
+
+        mesaj = _(
+            "Sayın %(musteri)s, Teslimat No: %(no)s, Tarih: %(tarih)s, "
+            "Araç: %(arac)s. Teslimatınız planlanmıştır."
+        ) % {
+            "musteri": self.musteri_id.name or "Müşteri",
+            "no": self.name,
+            "tarih": self.teslimat_tarihi.strftime("%d.%m.%Y"),
+            "arac": self.arac_id.name or "-",
+        }
+        return self._send_sms_mesaj(mesaj, konu="SMS Gönderildi")

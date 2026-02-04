@@ -23,14 +23,6 @@
               groups="base.group_user"
               sequence="20"/>
 
-    <!-- Sürücüler için Özel Menü -->
-    <menuitem id="menu_teslimat_belgeleri_surucu"
-              name="🚗 Bugünkü Teslimatlarım"
-              parent="menu_teslimat_planlama_root"
-              action="action_teslimat_belgesi_surucu"
-              sequence="25"
-              groups="teslimat_planlama.group_teslimat_driver"/>
-
     <!-- Araçlar (Yöneticiler) -->
     <menuitem id="menu_teslimat_arac"
               name="🚗 Araçlar"
