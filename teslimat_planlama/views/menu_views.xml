@@ -46,5 +46,111 @@
               action="action_teslimat_arac_kapatma"
               sequence="90"
               groups="teslimat_planlama.group_teslimat_manager"/>
+
+    <!-- ============================================== -->
+    <!-- RAPORLAMA MENÜSÜ (Arıza Onarım stili) -->
+    <!-- ============================================== -->
+    <menuitem id="menu_teslimat_raporlama"
+              name="Raporlama"
+              parent="menu_teslimat_planlama_root"
+              sequence="85"
+              groups="teslimat_planlama.group_teslimat_manager"/>
+
+    <!-- Raporlama - Pivot View -->
+    <record id="view_teslimat_belgesi_raporlama_pivot" model="ir.ui.view">
+        <field name="name">teslimat.belgesi.raporlama.pivot</field>
+        <field name="model">teslimat.belgesi</field>
+        <field name="arch" type="xml">
+            <pivot string="Teslimat Belgeleri Analizi" sample="1">
+                <field name="teslimat_tarihi" type="row"/>
+                <field name="durum" type="col"/>
+                <field name="id" type="measure" string="Kayıt Sayısı"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- Raporlama - Graph View (Bar) -->
+    <record id="view_teslimat_belgesi_raporlama_graph" model="ir.ui.view">
+        <field name="name">teslimat.belgesi.raporlama.graph</field>
+        <field name="model">teslimat.belgesi</field>
+        <field name="arch" type="xml">
+            <graph string="Teslimat Belgeleri Grafiği" type="bar" sample="1">
+                <field name="durum"/>
+                <field name="id" type="measure" string="Kayıt Sayısı"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Raporlama - Graph View (Pie) -->
+    <record id="view_teslimat_belgesi_raporlama_graph_pie" model="ir.ui.view">
+        <field name="name">teslimat.belgesi.raporlama.graph.pie</field>
+        <field name="model">teslimat.belgesi</field>
+        <field name="priority">20</field>
+        <field name="arch" type="xml">
+            <graph string="Durum Dağılımı" type="pie" sample="1">
+                <field name="durum"/>
+                <field name="id" type="measure" string="Kayıt Sayısı"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Raporlama - Özet Dashboard Action -->
+    <record id="action_teslimat_raporlama_ozet" model="ir.actions.act_window">
+        <field name="name">Özet Dashboard</field>
+        <field name="res_model">teslimat.belgesi</field>
+        <field name="view_mode">pivot,graph</field>
+        <field name="view_id" ref="view_teslimat_belgesi_raporlama_pivot"/>
+        <field name="search_view_id" ref="view_teslimat_belgesi_search"/>
+        <field name="context">{'search_default_bu_hafta': 1, 'search_default_group_durum': 1}</field>
+        <field name="groups_id" eval="[(4, ref('teslimat_planlama.group_teslimat_manager'))]"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Henüz rapor verisi bulunmuyor.</p>
+        </field>
+    </record>
+
+    <!-- Raporlama - Durum Analizi Action -->
+    <record id="action_teslimat_raporlama_durum_analizi" model="ir.actions.act_window">
+        <field name="name">Durum Analizi</field>
+        <field name="res_model">teslimat.belgesi</field>
+        <field name="view_mode">graph,pivot,tree</field>
+        <field name="view_id" ref="view_teslimat_belgesi_raporlama_graph_pie"/>
+        <field name="search_view_id" ref="view_teslimat_belgesi_search"/>
+        <field name="context">{'search_default_bu_hafta': 1}</field>
+        <field name="groups_id" eval="[(4, ref('teslimat_planlama.group_teslimat_manager'))]"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Henüz rapor verisi bulunmuyor.</p>
+        </field>
+    </record>
+
+    <!-- Raporlama - Tarih/Araç Trend Action -->
+    <record id="action_teslimat_raporlama_trend" model="ir.actions.act_window">
+        <field name="name">Tarih / Araç Trend</field>
+        <field name="res_model">teslimat.belgesi</field>
+        <field name="view_mode">graph,pivot,tree</field>
+        <field name="view_id" ref="view_teslimat_belgesi_raporlama_graph"/>
+        <field name="search_view_id" ref="view_teslimat_belgesi_search"/>
+        <field name="context">{'search_default_bu_hafta': 1}</field>
+        <field name="groups_id" eval="[(4, ref('teslimat_planlama.group_teslimat_manager'))]"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Henüz rapor verisi bulunmuyor.</p>
+        </field>
+    </record>
+
+    <!-- Raporlama Alt Menüleri -->
+    <menuitem id="menu_teslimat_raporlama_ozet"
+              name="Özet Dashboard"
+              parent="menu_teslimat_raporlama"
+              action="action_teslimat_raporlama_ozet"
+              sequence="10"/>
+    <menuitem id="menu_teslimat_raporlama_durum_analizi"
+              name="Durum Analizi"
+              parent="menu_teslimat_raporlama"
+              action="action_teslimat_raporlama_durum_analizi"
+              sequence="20"/>
+    <menuitem id="menu_teslimat_raporlama_trend"
+              name="Tarih / Araç Trend"
+              parent="menu_teslimat_raporlama"
+              action="action_teslimat_raporlama_trend"
+              sequence="30"/>
 </odoo>
 
