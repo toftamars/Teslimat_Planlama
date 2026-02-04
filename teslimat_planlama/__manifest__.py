@@ -28,6 +28,7 @@
         'contacts',
         'stock',
         'mail',
+        'account',
     ],
     'data': [
         # Security

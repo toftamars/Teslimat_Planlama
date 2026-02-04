@@ -55,9 +55,10 @@ class TeslimatBelgesiWizard(models.TransientModel):
         string="Sorumlu Personel",
         help="İsteğe bağlı - sorumlu personel/kullanıcı",
     )
-    analytic_account_adi = fields.Char(
+    analytic_account_id = fields.Many2one(
+        "account.analytic.account",
         string="Analitik hesap",
-        help="İsteğe bağlı - analitik hesap bilgisi",
+        help="Sistemdeki analitik hesap - isteğe bağlı seçin",
     )
 
     # Hesaplanan alanlar
@@ -531,7 +532,7 @@ class TeslimatBelgesiWizard(models.TransientModel):
             "durum": "hazir",
             "manuel_telefon": self.manuel_telefon if self.manuel_telefon else False,
             "transfer_olusturan_id": self.transfer_olusturan_id.id if self.transfer_olusturan_id else False,
-            "analytic_account_adi": self.analytic_account_adi or False,
+            "analytic_account_id": self.analytic_account_id.id if self.analytic_account_id else False,
         }
         
         teslimat = self.env["teslimat.belgesi"].create(vals)
