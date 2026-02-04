@@ -6,10 +6,129 @@ odoo.define('teslimat_planlama.uygun_gunler_click', function (require) {
 
     ListRenderer.include({
         /**
-         * Override _onRowClicked - sadece teslimat.ana.sayfa.gun için özel davranış
+         * Extracts the ID from a Many2one field value.
+         * Handles various Many2one value formats returned by Odoo.
+         *
+         * @private
+         * @param {*} value - Many2one field value (can be number, array, object, etc.)
+         * @returns {number|null} The extracted ID or null if not found
+         */
+        _extractMany2oneId: function (value) {
+            if (!value) {
+                return null;
+            }
+
+            // Direct numeric ID
+            if (typeof value === 'number') {
+                return value;
+            }
+
+            // Array format: [id, name]
+            if (Array.isArray(value) && value.length > 0) {
+                return value[0];
+            }
+
+            // Object with res_id property
+            if (value.res_id) {
+                return value.res_id;
+            }
+
+            // Nested data object with id
+            if (value.data && value.data.id) {
+                return value.data.id;
+            }
+
+            // Object with id property
+            if (typeof value === 'object' && value.id !== undefined) {
+                return value.id;
+            }
+
+            return value;
+        },
+
+        /**
+         * Parses date from various formats to YYYY-MM-DD string format.
+         * Supports: tarih_str (DD.MM.YYYY format), Moment objects, Date objects, and string dates.
+         *
+         * @private
+         * @param {Object} recordData - The record data object containing date fields
+         * @returns {string|null} Formatted date string (YYYY-MM-DD) or null if parsing fails
+         */
+        _parseDateFromRecord: function (recordData) {
+            var tarihValue = recordData.tarih || recordData.tarih_str;
+            var tarih = null;
+
+            // Parse from tarih_str field (format: "22.01.2026 Çar")
+            if (recordData.tarih_str) {
+                try {
+                    var parts = recordData.tarih_str.split(' ')[0].split('.');
+                    if (parts.length === 3) {
+                        // Convert DD.MM.YYYY to YYYY-MM-DD
+                        tarih = parts[2] + '-' + parts[1] + '-' + parts[0];
+                    }
+                } catch (error) {
+                    console.error('Tarih parse hatası:', error);
+                }
+            }
+
+            // Fallback to other date formats if tarih_str parsing failed
+            if (!tarih && tarihValue) {
+                try {
+                    // Moment object
+                    if (tarihValue._isAMomentObject || typeof tarihValue.format === 'function') {
+                        tarih = tarihValue.format('YYYY-MM-DD');
+                    }
+                    // String date
+                    else if (typeof tarihValue === 'string') {
+                        tarih = tarihValue;
+                    }
+                    // JavaScript Date object
+                    else if (tarihValue instanceof Date) {
+                        tarih = tarihValue.toISOString().split('T')[0];
+                    }
+                    // Object with value property
+                    else {
+                        tarih = tarihValue.value || String(tarihValue);
+                    }
+                } catch (error) {
+                    console.error('Tarih dönüştürme hatası:', error);
+                }
+            }
+
+            return tarih;
+        },
+
+        /**
+         * Finds the parent form controller for teslimat.ana.sayfa model.
+         * Traverses up the widget tree to locate the parent form.
+         *
+         * @private
+         * @returns {Object|null} Parent controller or null if not found
+         */
+        _findParentForm: function () {
+            var parent = this.getParent();
+            while (parent) {
+                if (parent.state &&
+                    parent.state.model === 'teslimat.ana.sayfa' &&
+                    parent.state.data) {
+                    return parent;
+                }
+                parent = parent.getParent && parent.getParent();
+            }
+            return null;
+        },
+
+        /**
+         * Override _onRowClicked for custom behavior on teslimat.ana.sayfa.gun model.
+         * When a row is clicked, creates a delivery document wizard with pre-filled values
+         * from the selected date row and parent form (arac_id and ilce_id).
+         *
+         * @override
+         * @private
+         * @param {Event} ev - Click event object
          */
         _onRowClicked: function (ev) {
-            // Sadece teslimat.ana.sayfa.gun modeli için özel işlem
+            // Apply custom logic only for teslimat.ana.sayfa.gun model
             if (this.state && this.state.model === 'teslimat.ana.sayfa.gun') {
                 ev.preventDefault();
                 ev.stopPropagation();
@@ -17,7 +136,7 @@ odoo.define('teslimat_planlama.uygun_gunler_click', function (require) {
                 var $row = $(ev.currentTarget);
                 var rowId = $row.data('id');
 
-                // Record'u bul
+                // Find the clicked record
                 var record = _.find(this.state.data, function(r) {
                     return r.id === rowId;
                 });
@@ -26,96 +145,57 @@ odoo.define('teslimat_planlama.uygun_gunler_click', function (require) {
                     return;
                 }
 
-                console.log('Record data:', record.data);
-                console.log('Record data keys:', Object.keys(record.data));
-
-                var kalan = record.data.kalan_kapasite;
-                if (kalan <= 0) {
+                // Check remaining capacity
+                var kalanKapasite = record.data.kalan_kapasite;
+                if (kalanKapasite <= 0) {
                     Dialog.alert(this, 'Bu tarih için kapasite dolmuştur.');
                     return;
                 }
 
-                // Tarih değerini al - farklı field isimlerini dene
-                var tarihValue = record.data.tarih || record.data.tarih_str;
-                var tarih;
-
-                console.log('Tarih value:', tarihValue);
-                console.log('Tarih_str value:', record.data.tarih_str);
-
-                // tarih_str'den tarihi parse et (format: "22.01.2026 Çar")
-                if (record.data.tarih_str) {
-                    var parts = record.data.tarih_str.split(' ')[0].split('.');
-                    if (parts.length === 3) {
-                        tarih = parts[2] + '-' + parts[1] + '-' + parts[0]; // YYYY-MM-DD
-                    }
-                }
-
-                // Eğer tarih hala yoksa, record.data.tarih'i dene
-                if (!tarih && tarihValue) {
-                    if (tarihValue._isAMomentObject || typeof tarihValue.format === 'function') {
-                        tarih = tarihValue.format('YYYY-MM-DD');
-                    } else if (typeof tarihValue === 'string') {
-                        tarih = tarihValue;
-                    } else if (tarihValue instanceof Date) {
-                        tarih = tarihValue.toISOString().split('T')[0];
-                    } else {
-                        tarih = tarihValue.value || String(tarihValue);
-                    }
-                }
-
-                console.log('Final tarih:', tarih);
-
-                // Parent'ı bul
-                var parent = this.getParent();
-                while (parent && !parent.state) {
-                    parent = parent.getParent();
-                }
-
-                if (!parent || !parent.state || !parent.state.data) {
+                // Parse date from record
+                var tarih = this._parseDateFromRecord(record.data);
+                if (!tarih) {
+                    Dialog.alert(this, 'Tarih bilgisi alınamadı.');
                     return;
                 }
 
-                var arac = parent.state.data.arac_id;
-                var ilce = parent.state.data.ilce_id;
+                // Find parent form (teslimat.ana.sayfa)
+                var parentForm = this._findParentForm();
+                if (!parentForm || !parentForm.state || !parentForm.state.data) {
+                    Dialog.alert(this, 'Ana form bilgisi alınamadı.');
+                    return;
+                }
 
-                console.log('Parent data:', parent.state.data);
-                console.log('Araç raw:', arac);
-                console.log('İlçe raw:', ilce);
+                var aracField = parentForm.state.data.arac_id;
+                var ilceField = parentForm.state.data.ilce_id;
 
-                if (!arac) {
+                // Validate vehicle selection
+                if (!aracField) {
                     Dialog.alert(this, 'Araç seçimi gereklidir.');
                     return;
                 }
 
-                // Araç ID'sini al
-                var arac_id = arac.res_id || (arac.data && arac.data.id) || arac;
+                // Extract IDs from Many2one fields
+                var aracId = this._extractMany2oneId(aracField);
+                var ilceId = this._extractMany2oneId(ilceField);
 
-                // İlçe ID'sini al (opsiyonel olabilir)
-                var ilce_id = null;
-                if (ilce) {
-                    ilce_id = ilce.res_id || (ilce.data && ilce.data.id) || ilce;
-                }
-
-                console.log('Araç ID:', arac_id);
-                console.log('İlçe ID:', ilce_id);
-
-                if (!arac_id) {
+                if (!aracId) {
+                    Dialog.alert(this, 'Araç bilgisi alınamadı.');
                     return;
                 }
 
-                // Context oluştur
-                var ctx = {
+                // Build context for wizard
+                var context = {
                     default_teslimat_tarihi: tarih,
-                    default_arac_id: arac_id,
+                    default_arac_id: aracId,
                 };
 
-                if (ilce_id) {
-                    ctx.default_ilce_id = ilce_id;
+                // Add district if available
+                if (ilceId) {
+                    context.default_ilce_id = ilceId;
                 }
 
-                console.log('Context:', ctx);
-
-                // Wizard'ı aç - context'i farklı yollarla gönder
+                // Open teslimat belgesi wizard with pre-filled values
                 this.do_action({
                     name: 'Teslimat Belgesi Oluştur',
                     type: 'ir.actions.act_window',
@@ -123,14 +203,15 @@ odoo.define('teslimat_planlama.uygun_gunler_click', function (require) {
                     view_mode: 'form',
                     views: [[false, 'form']],
                     target: 'new',
-                    context: ctx,
+                    context: context,
                 }, {
-                    additional_context: ctx,
+                    additional_context: context,
                 });
+
                 return;
             }
 
-            // Diğer tüm modeller için normal Odoo davranışı
+            // Default Odoo behavior for all other models
             this._super.apply(this, arguments);
         },
     });
