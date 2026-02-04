@@ -37,6 +37,18 @@ class TeslimatAnaSayfa(models.TransientModel):
         # Domain onchange ile dinamik olarak güncelleniyor
     )
 
+    def read(self, fields=None, load="_classic_read"):
+        """Form (yeniden) açıldığında araç/ilçe cache'ini temizle; Yenile/Kapat sonrası
+        listenin boş dönmemesi için uygun_gunler hesaplamasında güncel veri kullanılsın.
+        """
+        if fields is None or "uygun_gunler" in fields or "ilce_uygun_mu" in fields:
+            for record in self:
+                if record.arac_id:
+                    record.arac_id.invalidate_recordset(["uygun_ilceler"])
+                if record.ilce_id:
+                    record.ilce_id.invalidate_recordset(["yaka_tipi"])
+        return super().read(fields=fields, load=load)
+
     @api.model
     def default_get(self, fields_list):
         """Form açılırken İstanbul'u otomatik seç."""
@@ -723,7 +735,9 @@ class TeslimatAnaSayfa(models.TransientModel):
             # Uygun ilçeleri yeniden hesapla (sudo ile izin gerektirmeden)
             self.arac_id.sudo()._update_uygun_ilceler()
         
-        # Compute field'lar otomatik yenilenecek
+        # TransientModel'da Yenile sonrası form yeniden yüklendiğinde uygun_gunler
+        # bazen boş dönüyor; listeyi burada açıkça yeniden hesaplatıyoruz.
+        self._compute_uygun_gunler()
         return True
 
     def action_load_districts(self):
