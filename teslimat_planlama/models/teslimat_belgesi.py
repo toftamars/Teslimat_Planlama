@@ -106,9 +106,11 @@ class TeslimatBelgesi(models.Model):
         help="Transfer belgesini oluşturan personel/kullanıcı",
         tracking=True,
     )
-    analytic_account_adi = fields.Char(
+    analytic_account_id = fields.Many2one(
+        "account.analytic.account",
         string="Analitik hesap",
-        help="Transfer belgesindeki analitik hesap bilgisi (varsa)",
+        help="Sistemdeki analitik hesap (wizard veya transferden)",
+        tracking=True,
     )
 
     # Ürün Bilgileri (Transfer belgesindeki tüm ürünler)
@@ -295,19 +297,40 @@ class TeslimatBelgesi(models.Model):
     def write(self, vals: dict) -> bool:
         """Teslimat belgesi güncelleme.
 
-        Args:
-            vals: Güncellenecek değerler
-
-        Returns:
-            bool: Başarılı ise True
+        Tarih/araç/ilçe değişiyorsa kapasite kontrolleri write öncesi çalıştırılır
+        (düzenle ile dolu güne kayıt engellenir).
         """
         self._check_iptal_yetkisi(vals)
         self._log_write_debug(vals)
 
         for record in self:
             record._check_archived_record_edit(vals)
+            # Düzenle ile tarih/araç/ilçe değişince kapasite kontrolü (kaydetmeden önce)
+            if not record._is_archived():
+                record._check_capacity_on_write(vals)
 
         return super(TeslimatBelgesi, self).write(vals)
+
+    def _is_archived(self) -> bool:
+        """Kayıt teslim edilmiş veya iptal ise True."""
+        return self.durum in [COMPLETED_STATUS, CANCELLED_STATUS]
+
+    def _check_capacity_on_write(self, vals: dict) -> None:
+        """Write öncesi kapasite kontrolleri (yeni değerlerle)."""
+        relevant = {"teslimat_tarihi", "arac_id", "ilce_id"}
+        if not (relevant & set(vals.keys())):
+            return
+        new_tarih = vals.get("teslimat_tarihi", self.teslimat_tarihi)
+        new_arac_id = vals.get("arac_id", self.arac_id.id if self.arac_id else None)
+        new_ilce_id = vals.get("ilce_id", self.ilce_id.id if self.ilce_id else None)
+        if not new_tarih or not new_arac_id or not new_ilce_id:
+            return
+        self._validate_arac_kapasitesi(
+            teslimat_tarihi=new_tarih, arac_id=new_arac_id, ilce_id=new_ilce_id
+        )
+        self._validate_ilce_gun_kapasitesi(
+            teslimat_tarihi=new_tarih, arac_id=new_arac_id, ilce_id=new_ilce_id
+        )
 
     def _check_iptal_yetkisi(self, vals: dict) -> None:
         """İptal yetkisi kontrolü - sadece yöneticiler iptal edebilir.

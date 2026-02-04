@@ -35,7 +35,7 @@
                                placeholder="DEPO/OUT/00085 yazarak arayın"
                                required="1"/>
                         <field name="transfer_olusturan_id" string="Sorumlu Personel" options="{'no_create': True}"/>
-                        <field name="analytic_account_adi" string="Analitik hesap"/>
+                        <field name="analytic_account_id" string="Analitik hesap" options="{'no_create': True}"/>
                     </group>
                     <!-- Müşteri ve Adres (otomatik) -->
                     <group string="Müşteri Bilgileri">
