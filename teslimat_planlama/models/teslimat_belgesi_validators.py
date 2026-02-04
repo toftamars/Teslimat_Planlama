@@ -8,7 +8,7 @@ from datetime import datetime
 
 import pytz
 
-from odoo import _, api, models
+from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 
 from .teslimat_constants import (
@@ -59,6 +59,7 @@ class TeslimatBelgesiValidators(models.AbstractModel):
                 record._validate_ilce_gun_eslesmesi()
 
             record._validate_arac_kapasitesi()
+            record._validate_ilce_gun_kapasitesi()
 
     def _validate_ayni_gun_teslimat(self):
         """Aynı gün teslimat kontrolü (12:00 sonrası yasak)."""
@@ -166,3 +167,62 @@ class TeslimatBelgesiValidators(models.AbstractModel):
                       f"Bu tarih için araç kapasitesi dolmuştur.\n"
                       f"Lütfen farklı bir tarih veya araç seçin.")
                 )
+
+    def _validate_ilce_gun_kapasitesi(self):
+        """İlçe-gün kapasitesi kontrolü (çakışma / aşım engeli).
+
+        Ana Sayfa'da görünen 'son X kapasite' ile aynı kural: aynı (araç, ilçe, tarih)
+        için kayıt sayısı ilçe-gün maksimum_teslimat'ı aşmasın. Başka personel aynı
+        güne teslimat yazdıysa kaydetmek isteyen kullanıcıya uyarı verilir.
+        Yönetici bypass edilir (acil durum override).
+        """
+        if is_manager(self.env):
+            return
+        if not self.ilce_id or not self.arac_id or not self.teslimat_tarihi:
+            return
+        tarih = fields.Date.to_date(self.teslimat_tarihi)
+        gun_kodu = get_gun_kodu(tarih)
+        if not gun_kodu:
+            return
+        gun = self.env["teslimat.gun"].search([("gun_kodu", "=", gun_kodu)], limit=1)
+        if not gun:
+            return
+        gun_ilce = self.env["teslimat.gun.ilce"].search(
+            [
+                ("gun_id", "=", gun.id),
+                ("ilce_id", "=", self.ilce_id.id),
+                ("tarih", "=", False),
+            ],
+            limit=1,
+        )
+        if not gun_ilce:
+            return
+        maksimum = gun_ilce.maksimum_teslimat
+        domain = [
+            ("teslimat_tarihi", "=", tarih),
+            ("arac_id", "=", self.arac_id.id),
+            ("ilce_id", "=", self.ilce_id.id),
+            ("durum", "!=", "iptal"),
+            ("id", "!=", self.id),
+        ]
+        mevcut = self.env["teslimat.belgesi"].search_count(domain)
+        toplam = mevcut + 1
+        if toplam > maksimum:
+            raise ValidationError(
+                _(
+                    "İlçe-Gün Kapasitesi Dolu!\n\n"
+                    "Bu tarih ve ilçe için kapasite başka bir teslimat ile doldurulmuş.\n"
+                    "Araç: %(arac)s\n"
+                    "İlçe: %(ilce)s\n"
+                    "Tarih: %(tarih)s\n"
+                    "Kapasite: %(toplam)s/%(maks)s\n\n"
+                    "Lütfen sayfayı yenileyip güncel kapasiteye göre farklı bir gün seçin."
+                )
+                % {
+                    "arac": self.arac_id.name,
+                    "ilce": self.ilce_id.name,
+                    "tarih": tarih.strftime("%d.%m.%Y"),
+                    "toplam": toplam,
+                    "maks": maksimum,
+                }
+            )
