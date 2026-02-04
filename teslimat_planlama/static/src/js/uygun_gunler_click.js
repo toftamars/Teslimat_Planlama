@@ -145,6 +145,12 @@ odoo.define('teslimat_planlama.uygun_gunler_click', function (require) {
                     return;
                 }
 
+                // Kapalı güne tıklanırsa wizard açma, uyarı göster
+                if (record.data.arac_kapali_mi) {
+                    Dialog.alert(this, 'Durum kapalı ise teslimat oluşturulamaz!');
+                    return;
+                }
+
                 // Check remaining capacity
                 var kalanKapasite = record.data.kalan_kapasite;
                 if (kalanKapasite <= 0) {
