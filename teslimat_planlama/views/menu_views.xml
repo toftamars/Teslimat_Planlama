@@ -64,7 +64,6 @@
             <pivot string="Teslimat Belgeleri Analizi" sample="1">
                 <field name="teslimat_tarihi" type="row"/>
                 <field name="durum" type="col"/>
-                <field name="id" type="measure" string="Kayıt Sayısı"/>
             </pivot>
         </field>
     </record>
