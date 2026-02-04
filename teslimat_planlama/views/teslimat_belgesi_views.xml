@@ -115,6 +115,8 @@
                             <field name="teslimat_tarihi"/>
                             <field name="stock_picking_id"/>
                             <field name="transfer_no"/>
+                            <field name="transfer_olusturan_id" string="Transferi oluşturan"/>
+                            <field name="analytic_account_adi" string="Analitik hesap"/>
                         </group>
                         <group>
                             <field name="arac_id"/>

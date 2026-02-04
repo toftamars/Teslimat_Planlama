@@ -47,6 +47,14 @@
               sequence="90"
               groups="teslimat_planlama.group_teslimat_manager"/>
 
+    <!-- İlçe-Gün Programı (Yöneticiler) - Maksimum teslimat kapasiteleri -->
+    <menuitem id="menu_teslimat_gun_ilce"
+              name="📅 İlçe-Gün Programı"
+              parent="menu_teslimat_planlama_root"
+              action="action_teslimat_gun_ilce"
+              sequence="82"
+              groups="teslimat_planlama.group_teslimat_manager"/>
+
     <!-- ============================================== -->
     <!-- RAPORLAMA MENÜSÜ (Arıza Onarım stili) -->
     <!-- ============================================== -->

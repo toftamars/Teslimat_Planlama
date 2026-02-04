@@ -37,18 +37,6 @@ class TeslimatAnaSayfa(models.TransientModel):
         # Domain onchange ile dinamik olarak güncelleniyor
     )
 
-    def read(self, fields=None, load="_classic_read"):
-        """Form (yeniden) açıldığında araç/ilçe cache'ini temizle; Yenile/Kapat sonrası
-        listenin boş dönmemesi için uygun_gunler hesaplamasında güncel veri kullanılsın.
-        """
-        if fields is None or "uygun_gunler" in fields or "ilce_uygun_mu" in fields:
-            for record in self:
-                if record.arac_id:
-                    record.arac_id.invalidate_recordset(["uygun_ilceler"])
-                if record.ilce_id:
-                    record.ilce_id.invalidate_recordset(["yaka_tipi"])
-        return super().read(fields=fields, load=load)
-
     @api.model
     def default_get(self, fields_list):
         """Form açılırken İstanbul'u otomatik seç."""
@@ -612,6 +600,11 @@ class TeslimatAnaSayfa(models.TransientModel):
         
         if toplam_kapasite == 0:
             return None  # Programda yoksa bu günü atla
+        
+        # Araç günlük limitini de uygula: gösterilen kapasite ilçe-gün ve araç limitinin küçüğü
+        arac_limiti = (record.arac_id.gunluk_teslimat_limiti or 0)
+        if arac_limiti > 0:
+            toplam_kapasite = min(toplam_kapasite, arac_limiti)
         
         kalan_kapasite = toplam_kapasite - teslimat_sayisi
         

@@ -122,10 +122,6 @@
                     <!-- Gizli Alanlar -->
                     <field name="arac_kucuk_mu" invisible="1"/>
                 </div>
-                
-                <footer>
-                    <button string="Kapat" class="btn-secondary" special="cancel"/>
-                </footer>
             </form>
         </field>
     </record>
