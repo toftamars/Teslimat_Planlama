@@ -29,6 +29,7 @@
         'stock',
         'mail',
         'account',
+        'sms',
     ],
     'data': [
         # Security

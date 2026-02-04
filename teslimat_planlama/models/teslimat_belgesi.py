@@ -316,14 +316,29 @@ class TeslimatBelgesi(models.Model):
         return self.durum in [COMPLETED_STATUS, CANCELLED_STATUS]
 
     def _check_capacity_on_write(self, vals: dict) -> None:
-        """Write öncesi kapasite kontrolleri (yeni değerlerle)."""
+        """Write öncesi kapasite kontrolleri (yeni değerlerle).
+
+        Tarih/araç/ilçe değişince mutlaka çalışır; dolu güne kayıt engellenir.
+        """
         relevant = {"teslimat_tarihi", "arac_id", "ilce_id"}
         if not (relevant & set(vals.keys())):
             return
-        new_tarih = vals.get("teslimat_tarihi", self.teslimat_tarihi)
-        new_arac_id = vals.get("arac_id", self.arac_id.id if self.arac_id else None)
-        new_ilce_id = vals.get("ilce_id", self.ilce_id.id if self.ilce_id else None)
-        if not new_tarih or not new_arac_id or not new_ilce_id:
+        # Yeni değerler: vals'tan al, yoksa mevcut kayıttan (düzenle = çoğunlukla sadece tarih değişir)
+        new_tarih = vals.get("teslimat_tarihi") or self.teslimat_tarihi
+        if not new_tarih:
+            return
+        # Many2one bazen [id, name] gelir; id kullan
+        raw_arac = vals.get("arac_id")
+        if raw_arac is not None:
+            new_arac_id = raw_arac[0] if isinstance(raw_arac, (list, tuple)) else raw_arac
+        else:
+            new_arac_id = self.arac_id.id if self.arac_id else None
+        raw_ilce = vals.get("ilce_id")
+        if raw_ilce is not None:
+            new_ilce_id = raw_ilce[0] if isinstance(raw_ilce, (list, tuple)) else raw_ilce
+        else:
+            new_ilce_id = self.ilce_id.id if self.ilce_id else None
+        if not new_arac_id or not new_ilce_id:
             return
         self._validate_arac_kapasitesi(
             teslimat_tarihi=new_tarih, arac_id=new_arac_id, ilce_id=new_ilce_id

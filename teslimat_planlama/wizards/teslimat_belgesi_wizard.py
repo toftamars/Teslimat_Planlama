@@ -144,7 +144,7 @@ class TeslimatBelgesiWizard(models.TransientModel):
                 if fields_list and "ilce_id" not in fields_list:
                     fields_list.append("ilce_id")
 
-        # Transfer ID context'ten geliyorsa kullan (Analitik hesap ve Sorumlu Personel otomatik atanmaz, kullanıcı doldurur)
+        # Transfer ID context'ten geliyorsa kullan; Sorumlu Personel = transfer'deki user_id
         if ctx.get("default_transfer_id") and "transfer_id" in (fields_list or []):
             picking_id = ctx.get("default_transfer_id")
             picking = self.env["stock.picking"].browse(picking_id)
@@ -158,6 +158,9 @@ class TeslimatBelgesiWizard(models.TransientModel):
                     fields_list or []
                 ):
                     res["musteri_id"] = ctx.get("default_musteri_id")
+                # Sorumlu Personel = sistemdeki user_id (transfer sorumlusu)
+                if picking.user_id and "transfer_olusturan_id" in (fields_list or []):
+                    res["transfer_olusturan_id"] = picking.user_id.id
 
         return res
 
@@ -290,6 +293,10 @@ class TeslimatBelgesiWizard(models.TransientModel):
                 self.musteri_telefon = partner.mobile
             else:
                 self.musteri_telefon = ""
+
+        # 4. Sorumlu Personel = transferdeki user_id (sistemdeki Sorumlu alanı)
+        if picking.user_id:
+            self.transfer_olusturan_id = picking.user_id
 
     def action_teslimat_olustur(self) -> dict:
         """Teslimat belgesi oluştur, SMS gönder ve yönlendir.

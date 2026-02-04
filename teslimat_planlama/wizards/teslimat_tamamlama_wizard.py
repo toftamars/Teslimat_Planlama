@@ -85,7 +85,10 @@ class TeslimatTamamlamaWizard(models.TransientModel):
             vals['notlar'] = mevcut_not + yeni_not
         
         teslimat.write(vals)
-        
+
+        # Müşteriye 2. SMS: Teslimat tamamlandı
+        teslimat.send_sms_tamamlandi()
+
         # Fotoğrafın kaydedildiğini doğrula
         teslimat.invalidate_cache(['teslimat_fotografi'])
         if teslimat.teslimat_fotografi:
