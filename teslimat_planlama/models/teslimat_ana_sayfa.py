@@ -402,7 +402,11 @@ class TeslimatAnaSayfa(models.TransientModel):
             
             yonetici_mi = is_manager(self.env)
             small_vehicle = record.arac_kucuk_mu
-            bugun = fields.Date.today()
+            # Bugün = İstanbul tarihi (geçmiş gün görünmesin, yarın doğru görünsün)
+            from .teslimat_utils import get_istanbul_time
+            simdi_istanbul = get_istanbul_time()
+            bugun = simdi_istanbul.date()
+            saat = simdi_istanbul.hour
             
             # 1. Teslimat sayılarını batch olarak al (N+1 query önleme)
             teslimat_sayisi_by_date = self._get_teslimat_sayilari_batch(
@@ -411,11 +415,6 @@ class TeslimatAnaSayfa(models.TransientModel):
             
             # 2. Gün ve ilçe-gün eşleşmelerini batch olarak al
             gun_dict, gun_ilce_dict = self._get_gun_ilce_mappings_batch(record.ilce_id.id)
-            
-            # 3. Saat kontrolü için İstanbul saati
-            from .teslimat_utils import get_istanbul_time
-            simdi_istanbul = get_istanbul_time()
-            saat = simdi_istanbul.hour
             
             # 4. Her günü kontrol et ve uygun günleri topla
             uygun_gunler = []
