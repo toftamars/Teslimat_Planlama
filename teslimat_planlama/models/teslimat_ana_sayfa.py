@@ -449,26 +449,29 @@ class TeslimatAnaSayfa(models.TransientModel):
         self, arac_id: int, ilce_id: int, bugun: date, forecast_days: int
     ) -> dict:
         """Teslimat sayılarını batch olarak al (N+1 query önleme).
+
+        Sayım araç + tarih bazında yapılır (ilçe filtresi yok): Aynı araç-gün
+        için tüm ilçelerdeki teslimatlar toplamı gösterilir. Böylece Ataşehir veya
+        Kadıköy sorgulandığında aynı gün için aynı toplam (örn. 4) görünür.
         
         Args:
             arac_id: Araç ID
-            ilce_id: İlçe ID
+            ilce_id: İlçe ID (sorgu bağlamı için; domain'de kullanılmaz)
             bugun: Bugünün tarihi
             forecast_days: Kaç gün ilerisi kontrol edilecek
             
         Returns:
-            dict: {tarih: teslimat_sayisi} mapping
+            dict: {tarih: teslimat_sayisi} mapping (araç+gün toplamı)
         """
         from .teslimat_constants import CANCELLED_STATUS
         
         bitis_tarihi = bugun + timedelta(days=forecast_days)
         
-        # search_read ile tarihleri al; Python'da grupla (read_group :day locale döndürüyor)
+        # Araç + tarih bazında say (ilçe yok): tüm ilçelerdeki teslimat toplamı
         domain = [
             ("teslimat_tarihi", ">=", bugun),
             ("teslimat_tarihi", "<=", bitis_tarihi),
             ("arac_id", "=", arac_id),
-            ("ilce_id", "=", ilce_id),
             ("durum", "!=", CANCELLED_STATUS),
         ]
         rows = self.env["teslimat.belgesi"].search_read(
