@@ -81,69 +81,6 @@
                         </div>
                     </div>
                     
-                    <!-- Kapasite Bilgileri -->
-                    <div class="row" attrs="{'invisible': [('ilce_uygun_mu','=', False)]}">
-                        <div class="col-12">
-                            <div class="card shadow-sm">
-                                <div class="card-header bg-primary text-white">
-                                    <h5 class="mb-0"><i class="fa fa-bar-chart"/> Kapasite Bilgileri</h5>
-                                </div>
-                                <div class="card-body">
-                                    <div class="row text-center">
-                                        <div class="col-md-3 mb-3">
-                                            <div class="card border-primary">
-                                                <div class="card-body">
-                                                    <h6 class="text-muted mb-2">Toplam Kapasite</h6>
-                                                    <h3 class="text-primary mb-0">
-                                                        <field name="toplam_kapasite" readonly="1" widget="integer" nolabel="1"/>
-                                                    </h3>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3 mb-3">
-                                            <div class="card border-info">
-                                                <div class="card-body">
-                                                    <h6 class="text-muted mb-2">Kullanılan</h6>
-                                                    <h3 class="text-info mb-0">
-                                                        <field name="kullanilan_kapasite" readonly="1" widget="integer" nolabel="1"/>
-                                                    </h3>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3 mb-3">
-                                            <div class="card border-success">
-                                                <div class="card-body">
-                                                    <h6 class="text-muted mb-2">Kalan Kapasite</h6>
-                                                    <h3 class="text-success mb-0">
-                                                        <field name="kalan_kapasite" readonly="1" widget="integer" nolabel="1"/>
-                                                    </h3>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3 mb-3">
-                                            <div class="card border-warning">
-                                                <div class="card-body">
-                                                    <h6 class="text-muted mb-2">Teslimat Sayısı</h6>
-                                                    <h3 class="text-warning mb-0">
-                                                        <field name="teslimat_sayisi" readonly="1" widget="integer" nolabel="1"/>
-                                                    </h3>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Uygun Araçlar -->
-                                    <div class="row mt-4">
-                                        <div class="col-12">
-                                            <h6 class="text-muted mb-2"><i class="fa fa-truck"/> Uygun Araçlar</h6>
-                                            <field name="uygun_arac_ids" readonly="1" widget="many2many_tags" nolabel="1"/>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
                     <!-- Uygun Günler Listesi -->
                     <div class="row mt-3" attrs="{'invisible': [('ilce_uygun_mu','=', False)]}">
                         <div class="col-12">

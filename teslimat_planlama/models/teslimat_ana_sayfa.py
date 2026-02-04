@@ -581,10 +581,7 @@ class TeslimatAnaSayfa(models.TransientModel):
         
         teslimat_sayisi = teslimat_sayisi_by_date.get(tarih, 0)
         
-        # Araç kapasitesi kontrolü
-        if teslimat_sayisi >= record.arac_id.gunluk_teslimat_limiti:
-            return None
-        
+        # Araç kapasitesi dolsa bile günü listeye ekle (Dolu olarak göster)
         gun_kodu = GUN_KODU_MAP.get(tarih.weekday())
         if not gun_kodu:
             return None
@@ -606,10 +603,7 @@ class TeslimatAnaSayfa(models.TransientModel):
         
         kalan_kapasite = toplam_kapasite - teslimat_sayisi
         
-        # Kapasitesi dolu ise atla (yöneticiler için göster)
-        if kalan_kapasite <= 0 and not yonetici_mi:
-            return None
-        
+        # Kapasitesi dolu olsa bile listeye ekle; durum "Dolu" olarak gösterilir
         # Araç kapatma kontrolü
         arac_kapali = self._check_arac_kapali(record.arac_id.id, tarih)
         
