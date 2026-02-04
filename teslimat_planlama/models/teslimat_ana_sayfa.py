@@ -463,40 +463,34 @@ class TeslimatAnaSayfa(models.TransientModel):
         
         bitis_tarihi = bugun + timedelta(days=forecast_days)
         
-        # read_group kullanarak tek sorguda tüm teslimat sayılarını al
-        # NOT: groupby="teslimat_tarihi:day" kullanarak günlük gruplama yapıyoruz
-        result = self.env["teslimat.belgesi"].read_group(
-            domain=[
-                ("teslimat_tarihi", ">=", bugun),
-                ("teslimat_tarihi", "<=", bitis_tarihi),
-                ("arac_id", "=", arac_id),
-                ("ilce_id", "=", ilce_id),
-                ("durum", "!=", CANCELLED_STATUS),
-            ],
-            fields=["teslimat_tarihi"],
-            groupby=["teslimat_tarihi:day"],
-            lazy=False,
+        # search_read ile tarihleri al; Python'da grupla (read_group :day locale döndürüyor)
+        domain = [
+            ("teslimat_tarihi", ">=", bugun),
+            ("teslimat_tarihi", "<=", bitis_tarihi),
+            ("arac_id", "=", arac_id),
+            ("ilce_id", "=", ilce_id),
+            ("durum", "!=", CANCELLED_STATUS),
+        ]
+        rows = self.env["teslimat.belgesi"].search_read(
+            domain, ["teslimat_tarihi"], order="teslimat_tarihi"
         )
-        
-        # DEBUG: Kapasite hesaplama
+        teslimat_sayisi_dict = {}
+        for row in rows:
+            tarih = row.get("teslimat_tarihi")
+            if tarih:
+                if isinstance(tarih, str):
+                    try:
+                        tarih = fields.Date.from_string(tarih)
+                    except ValueError:
+                        continue
+                teslimat_sayisi_dict[tarih] = teslimat_sayisi_dict.get(tarih, 0) + 1
         if _logger.isEnabledFor(logging.DEBUG):
             arac = self.env["teslimat.arac"].browse(arac_id)
             ilce = self.env["teslimat.ilce"].browse(ilce_id)
             _logger.debug(
                 "Capacity calc: vehicle=%s, district=%s, dates=%d",
-                arac.name, ilce.name, len(result)
+                arac.name, ilce.name, len(teslimat_sayisi_dict)
             )
-        
-        # read_group ile groupby="field:day" kullanınca "field:day" key'i döner
-        teslimat_sayisi_dict = {}
-        for item in result:
-            # "teslimat_tarihi:day" key'inden tarihi al
-            tarih_str = item.get("teslimat_tarihi:day")
-            if tarih_str:
-                # Tarih formatı: "2026-01-27" şeklinde gelir
-                tarih = fields.Date.from_string(tarih_str)
-                teslimat_sayisi_dict[tarih] = item["__count"]
-        
         return teslimat_sayisi_dict
     
     def _get_gun_ilce_mappings_batch(self, ilce_id: int) -> tuple:
