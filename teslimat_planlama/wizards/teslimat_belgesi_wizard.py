@@ -61,6 +61,10 @@ class TeslimatBelgesiWizard(models.TransientModel):
         string="Analitik hesap",
         help="Sistemdeki analitik hesap - isteğe bağlı seçin",
     )
+    wizard_notu = fields.Text(
+        string="Not",
+        help="Opsiyonel not; oluşturulan teslimat belgesinde görünür",
+    )
 
     # Hesaplanan alanlar
     arac_kucuk_mu = fields.Boolean(
@@ -541,6 +545,7 @@ class TeslimatBelgesiWizard(models.TransientModel):
             "manuel_telefon": self.manuel_telefon if self.manuel_telefon else False,
             "transfer_olusturan_id": self.transfer_olusturan_id.id if self.transfer_olusturan_id else False,
             "analytic_account_id": self.analytic_account_id.id if self.analytic_account_id else False,
+            "notlar": self.wizard_notu or False,
         }
         
         teslimat = self.env["teslimat.belgesi"].create(vals)

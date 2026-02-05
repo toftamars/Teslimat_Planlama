@@ -37,6 +37,9 @@
                         <field name="transfer_olusturan_id" string="Sorumlu Personel" options="{'no_create': True}"/>
                         <field name="analytic_account_id" string="Analitik hesap" options="{'no_create': True}"/>
                     </group>
+                    <group string="Not (Opsiyonel)">
+                        <field name="wizard_notu" nolabel="1" placeholder="Buraya yazdığınız notlar oluşturulan teslimat belgesinde görünür..."/>
+                    </group>
                     <!-- Müşteri ve Adres (otomatik) -->
                     <group string="Müşteri Bilgileri">
                         <group>

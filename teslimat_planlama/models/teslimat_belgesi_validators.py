@@ -169,6 +169,8 @@ class TeslimatBelgesiValidators(models.AbstractModel):
         tarih = teslimat_tarihi if teslimat_tarihi is not None else self.teslimat_tarihi
         arac = arac_id if arac_id is not None else self.arac_id
         ilce = ilce_id if ilce_id is not None else self.ilce_id
+        if tarih:
+            tarih = fields.Date.to_date(tarih)
         if arac and tarih:
             domain = [
                 ("teslimat_tarihi", "=", tarih),
