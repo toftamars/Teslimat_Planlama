@@ -81,11 +81,10 @@
                             attrs="{'invisible': [('durum', '!=', 'yolda')]}"
                             groups="teslimat_planlama.group_teslimat_driver"/>
 
-                    <!-- Yönetici: İptal Butonu (teslim edilmiş ve iptal hariç) -->
+                    <!-- İptal Et: yalnızca yönetici veya transferi oluşturan görür/görebilir -->
                     <button name="action_iptal_et" string="❌ İptal Et" type="object"
                             class="btn-danger" icon="fa-times-circle"
-                            attrs="{'invisible': [('durum', 'in', ['teslim_edildi', 'iptal'])]}"
-                            groups="teslimat_planlama.group_teslimat_manager"
+                            attrs="{'invisible': [('durum', 'in', ['teslim_edildi', 'iptal']), ('can_user_cancel', '=', False)]}"
                             confirm="Bu teslimatı iptal etmek istediğinizden emin misiniz?"/>
 
                     <field name="durum" widget="statusbar" 
@@ -94,6 +93,7 @@
                 </header>
                 <sheet>
                     <field name="is_readonly" invisible="1"/>
+                    <field name="can_user_cancel" invisible="1"/>
                     
                     <!-- Teslim Edildi Uyarısı -->
                     <div class="alert alert-success" role="alert" attrs="{'invisible': [('is_readonly', '=', False)]}">
