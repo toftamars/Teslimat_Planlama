@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- SMS geçici devre dışı: True = SMS gönderilmez. Aktif etmek için bu kaydı silin veya value="False" yapın. -->
+        <record id="param_sms_disabled" model="ir.config_parameter">
+            <field name="key">teslimat_planlama.sms_disabled</field>
+            <field name="value">True</field>
+        </record>
+    </data>
+</odoo>

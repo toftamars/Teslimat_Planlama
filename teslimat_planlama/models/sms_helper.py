@@ -28,6 +28,13 @@ class SMSHelper:
         Returns:
             bool: Başarılı ise True, değilse False
         """
+        # Geçici devre dışı: Sistem parametresi teslimat_planlama.sms_disabled = True ise SMS gönderilmez
+        if env.get("ir.config_parameter"):
+            param = env["ir.config_parameter"].sudo().get_param("teslimat_planlama.sms_disabled") or ""
+            if param.lower() in ("true", "1", "yes"):
+                _logger.info("SMS devre dışı (teslimat_planlama.sms_disabled) - Kayıt: %s", record_name)
+                return True
+
         phone_number = phone_override
         if not phone_number and partner:
             phone_number = (partner.mobile or partner.phone or "").strip() or None

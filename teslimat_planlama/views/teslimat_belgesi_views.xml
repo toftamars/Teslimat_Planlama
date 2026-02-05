@@ -43,13 +43,13 @@
         <field name="name">teslimat.belgesi.tree</field>
         <field name="model">teslimat.belgesi</field>
         <field name="arch" type="xml">
-            <tree string="Teslimat Belgeleri" create="false" decoration-info="durum == 'hazir'" decoration-success="durum == 'teslim_edildi'" decoration-danger="durum == 'iptal'">
+            <tree string="Teslimat Belgeleri" create="false" delete="0" decoration-info="durum == 'hazir'" decoration-success="durum == 'teslim_edildi'" decoration-danger="durum == 'iptal'">
                 <field name="name"/>
                 <field name="teslimat_tarihi"/>
                 <field name="musteri_id"/>
                 <field name="arac_id"/>
                 <field name="ilce_id"/>
-                <field name="surucu_id"/>
+                <field name="location_id" string="Depo"/>
                 <field name="durum" widget="badge" decoration-success="durum == 'teslim_edildi'" decoration-info="durum == 'hazir'" decoration-warning="durum == 'yolda'" decoration-danger="durum == 'iptal'"/>
                 <field name="transfer_no"/>
             </tree>
@@ -115,6 +115,7 @@
                             <field name="teslimat_tarihi"/>
                             <field name="stock_picking_id"/>
                             <field name="transfer_no"/>
+                            <field name="location_id" string="Depo"/>
                             <field name="transfer_olusturan_id" string="Sorumlu Personel" options="{'no_create': True}"/>
                             <field name="analytic_account_id" string="Analitik hesap" options="{'no_create': True}"/>
                         </group>
@@ -220,7 +221,7 @@
         <field name="name">Teslimat Belgeleri</field>
         <field name="res_model">teslimat.belgesi</field>
         <field name="view_mode">tree,form,kanban</field>
-        <field name="context">{'search_default_bugun': 1, 'create': False}</field>
+        <field name="context">{'create': False}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 Henüz teslimat belgesi oluşturulmamış
@@ -232,6 +233,17 @@
                 Veya <strong>Transfer Belgeleri</strong> üzerinden "🚛 Teslimat Oluştur" butonuna tıklayın.
             </p>
         </field>
+    </record>
+
+    <!-- Sil (yalnızca yönetici): Aksiyon menüsünde sadece Teslimat Yöneticisi grubundakiler görür -->
+    <record id="action_teslimat_belgesi_sil_yonetici" model="ir.actions.server">
+        <field name="name">Sil</field>
+        <field name="model_id" ref="model_teslimat_belgesi"/>
+        <field name="binding_model_id" ref="model_teslimat_belgesi"/>
+        <field name="binding_view_types">list</field>
+        <field name="groups_id" eval="[(4, ref('teslimat_planlama.group_teslimat_manager'))]"/>
+        <field name="state">code</field>
+        <field name="code">action = records.unlink()</field>
     </record>
 </odoo>
 

@@ -39,7 +39,7 @@ class TeslimatBelgesi(models.Model):
         "teslimat.belgesi.validators",  # Validasyon mixin
         "teslimat.belgesi.actions",  # Action ve onchange mixin
     ]
-    _order = "teslimat_tarihi desc, name"
+    _order = "teslimat_tarihi asc, name"
 
     # Performans: Composite indeksler (kapasite sorgularında kritik)
     _sql_constraints = []
@@ -99,6 +99,13 @@ class TeslimatBelgesi(models.Model):
         string="Transfer Belgesi",
         domain=[("state", "in", ["waiting", "confirmed", "assigned", "done"])],
         tracking=True,
+    )
+    location_id = fields.Many2one(
+        "stock.location",
+        string="Depo",
+        related="stock_picking_id.location_id",
+        readonly=True,
+        help="Transfer belgesindeki kaynak konum (ürünün çıkacağı depo)",
     )
     transfer_olusturan_id = fields.Many2one(
         "res.users",
@@ -328,6 +335,7 @@ class TeslimatBelgesi(models.Model):
         new_tarih = vals.get("teslimat_tarihi") or self.teslimat_tarihi
         if not new_tarih:
             return
+        new_tarih = fields.Date.to_date(new_tarih)
         # Many2one bazen [id, name] gelir; id kullan
         raw_arac = vals.get("arac_id")
         if raw_arac is not None:
