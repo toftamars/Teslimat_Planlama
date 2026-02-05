@@ -333,7 +333,8 @@ class TeslimatBelgesi(models.Model):
 
         Tarih/araç/ilçe değişince mutlaka çalışır; dolu güne kayıt engellenir.
         Form sadece değişen alanları gönderdiği için araç/ilçe vals'ta yoksa
-        mevcut kayıttan alınır.
+        belgedeki mevcut Araç ve İlçe kullanılır (düzenle ile sadece tarih
+        değişince belgenin İlçe bilgisi dikkate alınır).
         """
         relevant = {"teslimat_tarihi", "arac_id", "ilce_id"}
         if not (relevant & set(vals.keys())):

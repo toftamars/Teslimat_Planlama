@@ -14,6 +14,7 @@ from odoo.exceptions import ValidationError
 from .teslimat_constants import (
     CANCELLED_STATUS,
     COMPLETED_STATUS,
+    DAILY_DELIVERY_LIMIT,
     SMALL_VEHICLE_TYPES,
 )
 from .teslimat_utils import (
@@ -233,9 +234,24 @@ class TeslimatBelgesiValidators(models.AbstractModel):
             ],
             limit=1,
         )
-        if not gun_ilce:
-            return
-        maksimum = gun_ilce.maksimum_teslimat
+        # Kapasite: önce ilçe-gün kaydı, yoksa haftalık program (Ana Sayfa ile aynı mantık)
+        if gun_ilce:
+            maksimum = gun_ilce.maksimum_teslimat
+        else:
+            from ..data.turkey_data import HAFTALIK_PROGRAM_SCHEDULE
+
+            ilce_rec = ilce if hasattr(ilce, "name") else self.env["teslimat.ilce"].browse(ilce)
+            ilce_adi_upper = (ilce_rec.name or "").upper()
+            bugun_gun_programi = HAFTALIK_PROGRAM_SCHEDULE.get(gun_kodu, [])
+            varsayilan = 0
+            for program_ilce in bugun_gun_programi:
+                if program_ilce.upper() in ilce_adi_upper or ilce_adi_upper in program_ilce.upper():
+                    varsayilan = DAILY_DELIVERY_LIMIT
+                    break
+            if varsayilan <= 0:
+                return  # Programda yoksa ilçe-gün limiti uygulanmaz
+            maksimum = varsayilan
+
         arac_rec = arac if hasattr(arac, "gunluk_teslimat_limiti") else self.env["teslimat.arac"].browse(arac)
         arac_limiti = (arac_rec.gunluk_teslimat_limiti or 0)
         if arac_limiti > 0:
