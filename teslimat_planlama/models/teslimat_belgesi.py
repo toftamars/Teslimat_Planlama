@@ -332,11 +332,13 @@ class TeslimatBelgesi(models.Model):
         """Write öncesi kapasite kontrolleri (yeni değerlerle).
 
         Tarih/araç/ilçe değişince mutlaka çalışır; dolu güne kayıt engellenir.
+        Form sadece değişen alanları gönderdiği için araç/ilçe vals'ta yoksa
+        mevcut kayıttan alınır.
         """
         relevant = {"teslimat_tarihi", "arac_id", "ilce_id"}
         if not (relevant & set(vals.keys())):
             return
-        # Yeni değerler: vals'tan al, yoksa mevcut kayıttan (düzenle = çoğunlukla sadece tarih değişir)
+        # Yeni değerler: vals'tan al, yoksa mevcut kayıttan (Odoo form sadece değişen alanları gönderir)
         new_tarih = vals.get("teslimat_tarihi") or self.teslimat_tarihi
         if not new_tarih:
             return
@@ -354,6 +356,7 @@ class TeslimatBelgesi(models.Model):
             new_ilce_id = self.ilce_id.id if self.ilce_id else None
         if not new_arac_id or not new_ilce_id:
             return
+        # Düzenle ile dolu güne taşımayı engelle (yönetici dahil; kapasite herkes için geçerli)
         self._validate_arac_kapasitesi(
             teslimat_tarihi=new_tarih, arac_id=new_arac_id, ilce_id=new_ilce_id
         )
