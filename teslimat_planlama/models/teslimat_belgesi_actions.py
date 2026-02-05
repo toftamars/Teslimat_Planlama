@@ -63,6 +63,15 @@ class TeslimatBelgesiActions(models.AbstractModel):
         for record in self:
             record.is_readonly = record.durum == COMPLETED_STATUS
 
+    def _compute_can_user_cancel(self) -> None:
+        """İptal butonunu göstermek için: yönetici veya transferi oluşturan kişi."""
+        user = self.env.user
+        manager = is_manager(self.env)
+        for record in self:
+            record.can_user_cancel = manager or (
+                record.transfer_olusturan_id and record.transfer_olusturan_id == user
+            )
+
     # =========================================================================
     # ONCHANGE METHODS
     # =========================================================================
@@ -240,20 +249,21 @@ class TeslimatBelgesiActions(models.AbstractModel):
         }
 
     def action_iptal_et(self) -> None:
-        """Teslimatı iptal et (Sadece yönetici).
+        """Teslimatı iptal et (Yönetici veya transferi oluşturan).
 
-        Yöneticiler bu butona basarak teslimatı iptal edebilir.
+        Yönetici veya 'Transferi oluşturan' kişi bu butona basarak teslimatı iptal edebilir.
         Durum 'iptal' olur ve chatter'a not eklenir.
         """
         self.ensure_one()
 
-        # Yönetici kontrolü (write metodunda da var ama burada da kontrol edelim)
-        if not is_manager(self.env):
+        # Yetki: yönetici veya bu transferi oluşturan kişi
+        user = self.env.user
+        if not (is_manager(self.env) or (self.transfer_olusturan_id and self.transfer_olusturan_id == user)):
             raise UserError(
                 _(
                     "Teslimat iptal yetkisi yok!\n\n"
-                    "Sadece yöneticiler teslimat belgelerini iptal edebilir.\n"
-                    "Lütfen yöneticinizle iletişime geçin."
+                    "Sadece yöneticiler veya bu transferi oluşturan kişi teslimatı iptal edebilir.\n"
+                    "Lütfen yöneticinizle veya transferi oluşturan personelle iletişime geçin."
                 )
             )
 
@@ -267,8 +277,9 @@ class TeslimatBelgesiActions(models.AbstractModel):
         self.durum = CANCELLED_STATUS
 
         # Chatter'a not ekle
+        who = _("yönetici") if is_manager(self.env) else _("transferi oluşturan kişi")
         self.message_post(
-            body=_("Teslimat yönetici tarafından iptal edildi."),
+            body=_("Teslimat %s tarafından iptal edildi.") % who,
             subject=_("Teslimat İptal Edildi"),
         )
 

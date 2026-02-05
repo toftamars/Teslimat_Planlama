@@ -172,6 +172,11 @@ class TeslimatBelgesi(models.Model):
         compute="_compute_is_readonly",
         help="Teslim edilmiş belgeler salt okunurdur"
     )
+    can_user_cancel = fields.Boolean(
+        string="İptal Edebilir",
+        compute="_compute_can_user_cancel",
+        help="Mevcut kullanıcı bu teslimatı iptal edebilir (yönetici veya transferi oluşturan)"
+    )
 
     @api.model
     def create(self, vals: dict) -> "TeslimatBelgesi":
@@ -357,7 +362,7 @@ class TeslimatBelgesi(models.Model):
         )
 
     def _check_iptal_yetkisi(self, vals: dict) -> None:
-        """İptal yetkisi kontrolü - sadece yöneticiler iptal edebilir.
+        """İptal yetkisi kontrolü - yönetici veya transferi oluşturan iptal edebilir.
 
         Args:
             vals: Write değerleri
@@ -365,15 +370,21 @@ class TeslimatBelgesi(models.Model):
         Raises:
             UserError: Yetkisiz iptal denemesi
         """
-        if 'durum' in vals and vals['durum'] == CANCELLED_STATUS:
-            if not is_manager(self.env):
-                raise UserError(
-                    _(
-                        "Teslimat iptal yetkisi yok!\n\n"
-                        "Sadece yöneticiler teslimat belgelerini iptal edebilir.\n"
-                        "Lütfen yöneticinizle iletişime geçin."
-                    )
+        if "durum" not in vals or vals["durum"] != CANCELLED_STATUS:
+            return
+        user = self.env.user
+        for record in self:
+            if is_manager(record.env) or (
+                record.transfer_olusturan_id and record.transfer_olusturan_id == user
+            ):
+                continue
+            raise UserError(
+                _(
+                    "Teslimat iptal yetkisi yok!\n\n"
+                    "Sadece yöneticiler veya bu transferi oluşturan kişi teslimatı iptal edebilir.\n"
+                    "Lütfen yöneticinizle veya transferi oluşturan personelle iletişime geçin."
                 )
+            )
 
     def _log_write_debug(self, vals: dict) -> None:
         """Write işlemini debug log'la.
