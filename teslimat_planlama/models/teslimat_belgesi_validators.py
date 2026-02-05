@@ -64,6 +64,15 @@ class TeslimatBelgesiValidators(models.AbstractModel):
             record._validate_arac_kapasitesi()
             record._validate_ilce_gun_kapasitesi()
 
+    @staticmethod
+    def _normalize_ilce_adi_for_schedule(adi: str) -> str:
+        """İlçe adını haftalık program eşleştirmesi için normalize et (Türkçe İ/I)."""
+        if not adi:
+            return ""
+        # Türkçe büyük İ (U+0130) ve küçük ı (U+0131) -> ASCII I; sonra büyük harf
+        s = (adi or "").replace("\u0130", "I").replace("\u0131", "i")
+        return s.upper()
+
     def _validate_gecmis_tarih(self):
         """Geçmiş tarihe teslimat kaydı yasak (düzenle ile de)."""
         if not self.teslimat_tarihi:
@@ -241,11 +250,13 @@ class TeslimatBelgesiValidators(models.AbstractModel):
             from ..data.turkey_data import HAFTALIK_PROGRAM_SCHEDULE
 
             ilce_rec = ilce if hasattr(ilce, "name") else self.env["teslimat.ilce"].browse(ilce)
-            ilce_adi_upper = (ilce_rec.name or "").upper()
+            # Türkçe İ/I: Python upper() "i"->"I" (ASCII), programda "İ" (U+0130) var; normalize ederek eşleştir
+            ilce_adi_norm = self._normalize_ilce_adi_for_schedule(ilce_rec.name or "")
             bugun_gun_programi = HAFTALIK_PROGRAM_SCHEDULE.get(gun_kodu, [])
             varsayilan = 0
             for program_ilce in bugun_gun_programi:
-                if program_ilce.upper() in ilce_adi_upper or ilce_adi_upper in program_ilce.upper():
+                prog_norm = self._normalize_ilce_adi_for_schedule(program_ilce)
+                if prog_norm in ilce_adi_norm or ilce_adi_norm in prog_norm:
                     varsayilan = DAILY_DELIVERY_LIMIT
                     break
             if varsayilan <= 0:
