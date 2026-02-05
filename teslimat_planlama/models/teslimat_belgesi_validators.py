@@ -221,20 +221,20 @@ class TeslimatBelgesiValidators(models.AbstractModel):
         gun_kodu = get_gun_kodu(tarih)
         if not gun_kodu:
             return
-        gun = self.env["teslimat.gun"].search([("gun_kodu", "=", gun_kodu)], limit=1)
-        if not gun:
-            return
         ilce_id_val = ilce.id if hasattr(ilce, "id") else ilce
         arac_id_val = arac.id if hasattr(arac, "id") else arac
-        gun_ilce = self.env["teslimat.gun.ilce"].search(
-            [
-                ("gun_id", "=", gun.id),
-                ("ilce_id", "=", ilce_id_val),
-                ("tarih", "=", False),
-            ],
-            limit=1,
-        )
-        # Kapasite: önce ilçe-gün kaydı, yoksa haftalık program (Ana Sayfa ile aynı mantık)
+        gun_ilce = None
+        gun = self.env["teslimat.gun"].search([("gun_kodu", "=", gun_kodu)], limit=1)
+        if gun:
+            gun_ilce = self.env["teslimat.gun.ilce"].search(
+                [
+                    ("gun_id", "=", gun.id),
+                    ("ilce_id", "=", ilce_id_val),
+                    ("tarih", "=", False),
+                ],
+                limit=1,
+            )
+        # Kapasite: önce ilçe-gün kaydı, yoksa haftalık program (gun yoksa da program uygulanır)
         if gun_ilce:
             maksimum = gun_ilce.maksimum_teslimat
         else:

@@ -721,14 +721,15 @@ class TeslimatAnaSayfa(models.TransientModel):
             
             # Eğer yaka tipi değiştiyse ilgili araçları güncelle
             self.ilce_id.sudo()._update_arac_ilce_eslesmesi()
+            self.ilce_id.invalidate_recordset()
         
         # Araç seçildiyse uygun ilçelerini kontrol et ve güncelle
         if self.arac_id:
             # Uygun ilçeleri yeniden hesapla (sudo ile izin gerektirmeden)
             self.arac_id.sudo()._update_uygun_ilceler()
+            self.arac_id.invalidate_recordset()
         
-        # TransientModel'da Yenile sonrası form yeniden yüklendiğinde uygun_gunler
-        # bazen boş dönüyor; listeyi burada açıkça yeniden hesaplatıyoruz.
+        # Cache temizlendi; ilce_uygun_mu ve uygun_gunler güncel araç/ilçe ile hesaplanır
         self._compute_uygun_gunler()
         return True
 
