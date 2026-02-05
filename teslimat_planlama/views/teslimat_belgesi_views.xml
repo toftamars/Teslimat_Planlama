@@ -115,7 +115,7 @@
                             <field name="teslimat_tarihi"/>
                             <field name="stock_picking_id"/>
                             <field name="transfer_no"/>
-                            <field name="transfer_olusturan_id" string="Transferi oluşturan"/>
+                            <field name="transfer_olusturan_id" string="Sorumlu Personel" options="{'no_create': True}"/>
                             <field name="analytic_account_id" string="Analitik hesap" options="{'no_create': True}"/>
                         </group>
                         <group>

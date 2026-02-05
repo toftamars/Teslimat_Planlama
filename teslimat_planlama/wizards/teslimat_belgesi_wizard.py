@@ -53,7 +53,8 @@ class TeslimatBelgesiWizard(models.TransientModel):
     transfer_olusturan_id = fields.Many2one(
         "res.users",
         string="Sorumlu Personel",
-        help="İsteğe bağlı - sorumlu personel/kullanıcı",
+        domain=[("share", "=", False)],
+        help="Sorumlu personel (yalnızca iç kullanıcılar)",
     )
     analytic_account_id = fields.Many2one(
         "account.analytic.account",

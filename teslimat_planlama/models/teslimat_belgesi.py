@@ -102,8 +102,9 @@ class TeslimatBelgesi(models.Model):
     )
     transfer_olusturan_id = fields.Many2one(
         "res.users",
-        string="Transferi oluşturan",
-        help="Transfer belgesini oluşturan personel/kullanıcı",
+        string="Sorumlu Personel",
+        domain=[("share", "=", False)],
+        help="Sorumlu personel (yalnızca iç kullanıcılar)",
         tracking=True,
     )
     analytic_account_id = fields.Many2one(
