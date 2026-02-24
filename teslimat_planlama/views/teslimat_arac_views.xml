@@ -130,7 +130,8 @@
             <search string="Araç Arama">
                 <field name="name"/>
                 <field name="arac_tipi"/>
-                <filter string="Aktif" name="aktif" domain="[('aktif','=',True)]"/>
+                <filter string="Aktif" name="aktif" domain="[('active','=',True)]"/>
+                <filter string="Arşivlendi" name="archived" domain="[('active','=',False)]"/>
                 <filter string="Geçici Kapatılmış" name="gecici_kapatma" domain="[('gecici_kapatma','=',True)]"/>
                 <filter string="Kapasitesi Var" name="kapasite_var" domain="[('kalan_kapasite','>',0)]"/>
             </search>
