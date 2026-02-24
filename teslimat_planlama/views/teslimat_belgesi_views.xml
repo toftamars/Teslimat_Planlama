@@ -227,10 +227,7 @@
                 Henüz teslimat belgesi oluşturulmamış
             </p>
             <p>
-                Teslimat belgesi oluşturmak için <strong>Ana Sayfa</strong> üzerinden uygun bir tarih seçin.
-            </p>
-            <p>
-                Veya <strong>Transfer Belgeleri</strong> üzerinden "🚛 Teslimat Oluştur" butonuna tıklayın.
+                Teslimat belgesi oluşturmak için <strong>Kapasite Sorgulama</strong> üzerinden uygun bir tarih seçin.
             </p>
         </field>
     </record>

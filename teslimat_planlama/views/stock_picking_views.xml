@@ -21,15 +21,6 @@
                     </button>
                 </div>
             </xpath>
-            
-            <!-- Kısayol Butonu - Header'a Ekle -->
-            <xpath expr="//header" position="inside">
-                <button name="action_teslimat_sihirbazi_ac" 
-                        string="🚛 Teslimat Oluştur" 
-                        type="object" 
-                        class="btn-primary"
-                        icon="fa-truck"/>
-            </xpath>
         </field>
     </record>
 </odoo>

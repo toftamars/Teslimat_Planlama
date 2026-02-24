@@ -10,7 +10,7 @@ class StockPicking(models.Model):
     """Stock Picking Inherit.
 
     Transfer belgelerine teslimat entegrasyonu ekler.
-    Smart button ve kısayol butonu içerir.
+    Smart button ile ilgili teslimatlar görüntülenir.
     """
 
     _inherit = "stock.picking"
@@ -56,28 +56,3 @@ class StockPicking(models.Model):
             "domain": [("stock_picking_id", "=", self.id)],
             "context": {"default_stock_picking_id": self.id},
         }
-
-    def action_teslimat_sihirbazi_ac(self) -> dict:
-        """Transfer belgesinden teslimat sihirbazını aç.
-
-        Returns:
-            dict: Wizard açma action'ı
-        """
-        self.ensure_one()
-
-        # Context hazırla - wizard'a bilgileri gönder
-        context = {
-            "default_transfer_id": self.id,
-            "default_musteri_id": self.partner_id.id if self.partner_id else False,
-        }
-
-        # Teslimat Belgesi Wizard'ını aç
-        return {
-            "type": "ir.actions.act_window",
-            "name": _("Teslimat Belgesi Oluştur"),
-            "res_model": "teslimat.belgesi.wizard",
-            "view_mode": "form",
-            "target": "new",
-            "context": context,
-        }
-
