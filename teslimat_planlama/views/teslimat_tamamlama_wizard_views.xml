@@ -23,10 +23,10 @@
                     </group>
                     
                     <group string="📸 Teslimat Fotoğrafı (Opsiyonel)">
-                        <field name="teslimat_fotografi" widget="image_camera_gallery" class="oe_avatar"/>
+                        <field name="teslimat_fotografi" widget="image" class="oe_avatar"/>
                         <field name="fotograf_dosya_adi" invisible="1"/>
                         <p class="text-muted">
-                            <i class="fa fa-info-circle"/> <strong>Fotoğraf Çek</strong> ile kamera açılır, <strong>Galeriden Seç</strong> ile mevcut fotoğraf seçilir.
+                            <i class="fa fa-info-circle"/> Teslimat tamamlandığına dair fotoğraf yükleyebilirsiniz.
                         </p>
                     </group>
                     
