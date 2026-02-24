@@ -7,9 +7,9 @@
               groups="base.group_user"
               web_icon="teslimat_planlama,static/description/icon.png"/>
 
-    <!-- Ana Sayfa - Kapasite Sorgulama (Tüm internal user'lar) -->
+    <!-- Kapasite Sorgulama (Tüm internal user'lar) -->
     <menuitem id="menu_teslimat_ana_sayfa"
-              name="📊 Ana Sayfa"
+              name="📊 Kapasite Sorgulama"
               parent="menu_teslimat_planlama_root"
               action="action_teslimat_ana_sayfa"
               groups="base.group_user"

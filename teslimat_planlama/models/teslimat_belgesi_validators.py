@@ -174,6 +174,8 @@ class TeslimatBelgesiValidators(models.AbstractModel):
     def _validate_arac_kapasitesi(self, teslimat_tarihi=None, arac_id=None, ilce_id=None):
         """Araç kapasitesi kontrolü.
 
+        Araç günlük limiti tüm ilçeler toplamı için geçerlidir (Ana Sayfa ile uyumlu).
+        İlçe bazlı sayım yapılmaz; aynı araç+tarih için toplam teslimat sayılır.
         Opsiyonel parametreler write öncesi kontrol için (düzenle ile tarih değişince).
         """
         tarih = teslimat_tarihi if teslimat_tarihi is not None else self.teslimat_tarihi
@@ -182,26 +184,19 @@ class TeslimatBelgesiValidators(models.AbstractModel):
         if tarih:
             tarih = fields.Date.to_date(tarih)
         if arac and tarih:
+            # Araç + tarih bazında say (ilçe yok) - Ana Sayfa ile aynı mantık
             domain = [
                 ("teslimat_tarihi", "=", tarih),
                 ("arac_id", "=", arac.id if hasattr(arac, "id") else arac),
-                ("durum", "!=", "iptal"),  # Sadece iptal hariç
-                ("id", "!=", self.id),  # Kendisini hariç tut
+                ("durum", "!=", "iptal"),
+                ("id", "!=", self.id),
             ]
-
-            # İlçe bazlı kontrol
-            if ilce:
-                domain.append(("ilce_id", "=", ilce.id if hasattr(ilce, "id") else ilce))
-
             mevcut_teslimat_sayisi = self.env["teslimat.belgesi"].search_count(domain)
-
-            # +1 ekle (kendisi için)
             toplam = mevcut_teslimat_sayisi + 1
             arac_rec = arac if hasattr(arac, "gunluk_teslimat_limiti") else self.env["teslimat.arac"].browse(arac)
             limit = arac_rec.gunluk_teslimat_limiti
             if limit is None:
                 limit = 0
-            # Limit yoksa (0) sadece ilçe-gün kapasitesi devreye girer; limit varsa aşımı engelle
             if limit > 0 and toplam > limit:
                 ilce_rec = ilce if hasattr(ilce, "name") else (self.env["teslimat.ilce"].browse(ilce) if ilce else None)
                 ilce_bilgi = f" - {ilce_rec.name}" if ilce_rec else ""
@@ -250,8 +245,8 @@ class TeslimatBelgesiValidators(models.AbstractModel):
             from ..data.turkey_data import HAFTALIK_PROGRAM_SCHEDULE
 
             ilce_rec = ilce if hasattr(ilce, "name") else self.env["teslimat.ilce"].browse(ilce)
-            # Türkçe İ/I: Python upper() "i"->"I" (ASCII), programda "İ" (U+0130) var; normalize ederek eşleştir
-            ilce_adi_norm = self._normalize_ilce_adi_for_schedule(ilce_rec.name or "")
+            ilce_adi = ilce_rec.name or ""
+            ilce_adi_norm = self._normalize_ilce_adi_for_schedule(ilce_adi)
             bugun_gun_programi = HAFTALIK_PROGRAM_SCHEDULE.get(gun_kodu, [])
             varsayilan = 0
             for program_ilce in bugun_gun_programi:
@@ -260,7 +255,7 @@ class TeslimatBelgesiValidators(models.AbstractModel):
                     varsayilan = DAILY_DELIVERY_LIMIT
                     break
             if varsayilan <= 0:
-                return  # Programda yoksa ilçe-gün limiti uygulanmaz
+                return  # Programda eşleşme yoksa ilçe-gün limiti uygulanmaz
             maksimum = varsayilan
 
         arac_rec = arac if hasattr(arac, "gunluk_teslimat_limiti") else self.env["teslimat.arac"].browse(arac)
