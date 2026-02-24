@@ -706,6 +706,15 @@ class TeslimatAnaSayfa(models.TransientModel):
         else:
             return "Dolu"
 
+    def _invalidate_record_cache(self, record) -> None:
+        """Kayıt cache'ini temizle (Odoo 15: invalidate_cache, Odoo 16+: invalidate_recordset)."""
+        if not record:
+            return
+        if hasattr(record, "invalidate_recordset"):
+            record.invalidate_recordset()
+        elif hasattr(record, "invalidate_cache"):
+            record.invalidate_cache()
+
     def action_sorgula(self) -> None:
         """Kapasite sorgulamasını yenile.
         
@@ -721,13 +730,13 @@ class TeslimatAnaSayfa(models.TransientModel):
             
             # Eğer yaka tipi değiştiyse ilgili araçları güncelle
             self.ilce_id.sudo()._update_arac_ilce_eslesmesi()
-            self.ilce_id.invalidate_recordset()
+            self._invalidate_record_cache(self.ilce_id)
         
         # Araç seçildiyse uygun ilçelerini kontrol et ve güncelle
         if self.arac_id:
             # Uygun ilçeleri yeniden hesapla (sudo ile izin gerektirmeden)
             self.arac_id.sudo()._update_uygun_ilceler()
-            self.arac_id.invalidate_recordset()
+            self._invalidate_record_cache(self.arac_id)
         
         # Cache temizlendi; ilce_uygun_mu ve uygun_gunler güncel araç/ilçe ile hesaplanır
         self._compute_uygun_gunler()

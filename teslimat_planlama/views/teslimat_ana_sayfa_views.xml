@@ -26,21 +26,21 @@
                                         <div class="col-md-4">
                                             <label for="arac_id" class="form-label">Araç <span class="text-danger">*</span></label>
                                             <field name="arac_id" widget="many2one" 
-                                                   options="{'no_create': True, 'no_edit': True}" 
+                                                   options="{'no_create': True, 'no_edit': True, 'no_open': True}" 
                                                    class="form-control"
                                                    required="1"/>
                                         </div>
                                         <div class="col-md-4">
                                             <label for="state_id" class="form-label">İl</label>
                                             <field name="state_id" widget="many2one" 
-                                                   options="{'no_create': True, 'no_edit': True}" 
+                                                   options="{'no_create': True, 'no_edit': True, 'no_open': True}" 
                                                    class="form-control"
                                                    attrs="{'invisible': [('arac_id', '=', False)]}"/>
                                         </div>
                                         <div class="col-md-4">
                                             <label for="ilce_id" class="form-label">İlçe</label>
                                             <field name="ilce_id" widget="many2one" 
-                                                   options="{'no_create': True, 'no_edit': True}" 
+                                                   options="{'no_create': True, 'no_edit': True, 'no_open': True}" 
                                                    class="form-control"
                                                    attrs="{'invisible': [('state_id', '=', False)], 'required': [('state_id', '!=', False)]}"/>
                                         </div>
@@ -123,6 +123,25 @@
                     <field name="arac_kucuk_mu" invisible="1"/>
                 </div>
             </form>
+        </field>
+    </record>
+
+    <!-- Yönetici: Many2one alanlarda dış bağlantı butonu göster -->
+    <record id="view_teslimat_ana_sayfa_form_manager" model="ir.ui.view">
+        <field name="name">teslimat.ana.sayfa.form.manager</field>
+        <field name="model">teslimat.ana.sayfa</field>
+        <field name="inherit_id" ref="view_teslimat_ana_sayfa_form"/>
+        <field name="groups_id" eval="[(4, ref('teslimat_planlama.group_teslimat_manager'))]"/>
+        <field name="arch" type="xml">
+            <field name="arac_id" position="attributes">
+                <attribute name="options">{'no_create': True, 'no_edit': True}</attribute>
+            </field>
+            <field name="state_id" position="attributes">
+                <attribute name="options">{'no_create': True, 'no_edit': True}</attribute>
+            </field>
+            <field name="ilce_id" position="attributes">
+                <attribute name="options">{'no_create': True, 'no_edit': True}</attribute>
+            </field>
         </field>
     </record>
 
