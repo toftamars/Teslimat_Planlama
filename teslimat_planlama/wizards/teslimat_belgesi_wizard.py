@@ -560,7 +560,7 @@ class TeslimatBelgesiWizard(models.TransientModel):
         return teslimat
     
     def _redirect_to_teslimat(self, teslimat) -> dict:
-        """Kullanıcıyı oluşturulan teslimat belgesine yönlendir.
+        """Kullanıcıyı Teslimat Belgeleri liste görünümüne yönlendir.
         
         Args:
             teslimat: Oluşturulan teslimat belgesi
@@ -572,8 +572,7 @@ class TeslimatBelgesiWizard(models.TransientModel):
             "type": "ir.actions.act_window",
             "name": _("Teslimat Belgeleri"),
             "res_model": "teslimat.belgesi",
-            "view_mode": "tree,form",
-            "domain": [("id", "=", teslimat.id)],
+            "view_mode": "tree",
             "target": "current",
         }
 
