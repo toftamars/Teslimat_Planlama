@@ -404,25 +404,28 @@ class TeslimatBelgesi(models.Model):
             )
 
     def _check_archived_record_edit(self, vals: dict) -> None:
-        """Arşivlenmiş kayıt düzenleme kontrolü.
+        """Teslim edilmiş kayıt düzenleme kontrolü.
+
+        Sadece teslim_edildi durumundaki belgeler düzenlenemez.
+        İptal belgeleri düzenlenebilir (başka güne taşınabilir, yeniden aktif edilebilir).
 
         Args:
             vals: Write değerleri
 
         Raises:
-            UserError: Yetkisiz arşivlenmiş kayıt düzenleme
+            UserError: Teslim edilmiş belge düzenleme denemesi
         """
-        if self.durum not in [COMPLETED_STATUS, CANCELLED_STATUS]:
-            return  # Arşivlenmemiş, kontrol gereksiz
+        if self.durum != COMPLETED_STATUS:
+            return  # Sadece teslim edilmiş belgeler engellenir; iptal düzenlenebilir
 
         if _logger.isEnabledFor(logging.DEBUG):
             _logger.debug(
-                "WRITE to archived: %s (status=%s)",
+                "WRITE to completed: %s (status=%s)",
                 self.name,
                 self.durum
             )
 
-        # Wizard'dan gelen alanlar (izin verilen)
+        # Wizard'dan gelen alanlar (izin verilen - teslim edilmiş belgede bile)
         wizard_fields = {
             'durum', 'gercek_teslimat_saati', 'teslim_alan_kisi',
             'teslimat_fotografi', 'fotograf_dosya_adi', 'notlar',
@@ -433,7 +436,7 @@ class TeslimatBelgesi(models.Model):
 
         if extra_fields:
             _logger.warning(
-                "Archived record edit attempt: %s, extra_fields=%s",
+                "Completed record edit attempt: %s, extra_fields=%s",
                 self.name,
                 extra_fields
             )
