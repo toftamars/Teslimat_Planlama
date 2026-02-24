@@ -1,5 +1,6 @@
 """Teslimat Belgesi Modeli."""
 import logging
+from datetime import date
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
@@ -8,6 +9,7 @@ from .teslimat_constants import (
     CANCELLED_STATUS,
     COMPLETED_STATUS,
     DAILY_DELIVERY_LIMIT,
+    READY_STATUS,
     SMALL_VEHICLE_TYPES,
     get_arac_kapatma_sebep_label,
 )
@@ -199,6 +201,10 @@ class TeslimatBelgesi(models.Model):
         self._check_arac_kapatma_on_create(arac_id, teslimat_tarihi)
         self._check_daily_limit(teslimat_tarihi)
 
+        # Aynı slot için eşzamanlı oluşturmayı engelle (race condition önleme)
+        ilce_id = vals.get("ilce_id")
+        self._acquire_capacity_lock(arac_id, ilce_id, teslimat_tarihi)
+
         return super(TeslimatBelgesi, self).create(vals)
 
     def _prepare_vals_for_create(self, vals: dict) -> None:
@@ -322,11 +328,56 @@ class TeslimatBelgesi(models.Model):
             if not record._is_archived():
                 record._check_capacity_on_write(vals)
 
+        # İptal belge: sadece tarih/araç/ilçe değişince hazır'a döndür (yeniden aktif et)
+        # Sadece not değişince iptal kalır
+        reactive_fields = {"teslimat_tarihi", "arac_id", "ilce_id"}
+        if (
+            len(self) == 1
+            and self.durum == CANCELLED_STATUS
+            and "durum" not in vals
+            and (reactive_fields & set(vals.keys()))
+        ):
+            vals = dict(vals)
+            vals["durum"] = READY_STATUS
+
         return super(TeslimatBelgesi, self).write(vals)
 
     def _is_archived(self) -> bool:
         """Kayıt teslim edilmiş veya iptal ise True."""
         return self.durum in [COMPLETED_STATUS, CANCELLED_STATUS]
+
+    def _acquire_capacity_lock(
+        self, arac_id, ilce_id, teslimat_tarihi
+    ) -> None:
+        """Aynı (araç, ilçe, tarih) slotu için advisory lock al.
+
+        İki personel aynı anda aynı slota teslimat oluşturduğunda kapasite
+        aşımını engeller. Lock transaction sonuna kadar tutulur.
+        Bekleme yok: lock alınamazsa anında hata verilir.
+        """
+        aid = arac_id
+        if isinstance(arac_id, (list, tuple)):
+            aid = arac_id[0] if arac_id else None
+        iid = ilce_id
+        if isinstance(ilce_id, (list, tuple)):
+            iid = ilce_id[0] if ilce_id else None
+        if not aid or not iid or not teslimat_tarihi:
+            return
+        try:
+            tarih = fields.Date.to_date(teslimat_tarihi)
+        except (ValueError, TypeError):
+            return
+        days = (tarih - date(2000, 1, 1)).days if tarih else 0
+        lock_key = (int(aid) * 1000000 + int(iid) * 1000 + days) % (2**31 - 1)
+        self.env.cr.execute("SELECT pg_try_advisory_xact_lock(%s)", (lock_key,))
+        acquired = self.env.cr.fetchone()[0]
+        if not acquired:
+            raise UserError(
+                _(
+                    "Bu tarih, araç ve ilçe için başka bir kullanıcı işlem yapıyor.\n\n"
+                    "Lütfen birkaç saniye sonra tekrar deneyin."
+                )
+            )
 
     def _check_capacity_on_write(self, vals: dict) -> None:
         """Write öncesi kapasite kontrolleri (yeni değerlerle).
@@ -357,6 +408,8 @@ class TeslimatBelgesi(models.Model):
             new_ilce_id = self.ilce_id.id if self.ilce_id else None
         if not new_arac_id or not new_ilce_id:
             return
+        # Aynı slot için eşzamanlı yazmayı engelle (race condition önleme)
+        self._acquire_capacity_lock(new_arac_id, new_ilce_id, new_tarih)
         # Düzenle ile dolu güne taşımayı engelle (yönetici dahil; kapasite herkes için geçerli)
         self._validate_arac_kapasitesi(
             teslimat_tarihi=new_tarih, arac_id=new_arac_id, ilce_id=new_ilce_id
