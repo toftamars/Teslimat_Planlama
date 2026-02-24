@@ -53,6 +53,13 @@ class TeslimatArac(models.Model):
 
     # Durum Bilgileri
     aktif = fields.Boolean(string="Aktif", default=True)
+    active = fields.Boolean(
+        string="Aktif",
+        related="aktif",
+        store=True,
+        readonly=False,
+        help="Arşivlenen araçlar listede gizlenir. Arşivden çıkararak tekrar kullanılabilir.",
+    )
     gecici_kapatma = fields.Boolean(string="Geçici Kapatma")
     kapatma_sebebi = fields.Text(string="Kapatma Sebebi")
     kapatma_baslangic = fields.Datetime(string="Kapatma Başlangıç")
