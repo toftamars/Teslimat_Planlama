@@ -121,12 +121,14 @@ class TeslimatTamamlamaWizard(models.TransientModel):
             )
             _logger.info("Teslimat tamamlandı: %s", teslimat.name)
 
-        # Sürücü: liste görünümüne dön (Bugün filtresi ile), diğerleri: tamamlanan belge formuna
+        # Sürücü: Teslimat Belgeleri listesine dön (Bugün filtresi ile)
+        # Diğer kullanıcılar: Tamamlanan belge formunu aç
         if self.env.user.has_group('teslimat_planlama.group_teslimat_driver'):
             return {
                 'type': 'ir.actions.act_window',
+                'name': _('Teslimat Belgeleri'),
                 'res_model': 'teslimat.belgesi',
-                'view_mode': 'tree,form',
+                'view_mode': 'tree,form,kanban',
                 'target': 'current',
                 'context': {'create': False, 'search_default_bugun': 1},
             }
