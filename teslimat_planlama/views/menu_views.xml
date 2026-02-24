@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <!-- Ana Menü - Tüm internal user'lara açık -->
+    <!-- action ile: Teslimat'a tıklanınca doğrudan Teslimat Belgeleri listesi açılır (özellikle sürücüler için) -->
     <menuitem id="menu_teslimat_planlama_root"
               name="Teslimat"
               sequence="75"
+              action="action_teslimat_belgesi"
               groups="base.group_user"
               web_icon="teslimat_planlama,static/description/icon.png"/>
 
