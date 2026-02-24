@@ -147,7 +147,7 @@
 
     <!-- Action -->
     <record id="action_teslimat_ana_sayfa" model="ir.actions.act_window">
-        <field name="name">Ana Sayfa</field>
+        <field name="name">Kapasite Sorgulama</field>
         <field name="res_model">teslimat.ana.sayfa</field>
         <field name="view_mode">form</field>
         <field name="target">current</field>
