@@ -5,6 +5,7 @@ Mixin pattern kullanılarak ana model'den ayrılmıştır.
 """
 
 import logging
+from urllib.parse import quote
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
@@ -241,6 +242,72 @@ class TeslimatBelgesiActions(models.AbstractModel):
         base_url = "https://www.google.com/maps/dir/?api=1"
         destination = self.musteri_adres.replace(" ", "+")
         url = f"{base_url}&destination={destination}"
+
+        return {
+            "type": "ir.actions.act_url",
+            "url": url,
+            "target": "new",
+        }
+
+    def action_rota_optimizasyonu(self) -> dict:
+        """Seçili teslimatların adreslerini Google Maps çoklu durak ile aç.
+
+        Liste görünümünde birden fazla teslimat seçildiğinde Aksiyon menüsünden
+        çağrılır. Adresi olan teslimatlar sırayla waypoints olarak Google Maps'e
+        gönderilir.
+
+        Returns:
+            dict: ir.actions.act_url ile yeni sekmede harita açar
+
+        Raises:
+            UserError: Hiç kayıt seçilmediyse veya hiçbirinde adres yoksa
+        """
+        if not self:
+            raise UserError(_("Lütfen en az bir teslimat seçin."))
+
+        # Adresi olan kayıtları filtrele (musteri_adres computed, oku)
+        adresli = []
+        for rec in self:
+            adres = (rec.musteri_adres or "").strip()
+            if adres:
+                adresli.append((rec, adres))
+
+        if not adresli:
+            raise UserError(
+                _(
+                    "Seçili teslimatların hiçbirinde müşteri adresi bulunamadı.\n\n"
+                    "Müşteri kaydında adres (sokak, ilçe, il) tanımlı olmalıdır."
+                )
+            )
+
+        # Google Maps: max 9 waypoints + origin + destination = 11 durak
+        if len(adresli) > 11:
+            adresli = adresli[:11]
+            _logger.warning(
+                "Rota optimizasyonu: 11'den fazla adres seçildi, ilk 11 kullanıldı"
+            )
+
+        # URL için adresleri encode et
+        def _encode(addr):
+            return quote(addr.strip(), safe="")
+
+        adresler = [_encode(a) for _, a in adresli]
+
+        # Google Maps: origin, destination, waypoints
+        # En fazla 9 waypoint (desktop), 3 (mobil) - hepsini waypoints yaparsak
+        # origin=ilk, destination=son, waypoints=aradakiler
+        base_url = "https://www.google.com/maps/dir/?api=1&travelmode=driving"
+
+        if len(adresler) == 1:
+            url = f"{base_url}&destination={adresler[0]}"
+        else:
+            origin = adresler[0]
+            destination = adresler[-1]
+            # Waypoints arada: pipe URL'de %7C olmalı
+            waypoints = "%7C".join(adresler[1:-1]) if len(adresler) > 2 else ""
+            url = f"{base_url}&origin={origin}&destination={destination}"
+            if waypoints:
+                url += f"&waypoints={waypoints}"
 
         return {
             "type": "ir.actions.act_url",
