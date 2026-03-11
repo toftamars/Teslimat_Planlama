@@ -242,5 +242,15 @@
         <field name="state">code</field>
         <field name="code">action = records.unlink()</field>
     </record>
+
+    <!-- Rota optimizasyonu: Seçili teslimatların adreslerini Google Maps çoklu durak ile aç -->
+    <record id="action_teslimat_belgesi_rota_optimizasyonu" model="ir.actions.server">
+        <field name="name">🗺️ Rota Optimizasyonu Oluştur</field>
+        <field name="model_id" ref="model_teslimat_belgesi"/>
+        <field name="binding_model_id" ref="model_teslimat_belgesi"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">action = records.action_rota_optimizasyonu()</field>
+    </record>
 </odoo>
 
