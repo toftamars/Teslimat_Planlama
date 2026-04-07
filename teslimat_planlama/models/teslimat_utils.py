@@ -118,6 +118,21 @@ def is_manager(env) -> bool:
     return env.user.has_group("teslimat_planlama.group_teslimat_manager")
 
 
+def is_super_manager(env) -> bool:
+    """Kullanıcının süper yönetici olup olmadığını kontrol et.
+
+    Süper yönetici, teslim edilmiş belgeler dahil tüm teslimat belgelerini
+    koşulsuz olarak silebilir.
+
+    Args:
+        env: Odoo environment
+
+    Returns:
+        bool: Süper yönetici ise True
+    """
+    return env.user.has_group("teslimat_planlama.group_teslimat_super_manager")
+
+
 def is_small_vehicle(arac) -> bool:
     """Araç küçük araç mı kontrol et.
 

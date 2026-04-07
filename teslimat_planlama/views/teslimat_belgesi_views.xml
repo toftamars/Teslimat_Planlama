@@ -243,6 +243,17 @@
         <field name="code">action = records.unlink()</field>
     </record>
 
+    <!-- Koşulsuz Sil (yalnızca süper yönetici): Teslim edilmiş belgeler dahil tüm silme yetkisi -->
+    <record id="action_teslimat_belgesi_sil_super_yonetici" model="ir.actions.server">
+        <field name="name">⚠️ Koşulsuz Sil (Süper Yönetici)</field>
+        <field name="model_id" ref="model_teslimat_belgesi"/>
+        <field name="binding_model_id" ref="model_teslimat_belgesi"/>
+        <field name="binding_view_types">list</field>
+        <field name="groups_id" eval="[(4, ref('teslimat_planlama.group_teslimat_super_manager'))]"/>
+        <field name="state">code</field>
+        <field name="code">action = records.unlink()</field>
+    </record>
+
     <!-- Rota optimizasyonu: Seçili teslimatların adreslerini Google Maps çoklu durak ile aç -->
     <record id="action_teslimat_belgesi_rota_optimizasyonu" model="ir.actions.server">
         <field name="name">🗺️ Rota Optimizasyonu Oluştur</field>
