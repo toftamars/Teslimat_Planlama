@@ -17,6 +17,7 @@ from .teslimat_utils import (
     check_arac_kapatma,
     check_pazar_gunu_validation,
     is_manager,
+    is_super_manager,
 )
 
 _logger = logging.getLogger(__name__)
@@ -507,9 +508,16 @@ class TeslimatBelgesi(models.Model):
     def unlink(self) -> bool:
         """Teslimat belgesi silme - Kısıtlamalar.
 
+        Süper yöneticiler tüm kontrolleri atlayarak koşulsuz siler.
+        Normal yöneticiler teslim edilmiş kayıtları silemez.
+
         Returns:
             bool: Başarılı ise True
         """
+        # Süper yönetici: tüm kontrolleri atla, koşulsuz sil
+        if is_super_manager(self.env):
+            return super(TeslimatBelgesi, self).unlink()
+
         self._check_unlink_yetkisi()
 
         for record in self:

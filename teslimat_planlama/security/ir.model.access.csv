@@ -13,6 +13,7 @@ access_teslimat_transfer_all,teslimat.transfer.all,model_teslimat_transfer,base.
 access_teslimat_transfer_manager,teslimat.transfer.manager,model_teslimat_transfer,teslimat_planlama.group_teslimat_manager,1,1,1,1
 access_teslimat_belgesi_all,teslimat.belgesi.all,model_teslimat_belgesi,base.group_user,1,1,1,0
 access_teslimat_belgesi_manager,teslimat.belgesi.manager,model_teslimat_belgesi,teslimat_planlama.group_teslimat_manager,1,1,1,1
+access_teslimat_belgesi_super_manager,teslimat.belgesi.super.manager,model_teslimat_belgesi,teslimat_planlama.group_teslimat_super_manager,1,1,1,1
 access_teslimat_belgesi_driver,teslimat.belgesi.driver,model_teslimat_belgesi,teslimat_planlama.group_teslimat_driver,1,1,0,0
 access_teslimat_belgesi_urun_all,teslimat.belgesi.urun.all,model_teslimat_belgesi_urun,base.group_user,1,1,1,0
 access_teslimat_belgesi_urun_manager,teslimat.belgesi.urun.manager,model_teslimat_belgesi_urun,teslimat_planlama.group_teslimat_manager,1,1,1,1

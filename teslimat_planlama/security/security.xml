@@ -22,6 +22,14 @@
             <field name="implied_ids" eval="[(4, ref('stock.group_stock_manager'))]"/>
             <field name="comment">Tüm yetkiler + validasyon bypass (pazar günü, kapasite, vb.)</field>
         </record>
+
+        <!-- Teslimat Süper Yöneticisi Grubu -->
+        <record id="group_teslimat_super_manager" model="res.groups">
+            <field name="name">Teslimat Süper Yöneticisi</field>
+            <field name="category_id" ref="teslimat_planlama.module_category_teslimat"/>
+            <field name="implied_ids" eval="[(4, ref('teslimat_planlama.group_teslimat_manager'))]"/>
+            <field name="comment">Koşulsuz silme dahil tüm yetkilere sahip üst düzey yönetici rolü</field>
+        </record>
     </data>
 </odoo>
 
