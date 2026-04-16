@@ -52,7 +52,7 @@ class StockPicking(models.Model):
             "name": _("Teslimat Belgeleri"),
             "type": "ir.actions.act_window",
             "res_model": "teslimat.belgesi",
-            "view_mode": "tree,form",
+            "view_mode": "list,form",
             "domain": [("stock_picking_id", "=", self.id)],
             "context": {"default_stock_picking_id": self.id},
         }

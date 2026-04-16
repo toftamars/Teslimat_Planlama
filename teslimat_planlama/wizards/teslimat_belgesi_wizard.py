@@ -572,7 +572,7 @@ class TeslimatBelgesiWizard(models.TransientModel):
             "type": "ir.actions.act_window",
             "name": _("Teslimat Belgeleri"),
             "res_model": "teslimat.belgesi",
-            "view_mode": "tree",
+            "view_mode": "list",
             "target": "current",
         }
 

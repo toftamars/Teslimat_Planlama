@@ -172,10 +172,7 @@ def get_istanbul_state(env):
         limit=1
     )
 
-    # Cache the result (store ID to avoid recordset serialization issues)
-    if istanbul:
-        env.context = dict(env.context, **{cache_key: istanbul.id})
-
+    # Odoo 19: env.context mutation kaldırıldı (immutable); cache atlanıyor
     return istanbul
 
 

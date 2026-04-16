@@ -12,7 +12,7 @@
                         <field name="gun_id" readonly="1"/>
                         <field name="sure_siz"/>
                     </group>
-                    <group attrs="{'invisible': [('sure_siz','=', True)]}">
+                    <group invisible="sure_siz">
                         <field name="kapatma_baslangic"/>
                         <field name="kapatma_bitis"/>
                     </group>

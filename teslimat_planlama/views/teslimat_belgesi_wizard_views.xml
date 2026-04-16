@@ -25,7 +25,7 @@
                             <field name="ilce_id"
                                    force_save="1"
                                    options="{'no_create': True, 'no_edit': True}"
-                                   attrs="{'required': ['&amp;', ('arac_id','!=', False), ('arac_kucuk_mu','=', False)]}"/>
+                                   required="arac_id and not arac_kucuk_mu"/>
                         </group>
                     </group>
                     <!-- Transfer No -->

@@ -7,7 +7,7 @@ Mixin pattern kullanılarak ana model'den ayrılmıştır.
 import logging
 from urllib.parse import quote
 
-from odoo import _, api, fields, models
+from odoo import Command, _, api, fields, models
 from odoo.exceptions import UserError
 
 from .teslimat_constants import (
@@ -161,27 +161,25 @@ class TeslimatBelgesiActions(models.AbstractModel):
         Args:
             picking: Stock picking kaydı
         """
-        # Mevcut ürünleri temizle (Command.clear)
-        self.transfer_urun_ids = [(5, 0, 0)]
+        # Mevcut ürünleri temizle
+        self.transfer_urun_ids = [Command.clear()]
 
         # Transfer belgesi ürünlerini ekle
         if picking and picking.move_ids_without_package:
-            lines = []
+            lines = [Command.clear()]
             for seq, move in enumerate(picking.move_ids_without_package, start=1):
                 lines.append(
-                    (
-                        0,
-                        0,
+                    Command.create(
                         {
                             "sequence": seq,
                             "urun_id": move.product_id.id,
                             "miktar": move.quantity_done or move.product_uom_qty,
                             "birim": move.product_uom.id,
                             "stock_move_id": move.id,
-                        },
+                        }
                     )
                 )
-            self.transfer_urun_ids = [(5, 0, 0)] + lines
+            self.transfer_urun_ids = lines
 
     # =========================================================================
     # ACTION METHODS

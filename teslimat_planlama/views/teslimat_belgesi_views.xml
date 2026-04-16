@@ -7,7 +7,7 @@
         <field name="name">teslimat.belgesi.kanban</field>
         <field name="model">teslimat.belgesi</field>
         <field name="arch" type="xml">
-            <kanban default_group_by="durum" class="o_kanban_dashboard">
+            <kanban default_group_by="durum">
                 <field name="name"/>
                 <field name="teslimat_tarihi"/>
                 <field name="musteri_id"/>
@@ -15,22 +15,12 @@
                 <field name="ilce_id"/>
                 <field name="durum"/>
                 <templates>
-                    <t t-name="kanban-box">
-                        <div class="oe_kanban_card oe_kanban_global_click">
-                            <div class="oe_kanban_content">
-                                <div class="o_kanban_record_top">
-                                    <div class="o_kanban_record_headings">
-                                        <strong class="o_kanban_record_title">
-                                            <field name="name"/>
-                                        </strong>
-                                    </div>
-                                </div>
-                                <div class="o_kanban_record_body">
-                                    <div><field name="musteri_id"/></div>
-                                    <div><field name="ilce_id"/> - <field name="arac_id"/></div>
-                                    <div><field name="teslimat_tarihi"/></div>
-                                </div>
-                            </div>
+                    <t t-name="card">
+                        <div class="oe_kanban_global_click">
+                            <strong><field name="name"/></strong>
+                            <div><field name="musteri_id"/></div>
+                            <div><field name="ilce_id"/> - <field name="arac_id"/></div>
+                            <div><field name="teslimat_tarihi"/></div>
                         </div>
                     </t>
                 </templates>
@@ -43,7 +33,7 @@
         <field name="name">teslimat.belgesi.tree</field>
         <field name="model">teslimat.belgesi</field>
         <field name="arch" type="xml">
-            <tree string="Teslimat Belgeleri" create="false" delete="0" decoration-info="durum == 'hazir'" decoration-success="durum == 'teslim_edildi'" decoration-danger="durum == 'iptal'">
+            <list string="Teslimat Belgeleri" create="false" delete="0" decoration-info="durum == 'hazir'" decoration-success="durum == 'teslim_edildi'" decoration-danger="durum == 'iptal'">
                 <field name="name"/>
                 <field name="teslimat_tarihi"/>
                 <field name="musteri_id"/>
@@ -52,7 +42,7 @@
                 <field name="location_id" string="Depo"/>
                 <field name="durum" widget="badge" decoration-success="durum == 'teslim_edildi'" decoration-info="durum == 'hazir'" decoration-warning="durum == 'yolda'" decoration-danger="durum == 'iptal'"/>
                 <field name="transfer_no"/>
-            </tree>
+            </list>
         </field>
     </record>
 
@@ -66,25 +56,25 @@
                     <!-- Sürücü: Yolda Butonu (sadece hazir durumunda görünür) -->
                     <button name="action_yolda_yap" string="🚗 Yolda" type="object"
                             class="oe_highlight" icon="fa-road"
-                            attrs="{'invisible': [('durum', '!=', 'hazir')]}"
+                            invisible="durum != 'hazir'"
                             groups="teslimat_planlama.group_teslimat_driver"/>
 
                     <!-- Sürücü: Yol Tarifi (sadece yolda durumunda görünür) -->
                     <button name="action_yol_tarifi" string="🗺️ Yol Tarifi" type="object"
                             class="btn-primary" icon="fa-map-marker"
-                            attrs="{'invisible': [('durum', '!=', 'yolda')]}"
+                            invisible="durum != 'yolda'"
                             groups="teslimat_planlama.group_teslimat_driver"/>
 
                     <!-- Sürücü: Teslimatı Tamamla (sadece yolda durumunda görünür) -->
                     <button name="action_teslimat_tamamla" string="✅ Teslimatı Tamamla" type="object" 
                             class="oe_highlight" icon="fa-check"
-                            attrs="{'invisible': [('durum', '!=', 'yolda')]}"
+                            invisible="durum != 'yolda'"
                             groups="teslimat_planlama.group_teslimat_driver"/>
 
                     <!-- İptal Et: yalnızca yönetici veya transferi oluşturan görür/görebilir -->
                     <button name="action_iptal_et" string="❌ İptal Et" type="object"
                             class="btn-danger" icon="fa-times-circle"
-                            attrs="{'invisible': [('durum', 'in', ['teslim_edildi', 'iptal']), ('can_user_cancel', '=', False)]}"
+                            invisible="durum in ['teslim_edildi', 'iptal'] and not can_user_cancel"
                             confirm="Bu teslimatı iptal etmek istediğinizden emin misiniz?"/>
 
                     <field name="durum" widget="statusbar" 
@@ -96,12 +86,12 @@
                     <field name="can_user_cancel" invisible="1"/>
                     
                     <!-- Teslim Edildi Uyarısı -->
-                    <div class="alert alert-success" role="alert" attrs="{'invisible': [('is_readonly', '=', False)]}">
+                    <div class="alert alert-success" role="alert" invisible="not is_readonly">
                         <strong>✅ Teslimat Tamamlandı</strong> - Bu belge teslim edilmiştir ve düzenlenemez.
                     </div>
                     
                     <!-- Yönetici Bilgilendirme -->
-                    <div class="alert alert-info" role="alert" groups="teslimat_planlama.group_teslimat_manager" attrs="{'invisible': [('durum', '=', 'teslim_edildi')]}">
+                    <div class="alert alert-info" role="alert" groups="teslimat_planlama.group_teslimat_manager" invisible="durum == 'teslim_edildi'">
                         <strong>👑 Yönetici Modu</strong> - Sınırsız teslimat oluşturabilir, tüm kısıtlamaları bypass edebilirsiniz.
                     </div>
                     
@@ -110,7 +100,7 @@
                             <field name="name" placeholder="Teslimat No"/>
                         </h1>
                     </div>
-                    <group attrs="{'readonly': [('is_readonly', '=', True)]}">
+                    <group readonly="is_readonly">
                         <group>
                             <field name="teslimat_tarihi"/>
                             <field name="stock_picking_id"/>
@@ -124,18 +114,18 @@
                             <field name="ilce_id"/>
                         </group>
                     </group>
-                    <group attrs="{'readonly': [('is_readonly', '=', True)]}">
+                    <group readonly="is_readonly">
                         <group string="📞 Müşteri İletişim Bilgileri">
                             <field name="musteri_id"/>
                             <field name="musteri_telefon" widget="phone" 
                                    string="📞 Müşteri Telefonu"/>
                             <field name="manuel_telefon" widget="phone"
                                    string="📱 Telefon (Opsiyonel)"
-                                   attrs="{'invisible': [('manuel_telefon', '=', False)]}"
+                                   invisible="not manuel_telefon"
                                    help="Wizard'dan girilen opsiyonel telefon numarası"/>
                             <field name="musteri_adres" 
                                    string="📍 Müşteri Adresi"
-                                   attrs="{'invisible': [('musteri_adres', '=', False)]}"
+                                   invisible="not musteri_adres"
                                    widget="text"
                                    placeholder="Adres bilgisi yükleniyor..."/>
                         </group>
@@ -145,16 +135,16 @@
                     </group>
                     <group string="Transfer Ürünleri">
                         <field name="transfer_urun_ids" readonly="1">
-                            <tree editable="false">
+                            <list editable="false">
                                 <field name="sequence"/>
                                 <field name="urun_id"/>
                                 <field name="miktar"/>
                                 <field name="birim"/>
                                 <field name="stock_move_id" invisible="1"/>
-                            </tree>
+                            </list>
                         </field>
                     </group>
-                    <group string="Teslim Bilgileri" attrs="{'invisible': [('durum', '!=', 'teslim_edildi')]}">
+                    <group string="Teslim Bilgileri" invisible="durum != 'teslim_edildi'">
                         <group>
                             <field name="teslim_alan_kisi" readonly="1"/>
                             <field name="gercek_teslimat_saati" readonly="1"/>
@@ -162,7 +152,7 @@
                         </group>
                     
                     <!-- Teslimat Fotoğrafı -->
-                    <group string="📷 Teslimat Fotoğrafı" attrs="{'invisible': ['|', ('durum', '!=', 'teslim_edildi'), ('teslimat_fotografi', '=', False)]}">
+                    <group string="📷 Teslimat Fotoğrafı" invisible="durum != 'teslim_edildi' or not teslimat_fotografi">
                         <div class="text-center">
                             <field name="teslimat_fotografi" widget="image" readonly="1" nolabel="1" 
                                    options="{'size': [600, 600]}"
@@ -176,7 +166,7 @@
                         </div>
                     </group>
                     
-                    <group string="Notlar" attrs="{'readonly': [('is_readonly', '=', True)]}">
+                    <group string="Notlar" readonly="is_readonly">
                         <field name="notlar" nolabel="1"/>
                     </group>
                 </sheet>
@@ -220,7 +210,7 @@
     <record id="action_teslimat_belgesi" model="ir.actions.act_window">
         <field name="name">Teslimat Belgeleri</field>
         <field name="res_model">teslimat.belgesi</field>
-        <field name="view_mode">tree,form,kanban</field>
+        <field name="view_mode">list,form,kanban</field>
         <field name="context">{'create': False, 'search_default_bugun': 1}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">

@@ -5,7 +5,7 @@
         <field name="name">teslimat.arac.kapatma.tree</field>
         <field name="model">teslimat.arac.kapatma</field>
         <field name="arch" type="xml">
-            <tree string="Araç Kapatma Kayıtları" 
+            <list string="Araç Kapatma Kayıtları" 
                   decoration-danger="not aktif"
                   decoration-warning="aktif"
                   decoration-success="not aktif">
@@ -16,7 +16,7 @@
                 <field name="sebep"/>
                 <field name="kapatan_kullanici_id"/>
                 <field name="aktif" widget="boolean_toggle"/>
-            </tree>
+            </list>
         </field>
     </record>
 
@@ -29,22 +29,22 @@
                 <header>
                     <button name="action_iptal_et" string="İptal Et" type="object" 
                             class="btn-warning"
-                            attrs="{'invisible': [('aktif', '=', False)]}"/>
+                            invisible="not aktif"/>
                     <button name="action_aktif_et" string="Tekrar Aktif Et" type="object" 
                             class="btn-success"
-                            attrs="{'invisible': [('aktif', '=', True)]}"/>
+                            invisible="aktif"/>
                     <field name="aktif" widget="statusbar" statusbar_visible="1"/>
                 </header>
                 
                 <sheet>
                     <!-- Uyarı Mesajı - Kapalı kayıt -->
-                    <div class="alert alert-danger" role="alert" attrs="{'invisible': [('aktif', '=', True)]}">
+                    <div class="alert alert-danger" role="alert" invisible="aktif">
                         <i class="fa fa-ban"/> Bu kapatma kaydı <strong>iptal edilmiş</strong>
                     </div>
                     
                     <!-- Uyarı Mesajı - Aktif kapatma -->
                     <div class="alert alert-warning" role="alert" 
-                         attrs="{'invisible': [('aktif', '=', False)]}">
+                         invisible="not aktif">
                         <i class="fa fa-exclamation-triangle"/> Bu araç <strong>kapalı</strong>
                     </div>
                     
@@ -78,10 +78,7 @@
                     </group>
                 </sheet>
                 
-                <div class="oe_chatter">
-                    <field name="message_follower_ids"/>
-                    <field name="message_ids"/>
-                </div>
+                <chatter/>
             </form>
         </field>
     </record>
@@ -121,7 +118,7 @@
     <record id="action_teslimat_arac_kapatma" model="ir.actions.act_window">
         <field name="name">Araç Kapatma Kayıtları</field>
         <field name="res_model">teslimat.arac.kapatma</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">list,form</field>
         <field name="context">{'search_default_filter_aktif': 1}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">

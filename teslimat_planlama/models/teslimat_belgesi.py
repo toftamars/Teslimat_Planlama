@@ -181,32 +181,33 @@ class TeslimatBelgesi(models.Model):
         help="Mevcut kullanıcı bu teslimatı iptal edebilir (yönetici veya transferi oluşturan)"
     )
 
-    @api.model
-    def create(self, vals: dict) -> "TeslimatBelgesi":
+    @api.model_create_multi
+    def create(self, vals_list: list) -> "TeslimatBelgesi":
         """Teslimat belgesi oluştur.
 
         Args:
-            vals: Create değerleri
+            vals_list: Create değerleri listesi
 
         Returns:
-            TeslimatBelgesi: Oluşturulan kayıt
+            TeslimatBelgesi: Oluşturulan kayıtlar
         """
-        # Otomatik değer atamaları
-        self._prepare_vals_for_create(vals)
+        for vals in vals_list:
+            # Otomatik değer atamaları
+            self._prepare_vals_for_create(vals)
 
-        # Validasyonlar
-        teslimat_tarihi = vals.get("teslimat_tarihi", fields.Date.today())
-        arac_id = vals.get("arac_id")
+            # Validasyonlar
+            teslimat_tarihi = vals.get("teslimat_tarihi", fields.Date.today())
+            arac_id = vals.get("arac_id")
 
-        check_pazar_gunu_validation(teslimat_tarihi, bypass_for_manager=True, env=self.env)
-        self._check_arac_kapatma_on_create(arac_id, teslimat_tarihi)
-        self._check_daily_limit(teslimat_tarihi)
+            check_pazar_gunu_validation(teslimat_tarihi, bypass_for_manager=True, env=self.env)
+            self._check_arac_kapatma_on_create(arac_id, teslimat_tarihi)
+            self._check_daily_limit(teslimat_tarihi)
 
-        # Aynı slot için eşzamanlı oluşturmayı engelle (race condition önleme)
-        ilce_id = vals.get("ilce_id")
-        self._acquire_capacity_lock(arac_id, ilce_id, teslimat_tarihi)
+            # Aynı slot için eşzamanlı oluşturmayı engelle (race condition önleme)
+            ilce_id = vals.get("ilce_id")
+            self._acquire_capacity_lock(arac_id, ilce_id, teslimat_tarihi)
 
-        return super(TeslimatBelgesi, self).create(vals)
+        return super(TeslimatBelgesi, self).create(vals_list)
 
     def _prepare_vals_for_create(self, vals: dict) -> None:
         """Create için vals'u hazırla (sequence ve sıra no).
