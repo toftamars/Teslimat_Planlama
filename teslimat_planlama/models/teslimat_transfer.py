@@ -189,8 +189,8 @@ class TeslimatTransfer(models.Model):
             self.transfer_no = picking.name
 
         # Ürün bilgileri (ilk ürünü al)
-        if picking.move_ids_without_package:
-            first_move = picking.move_ids_without_package[0]
+        if picking.move_ids:
+            first_move = picking.move_ids[0]
             self.urun_id = first_move.product_id
             self.miktar = first_move.quantity_done or first_move.product_uom_qty
 
