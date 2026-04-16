@@ -90,7 +90,7 @@ class TeslimatTamamlamaWizard(models.TransientModel):
         teslimat.send_sms_tamamlandi()
 
         # Fotoğrafın kaydedildiğini doğrula
-        teslimat.invalidate_cache(['teslimat_fotografi'])
+        teslimat.invalidate_recordset(['teslimat_fotografi'])
         if teslimat.teslimat_fotografi:
             _logger.info("Fotoğraf başarıyla kaydedildi - Boyut: %s bytes", len(teslimat.teslimat_fotografi) if teslimat.teslimat_fotografi else 0)
         else:
@@ -128,7 +128,7 @@ class TeslimatTamamlamaWizard(models.TransientModel):
                 'type': 'ir.actions.act_window',
                 'name': _('Teslimat Belgeleri'),
                 'res_model': 'teslimat.belgesi',
-                'view_mode': 'tree,form,kanban',
+                'view_mode': 'list,form,kanban',
                 'target': 'current',
                 'context': {'create': False, 'search_default_bugun': 1},
             }

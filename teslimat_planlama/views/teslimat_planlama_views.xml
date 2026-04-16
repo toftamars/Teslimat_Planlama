@@ -7,13 +7,13 @@
         <field name="name">teslimat.planlama.tree</field>
         <field name="model">teslimat.planlama</field>
         <field name="arch" type="xml">
-            <tree string="Teslimat Planlamaları">
+            <list string="Teslimat Planlamaları">
                 <field name="name"/>
                 <field name="tarih"/>
                 <field name="durum"/>
                 <field name="toplam_transfer"/>
                 <field name="toplam_urun"/>
-            </tree>
+            </list>
         </field>
     </record>
 
@@ -64,7 +64,7 @@
                         </page>
                         <page string="Transferler">
                             <field name="transfer_ids">
-                                <tree editable="bottom">
+                                <list editable="bottom">
                                     <field name="sira_no"/>
                                     <field name="transfer_no"/>
                                     <field name="name"/>
@@ -76,7 +76,7 @@
                                     <field name="birim"/>
                                     <field name="planlanan_tarih"/>
                                     <field name="durum"/>
-                                </tree>
+                                </list>
                             </field>
                         </page>
                         <page string="Notlar">
@@ -109,7 +109,7 @@
     <record id="action_teslimat_planlama" model="ir.actions.act_window">
         <field name="name">Teslimat Planlamaları</field>
         <field name="res_model">teslimat.planlama</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">list,form</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 Henüz planlama oluşturulmamış

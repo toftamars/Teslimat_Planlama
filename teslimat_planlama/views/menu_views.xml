@@ -113,7 +113,7 @@
     <record id="action_teslimat_raporlama_durum_analizi" model="ir.actions.act_window">
         <field name="name">Durum Analizi</field>
         <field name="res_model">teslimat.belgesi</field>
-        <field name="view_mode">graph,pivot,tree</field>
+        <field name="view_mode">graph,pivot,list</field>
         <field name="view_id" ref="view_teslimat_belgesi_raporlama_graph_pie"/>
         <field name="search_view_id" ref="view_teslimat_belgesi_search"/>
         <field name="context">{'search_default_bu_hafta': 1}</field>
@@ -127,7 +127,7 @@
     <record id="action_teslimat_raporlama_trend" model="ir.actions.act_window">
         <field name="name">Tarih / Araç Trend</field>
         <field name="res_model">teslimat.belgesi</field>
-        <field name="view_mode">graph,pivot,tree</field>
+        <field name="view_mode">graph,pivot,list</field>
         <field name="view_id" ref="view_teslimat_belgesi_raporlama_graph"/>
         <field name="search_view_id" ref="view_teslimat_belgesi_search"/>
         <field name="context">{'search_default_bu_hafta': 1}</field>

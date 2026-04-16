@@ -35,14 +35,14 @@
                                             <field name="state_id" widget="many2one" 
                                                    options="{'no_create': True, 'no_edit': True, 'no_open': True}" 
                                                    class="form-control"
-                                                   attrs="{'invisible': [('arac_id', '=', False)]}"/>
+                                                   invisible="not arac_id"/>
                                         </div>
                                         <div class="col-md-4">
                                             <label for="ilce_id" class="form-label">İlçe</label>
                                             <field name="ilce_id" widget="many2one" 
                                                    options="{'no_create': True, 'no_edit': True, 'no_open': True}" 
                                                    class="form-control"
-                                                   attrs="{'invisible': [('state_id', '=', False)], 'required': [('state_id', '!=', False)]}"/>
+                                                   invisible="not state_id" required="state_id"/>
                                         </div>
                                     </div>
                                     
@@ -50,7 +50,7 @@
                                         <div class="col-12 text-end">
                                             <button name="action_sorgula" string="🔄 Yenile" type="object" 
                                                    class="btn btn-primary me-2"
-                                                   attrs="{'invisible': [('arac_id','=', False)]}"/>
+                                                   invisible="not arac_id"/>
                                             <button string="✖️ Kapat" special="cancel" class="btn btn-secondary"/>
                                         </div>
                                     </div>
@@ -60,7 +60,7 @@
                     </div>
                     
                     <!-- Uygunluk Durumu -->
-                    <div class="row mb-3" attrs="{'invisible': [('ilce_uygun_mu','=', False)]}">
+                    <div class="row mb-3" invisible="not ilce_uygun_mu">
                         <div class="col-12">
                             <div class="alert alert-success mb-0">
                                 <i class="fa fa-check-circle"/> 
@@ -71,7 +71,7 @@
                     </div>
                     
                     <!-- Hata Mesajı -->
-                    <div class="row mb-3" attrs="{'invisible': [('ilce_uygun_mu','=', True)]}">
+                    <div class="row mb-3" invisible="ilce_uygun_mu">
                         <div class="col-12">
                             <div class="alert alert-danger mb-0">
                                 <i class="fa fa-exclamation-triangle"/> 
@@ -82,7 +82,7 @@
                     </div>
                     
                     <!-- Uygun Günler Listesi -->
-                    <div class="row mt-3" attrs="{'invisible': [('ilce_uygun_mu','=', False)]}">
+                    <div class="row mt-3" invisible="not ilce_uygun_mu">
                         <div class="col-12">
                             <div class="card shadow-sm">
                                 <div class="card-header bg-success text-white">
@@ -90,7 +90,7 @@
                                 </div>
                                 <div class="card-body">
                                     <field name="uygun_gunler" readonly="1" nolabel="1">
-                                        <tree decoration-success="kalan_kapasite &gt; 5 and not arac_kapali_mi"
+                                        <list decoration-success="kalan_kapasite &gt; 5 and not arac_kapali_mi"
                                               decoration-warning="kalan_kapasite &lt;= 5 and kalan_kapasite &gt; 0 and not arac_kapali_mi"
                                               decoration-danger="kalan_kapasite &lt;= 0 or arac_kapali_mi"
                                               create="false"
@@ -112,7 +112,7 @@
                                             <field name="durum_text" readonly="1" string="Durum" optional="show"/>
                                             <field name="kapatma_sebep" readonly="1" string="🚫 Kapatma Sebebi" optional="hide"/>
                                             <field name="kapatan_kisi" readonly="1" string="👤 Kapatan" optional="hide"/>
-                                </tree>
+                                </list>
                             </field>
                                 </div>
                             </div>

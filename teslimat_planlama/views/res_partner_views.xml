@@ -41,13 +41,13 @@
                     <notebook>
                         <page string="Teslimat Belgeleri">
                             <field name="teslimat_belgesi_ids" readonly="1">
-                                <tree>
+                                <list>
                                     <field name="name"/>
                                     <field name="teslimat_tarihi"/>
                                     <field name="arac_id"/>
                                     <field name="ilce_id"/>
                                     <field name="durum"/>
-                                </tree>
+                                </list>
                             </field>
                         </page>
                     </notebook>

@@ -76,15 +76,16 @@ class TeslimatPlanlama(models.Model):
             record.toplam_transfer = len(record.transfer_ids)
             record.toplam_urun = len(record.urun_ids)
 
-    @api.model
-    def create(self, vals: dict) -> "TeslimatPlanlama":
+    @api.model_create_multi
+    def create(self, vals_list: list) -> "TeslimatPlanlama":
         """Sequence ile otomatik numaralandırma."""
-        if vals.get("name", _("Yeni")) == _("Yeni"):
-            vals["name"] = (
-                self.env["ir.sequence"].next_by_code("teslimat.planlama")
-                or _("Yeni")
-            )
-        return super(TeslimatPlanlama, self).create(vals)
+        for vals in vals_list:
+            if vals.get("name", _("Yeni")) == _("Yeni"):
+                vals["name"] = (
+                    self.env["ir.sequence"].next_by_code("teslimat.planlama")
+                    or _("Yeni")
+                )
+        return super(TeslimatPlanlama, self).create(vals_list)
 
     def action_onayla(self) -> None:
         """Planı onayla."""
