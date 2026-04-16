@@ -165,9 +165,9 @@ class TeslimatBelgesiActions(models.AbstractModel):
         self.transfer_urun_ids = [Command.clear()]
 
         # Transfer belgesi ürünlerini ekle
-        if picking and picking.move_ids_without_package:
+        if picking and picking.move_ids:
             lines = [Command.clear()]
-            for seq, move in enumerate(picking.move_ids_without_package, start=1):
+            for seq, move in enumerate(picking.move_ids, start=1):
                 lines.append(
                     Command.create(
                         {

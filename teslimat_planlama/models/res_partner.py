@@ -68,11 +68,6 @@ class ResPartner(models.Model):
     # )
 
     # Teslimat geçmişi
-    teslimat_planlama_ids = fields.One2many(
-        "teslimat.planlama",
-        "musteri_ids",  # Many2many field name
-        string="Teslimat Planlamaları",
-    )
     teslimat_belgesi_ids = fields.One2many(
         "teslimat.belgesi",
         "musteri_id",

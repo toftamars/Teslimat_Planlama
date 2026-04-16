@@ -19,7 +19,7 @@ class TeslimatAracKapatma(models.Model):
     _description = "Araç Kapatma"
     _inherit = ["mail.thread", "mail.activity.mixin"]
     _order = "baslangic_tarihi desc"
-    _rec_name = "display_name"
+    _rec_name = "arac_id"
     
     # Temel Bilgiler
     arac_id = fields.Many2one(
@@ -86,13 +86,6 @@ class TeslimatAracKapatma(models.Model):
         string="Aktif",
         default=True,
         help="Kapatma kaydı aktif mi?"
-    )
-    
-    # Display Name
-    display_name = fields.Char(
-        string="İsim",
-        compute="_compute_display_name",
-        store=True
     )
     
     gun_sayisi = fields.Integer(
