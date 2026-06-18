@@ -327,31 +327,18 @@ class TeslimatAnaSayfa(models.TransientModel):
                             limit=1,
                         )
                         
-                        # Genel kural yoksa haftalık programa göre varsayılan kapasite kullan
+                        # Tek kaynak: ilçe-gün maksimum kapasite çözümü _get_toplam_kapasite'de.
+                        # (gun_ilce -> maksimum_teslimat; yoksa haftalık program -> varsayılan; yoksa 0)
                         # NOT: Compute içinde create() yapmıyoruz - veri tutarlılığı için
-                        varsayilan_kapasite = 0
-                        if not gun_ilce:
-                            # Haftalık programı kontrol et
-                            from ..data.turkey_data import HAFTALIK_PROGRAM_SCHEDULE
+                        from .teslimat_constants import DAILY_DELIVERY_LIMIT
 
-                            ilce_adi_upper = record.ilce_id.name.upper()
-                            bugun_gun_programi = HAFTALIK_PROGRAM_SCHEDULE.get(gun_kodu, [])
-
-                            # İlçe ismini normalize et (Türkçe karakterleri tolere et)
-                            for program_ilce in bugun_gun_programi:
-                                if program_ilce.upper() in ilce_adi_upper or ilce_adi_upper in program_ilce.upper():
-                                    varsayilan_kapasite = 7  # Programda var, varsayılan kapasite
-                                    break
-
-                        if gun_ilce:
-                            record.toplam_kapasite = gun_ilce.maksimum_teslimat
+                        toplam = self._get_toplam_kapasite(
+                            gun_ilce, gun_kodu, record.ilce_id.name, DAILY_DELIVERY_LIMIT
+                        )
+                        if gun_ilce or toplam > 0:
+                            record.toplam_kapasite = toplam
                             record.kullanilan_kapasite = record.teslimat_sayisi
-                            record.kalan_kapasite = record.toplam_kapasite - record.kullanilan_kapasite
-                        elif varsayilan_kapasite > 0:
-                            # Programda var ama gun_ilce kaydı yok - varsayılan kapasite kullan
-                            record.toplam_kapasite = varsayilan_kapasite
-                            record.kullanilan_kapasite = record.teslimat_sayisi
-                            record.kalan_kapasite = varsayilan_kapasite - record.teslimat_sayisi
+                            record.kalan_kapasite = toplam - record.teslimat_sayisi
                         else:
                             record.toplam_kapasite = 0
                             record.kullanilan_kapasite = 0

@@ -14,6 +14,16 @@ class SMSHelper:
     """SMS işlemleri için helper metodlar."""
 
     @staticmethod
+    def _mask_phone(phone):
+        """Loglarda PII sızıntısını önlemek için telefonu maskele (son 4 hane görünür)."""
+        if not phone:
+            return "-"
+        digits = "".join(ch for ch in phone if ch.isdigit())
+        if len(digits) <= 4:
+            return "***"
+        return "***" + digits[-4:]
+
+    @staticmethod
     def send_sms(env, partner, message, record_name="", phone_override=None):
         """
         SMS gönderir (Odoo sms.sms ile).
@@ -45,6 +55,16 @@ class SMSHelper:
             )
             return False
 
+        # Gevşek sağlık kontrolü: bariz geçersiz numarayı (digit < 7) atla.
+        # Format dayatma yok — gerçek numaraları (uluslararası/+90/sabit hat) elemez.
+        if len([ch for ch in phone_number if ch.isdigit()]) < 7:
+            _logger.warning(
+                "SMS gönderilemedi: geçersiz telefon (%s) - Kayıt: %s",
+                SMSHelper._mask_phone(phone_number),
+                record_name,
+            )
+            return False
+
         try:
             sms = env["sms.sms"].sudo().create(
                 {
@@ -54,7 +74,11 @@ class SMSHelper:
                 }
             )
             sms.sudo().send()
-            _logger.info("SMS gönderildi: %s - %s", record_name, phone_number)
+            _logger.info(
+                "SMS gönderildi: %s - %s",
+                record_name,
+                SMSHelper._mask_phone(phone_number),
+            )
             return True
         except Exception as e:
             _logger.error("SMS hatası: %s - %s", record_name, str(e))
