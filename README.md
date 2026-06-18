@@ -20,7 +20,6 @@ Teslimat Planlama modülü, teslimat operasyonlarını planlamak, kapasiteyi kon
 | **Rol bazlı limitler** | Kullanıcılar günde en fazla 7 teslimat oluşturabilir; yöneticiler sınırsızdır. |
 | **Müşteri bilgilendirme** | Teslimat planlandığında, yolda olduğunda ve tamamlandığında müşteriye otomatik SMS gönderilir. |
 | **Teslimat kanıtı** | Teslimat tamamlanırken opsiyonel fotoğraf yüklenebilir; fotoğrafa tıklayarak büyütülebilir. |
-| **Konum takibi** | Sürücüler teslimat belgesi için enlem–boylam ile konum güncelleyebilir (İstanbul koordinat validasyonu ile). |
 
 ---
 
@@ -61,10 +60,6 @@ Teslimat Planlama modülü, teslimat operasyonlarını planlamak, kapasiteyi kon
 - Tamamlanan teslimatlarda fotoğraf görüntüleme
 - Fotoğrafa tıklayarak tam boyutta görüntüleme (zoom)
 
-### Konum Güncelleme
-- Sürücüler teslimat belgesi için enlem–boylam ile konum güncelleyebilir
-- İstanbul koordinat aralığı validasyonu
-
 ### Raporlama
 - Özet dashboard (pivot, grafik)
 - Durum analizi (pasta grafik)
@@ -77,7 +72,7 @@ Teslimat Planlama modülü, teslimat operasyonlarını planlamak, kapasiteyi kon
 | Rol | Açıklama | Günlük teslimat limiti |
 |-----|----------|-------------------------|
 | **Kullanıcı** | Teslimat oluşturma, kapasite sorgulama, transfer bağlama | Max 7 |
-| **Teslimat Sürücüsü** | Yolda / Tamamla butonları, konum güncelleme, teslimat takibi | Sürücü arayüzü |
+| **Teslimat Sürücüsü** | Yolda / Tamamla butonları, teslimat takibi | Sürücü arayüzü |
 | **Teslimat Yöneticisi** | Araçlar, ilçe–gün programı, araç kapatma, raporlama, sınırsız teslimat | Sınırsız |
 
 ---
@@ -104,8 +99,7 @@ Teslimat Planlama modülü, teslimat operasyonlarını planlamak, kapasiteyi kon
 ### Sürücüler
 
 1. **Yolda** — Teslimat belgesi formunda **Yolda** butonuna basın; müşteriye yolda SMS'i gönderilir.
-2. **Konum Güncelle** — Konum güncelleme wizard'ı ile enlem–boylam girerek teslimat konumunu kaydedin.
-3. **Teslimatı Tamamla** — Tamamlama wizard'ında opsiyonel fotoğraf ve not ekleyerek teslimatı tamamlayın; müşteriye tamamlandı SMS'i gönderilir.
+2. **Teslimatı Tamamla** — Tamamlama wizard'ında opsiyonel fotoğraf ve not ekleyerek teslimatı tamamlayın; müşteriye tamamlandı SMS'i gönderilir.
 
 ### Yöneticiler
 

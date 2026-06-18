@@ -17,11 +17,11 @@
                 <field name="kalan_teslimat_kapasitesi"/>
                 <button name="action_aktif_et" string="Aktif Et" type="object" 
                         class="btn-primary" 
-                        invisible="not gecici_kapatma"
+                        attrs="{'invisible': [('gecici_kapatma', '=', False)]}"
                         groups="teslimat_planlama.group_teslimat_manager"/>
                 <button name="action_gecici_kapat" string="Kapat" type="object" 
                         class="btn-secondary"
-                        invisible="gecici_kapatma"
+                        attrs="{'invisible': [('gecici_kapatma', '=', True)]}"
                         groups="teslimat_planlama.group_teslimat_manager"/>
             </tree>
         </field>
@@ -36,11 +36,11 @@
                 <header>
                     <button name="action_aktif_et" string="Aktif Et" type="object" 
                             class="oe_highlight"
-                            invisible="not gecici_kapatma"
+                            attrs="{'invisible': [('gecici_kapatma', '=', False)]}"
                             groups="teslimat_planlama.group_teslimat_manager"/>
                     <button name="action_gecici_kapat" string="Geçici Kapat" type="object" 
                             class="btn-secondary"
-                            invisible="gecici_kapatma"
+                            attrs="{'invisible': [('gecici_kapatma', '=', True)]}"
                             groups="teslimat_planlama.group_teslimat_manager"/>
                 </header>
                 <sheet>
@@ -64,7 +64,7 @@
                             <field name="kalan_teslimat_kapasitesi" readonly="1"/>
                         </group>
                     </group>
-                    <group string="Kapatma Bilgileri" invisible="not gecici_kapatma">
+                    <group string="Kapatma Bilgileri" attrs="{'invisible': [('gecici_kapatma', '=', False)]}">
                         <group>
                             <field name="kapatma_baslangic" readonly="1"/>
                             <field name="kapatma_bitis" readonly="1"/>

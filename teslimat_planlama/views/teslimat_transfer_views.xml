@@ -29,7 +29,7 @@
                 <header>
                     <button name="action_transfer_belgesi_olustur" string="Teslimat Belgesi Oluştur" 
                             type="object" class="oe_highlight"
-                            invisible="durum not in ['bekliyor', 'hazirlaniyor']"/>
+                            attrs="{'invisible': [('durum', 'not in', ['bekliyor', 'hazirlaniyor'])]}"/>
                 </header>
                 <sheet>
                     <div class="oe_title">

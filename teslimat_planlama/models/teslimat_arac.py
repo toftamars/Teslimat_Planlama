@@ -100,6 +100,26 @@ class TeslimatArac(models.Model):
                 record.gunluk_teslimat_limiti - record.mevcut_kapasite
             )
 
+    @api.model
+    def _cron_recompute_kapasite(self) -> None:
+        """Gün dönümünde 'bugüne' bağlı kapasite alanlarını tazele.
+
+        mevcut_kapasite/kalan_kapasite store=True ve fields.Date.today()'e
+        bağlıdır. @api.depends 'bugün'ü kapsayamadığı için gün değiştiğinde
+        (gece yarısı) bu alanlar otomatik güncellenmez; bir teslimat eklenip
+        değişene kadar dünün değeri kalır. Bu cron her gün çalışarak, hareket
+        olmayan günlerde bile değerleri tazeler. (Aynı gün içindeki teslimat
+        değişiklikleri zaten @api.depends ile anında yansır.)
+
+        store=True korunur çünkü kalan_kapasite, canlı get_uygun_araclar()
+        sorgusunda (domain + order) ve "Kapasitesi Var" arama filtresinde
+        SQL düzeyinde kullanılır.
+        """
+        araclar = self.search([])
+        if araclar:
+            araclar._compute_mevcut_kapasite()
+            araclar._compute_kalan_kapasite()
+
     _sql_constraints = [
         ('name_unique', 'UNIQUE(name)', 'Araç adı benzersiz olmalıdır!'),
     ]

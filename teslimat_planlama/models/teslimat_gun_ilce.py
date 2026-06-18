@@ -18,7 +18,6 @@ class TeslimatGunIlce(models.Model):
     _name = "teslimat.gun.ilce"
     _description = "Teslimat Gün-İlçe Eşleşmesi"
     _order = "gun_id, ilce_id, tarih"
-    _unique = ("gun_id", "ilce_id", "tarih")
 
     gun_id = fields.Many2one("teslimat.gun", string="Gün", required=True, ondelete="cascade")
     ilce_id = fields.Many2one("teslimat.ilce", string="İlçe", required=True, ondelete="cascade")
@@ -102,4 +101,60 @@ class TeslimatGunIlce(models.Model):
                             f"için zaten genel bir kural mevcut."
                         )
                     )
+
+    def init(self):
+        """DB seviyesinde benzersizlik için partial unique index'ler.
+
+        Python @api.constrains kullanıcı-dostu hata verir; aşağıdaki index'ler
+        ise eşzamanlı yazım / veri import / shell gibi ORM-bypass senaryolarını
+        da kapatarak çift kaydı DB seviyesinde engeller.
+
+        Güvenli (savunmacı) kurulum: Eğer veritabanında ZATEN çift kayıt varsa
+        index OLUŞTURULMAZ, yalnızca uyarı loglanır. Böylece modül upgrade'i
+        hiçbir koşulda bozulmaz; sistem mevcut davranışıyla çalışmaya devam eder.
+
+        Kural:
+        - tarih BOŞ  (genel kural)  -> (gun_id, ilce_id) benzersiz
+        - tarih DOLU (özel kural)   -> (gun_id, ilce_id, tarih) benzersiz
+        """
+        super().init()
+
+        # 1) Mevcut çiftleri tespit et — varsa index kurma (upgrade'i bozma)
+        self._cr.execute("""
+            SELECT 1 FROM teslimat_gun_ilce
+            WHERE tarih IS NULL
+            GROUP BY gun_id, ilce_id HAVING COUNT(*) > 1
+            LIMIT 1
+        """)
+        genel_cift = self._cr.fetchone()
+
+        self._cr.execute("""
+            SELECT 1 FROM teslimat_gun_ilce
+            WHERE tarih IS NOT NULL
+            GROUP BY gun_id, ilce_id, tarih HAVING COUNT(*) > 1
+            LIMIT 1
+        """)
+        tarihli_cift = self._cr.fetchone()
+
+        if genel_cift or tarihli_cift:
+            _logger.warning(
+                "teslimat.gun.ilce: Cift kayit mevcut -> benzersizlik index'leri "
+                "OLUSTURULMADI. Lutfen ciftleri temizleyip modulu tekrar guncelleyin. "
+                "Kontrol SQL: SELECT gun_id, ilce_id, tarih, COUNT(*) "
+                "FROM teslimat_gun_ilce GROUP BY gun_id, ilce_id, tarih "
+                "HAVING COUNT(*) > 1"
+            )
+            return
+
+        # 2) Cift yok -> partial unique index'leri olustur (idempotent)
+        self._cr.execute("""
+            CREATE UNIQUE INDEX IF NOT EXISTS teslimat_gun_ilce_genel_unique
+            ON teslimat_gun_ilce (gun_id, ilce_id)
+            WHERE tarih IS NULL
+        """)
+        self._cr.execute("""
+            CREATE UNIQUE INDEX IF NOT EXISTS teslimat_gun_ilce_tarihli_unique
+            ON teslimat_gun_ilce (gun_id, ilce_id, tarih)
+            WHERE tarih IS NOT NULL
+        """)
 

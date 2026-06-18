@@ -41,6 +41,7 @@
         'data/teslimat_program_kurulum_data.xml',
         'data/istanbul_ilceleri_data.xml',
         'data/sms_parameter_data.xml',
+        'data/teslimat_cron_data.xml',
         
         # Core Views
         # 'views/teslimat_sehir_views.xml',  # Deprecated - using res.country.state
@@ -63,7 +64,6 @@
         # Wizard Views
         'views/teslimat_belgesi_wizard_views.xml',
         'views/teslimat_gun_kapatma_wizard_views.xml',
-        'views/teslimat_konum_wizard_views.xml',
         'views/teslimat_tamamlama_wizard_views.xml',
         'views/teslimat_arac_kapatma_wizard_views.xml',
         

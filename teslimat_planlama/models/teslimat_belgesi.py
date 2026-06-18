@@ -350,32 +350,43 @@ class TeslimatBelgesi(models.Model):
     def _acquire_capacity_lock(
         self, arac_id, ilce_id, teslimat_tarihi
     ) -> None:
-        """Aynı (araç, ilçe, tarih) slotu için advisory lock al.
+        """Aynı (araç, tarih) slotu için advisory lock al.
 
-        İki personel aynı anda aynı slota teslimat oluşturduğunda kapasite
-        aşımını engeller. Lock transaction sonuna kadar tutulur.
-        Bekleme yok: lock alınamazsa anında hata verilir.
+        İki personel aynı anda aynı araç+tarih için teslimat oluşturduğunda
+        kapasite aşımını engeller. (araç, tarih) kilidi hem araç günlük limitini
+        (araç+tarih bazında sayılır) hem de ilçe-gün kapasitesini
+        (araç+ilçe+tarih = araç+tarih'in alt kümesi) race-safe yapar; bu yüzden
+        ayrı ilçe kilidine ve deadlock'a yol açacak lock sırasına gerek yoktur.
+
+        İki-argümanlı pg_try_advisory_xact_lock(int4, int4) kullanılır: araç_id ve
+        gün sayısı ayrı parametrelerdir; böylece eski formülde (araç*1e6 + ilçe*1e3
+        + gün) gün sayısının ilçe alanına taşmasından kaynaklanan anahtar çakışması
+        ortadan kalkar.
+
+        Lock transaction sonuna kadar tutulur. Bekleme yok: alınamazsa anında hata.
+        ilce_id parametresi imza uyumluluğu için korunur (artık anahtarda kullanılmaz).
         """
         aid = arac_id
         if isinstance(arac_id, (list, tuple)):
             aid = arac_id[0] if arac_id else None
-        iid = ilce_id
-        if isinstance(ilce_id, (list, tuple)):
-            iid = ilce_id[0] if ilce_id else None
-        if not aid or not iid or not teslimat_tarihi:
+        if not aid or not teslimat_tarihi:
             return
         try:
             tarih = fields.Date.to_date(teslimat_tarihi)
         except (ValueError, TypeError):
             return
-        days = (tarih - date(2000, 1, 1)).days if tarih else 0
-        lock_key = (int(aid) * 1000000 + int(iid) * 1000 + days) % (2**31 - 1)
-        self.env.cr.execute("SELECT pg_try_advisory_xact_lock(%s)", (lock_key,))
+        if not tarih:
+            return
+        days = (tarih - date(2000, 1, 1)).days
+        # (araç_id, gün_sayısı) iki ayrı int4 → paketleme/modulo yok → çakışma yok
+        self.env.cr.execute(
+            "SELECT pg_try_advisory_xact_lock(%s, %s)", (int(aid), int(days))
+        )
         acquired = self.env.cr.fetchone()[0]
         if not acquired:
             raise UserError(
                 _(
-                    "Bu tarih, araç ve ilçe için başka bir kullanıcı işlem yapıyor.\n\n"
+                    "Bu tarih ve araç için başka bir kullanıcı işlem yapıyor.\n\n"
                     "Lütfen birkaç saniye sonra tekrar deneyin."
                 )
             )

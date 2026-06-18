@@ -25,9 +25,6 @@ access_teslimat_belgesi_wizard_all,teslimat.belgesi.wizard.all,model_teslimat_be
 access_teslimat_belgesi_wizard_manager,teslimat.belgesi.wizard.manager,model_teslimat_belgesi_wizard,teslimat_planlama.group_teslimat_manager,1,1,1,1
 access_teslimat_gun_kapatma_wizard_all,teslimat.gun.kapatma.wizard.all,model_teslimat_gun_kapatma_wizard,base.group_user,1,1,1,0
 access_teslimat_gun_kapatma_wizard_manager,teslimat.gun.kapatma.wizard.manager,model_teslimat_gun_kapatma_wizard,teslimat_planlama.group_teslimat_manager,1,1,1,1
-access_teslimat_konum_wizard_all,teslimat.konum.wizard.all,model_teslimat_konum_wizard,base.group_user,1,1,1,0
-access_teslimat_konum_wizard_manager,teslimat.konum.wizard.manager,model_teslimat_konum_wizard,teslimat_planlama.group_teslimat_manager,1,1,1,1
-access_teslimat_konum_wizard_driver,teslimat.konum.wizard.driver,model_teslimat_konum_wizard,teslimat_planlama.group_teslimat_driver,1,1,1,0
 access_teslimat_arac_kapatma_all,teslimat.arac.kapatma.all,model_teslimat_arac_kapatma,base.group_user,1,0,0,0
 access_teslimat_arac_kapatma_manager,teslimat.arac.kapatma.manager,model_teslimat_arac_kapatma,teslimat_planlama.group_teslimat_manager,1,1,1,1
 access_teslimat_arac_kapatma_wizard_manager,teslimat.arac.kapatma.wizard.manager,model_teslimat_arac_kapatma_wizard,teslimat_planlama.group_teslimat_manager,1,1,1,1
