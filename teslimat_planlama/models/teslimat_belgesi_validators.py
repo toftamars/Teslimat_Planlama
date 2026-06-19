@@ -119,7 +119,8 @@ class TeslimatBelgesiValidators(models.AbstractModel):
                 self.env, self.arac_id.id, self.teslimat_tarihi, bypass_for_manager=False
             )
             if not gecerli:
-                raise ValidationError(_(hata_mesaji))
+                # hata_mesaji zaten check_arac_kapatma içinde _() ile çevrildi
+                raise ValidationError(hata_mesaji)
 
     def _validate_arac_ilce_uyumlulugu(self):
         """Araç-İlçe uyumluluğu kontrolü."""

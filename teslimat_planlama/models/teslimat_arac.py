@@ -356,23 +356,26 @@ class TeslimatArac(models.Model):
         """
         result = self.sync_all_arac_ilce_eslesmesi()
         
-        mesaj = (
-            f"✓ Senkronizasyon Tamamlandı!\n\n"
-            f"Güncellenen Araç Sayısı: {result['guncellenen_sayisi']}\n"
-            f"Hata Sayısı: {result['hata_sayisi']}\n\n"
-        )
-        
+        mesaj = _(
+            "✓ Senkronizasyon Tamamlandı!\n\n"
+            "Güncellenen Araç Sayısı: %(guncellenen)s\n"
+            "Hata Sayısı: %(hata)s\n\n"
+        ) % {
+            "guncellenen": result['guncellenen_sayisi'],
+            "hata": result['hata_sayisi'],
+        }
+
         if result['detaylar']:
-            mesaj += "Detaylar:\n" + "\n".join(result['detaylar'][:10])
+            mesaj += _("Detaylar:\n") + "\n".join(result['detaylar'][:10])
             if len(result['detaylar']) > 10:
-                mesaj += f"\n... ve {len(result['detaylar']) - 10} araç daha"
-        
+                mesaj += _("\n... ve %(adet)s araç daha") % {"adet": len(result['detaylar']) - 10}
+
         return {
             "type": "ir.actions.client",
             "tag": "display_notification",
             "params": {
                 "title": _("Toplu Senkronizasyon Tamamlandı"),
-                "message": _(mesaj),
+                "message": mesaj,
                 "type": "success",
                 "sticky": True,
             },

@@ -377,7 +377,8 @@ class TeslimatBelgesiWizard(models.TransientModel):
                 bypass_for_manager=False
             )
             if not gecerli:
-                raise UserError(_(hata_mesaji))
+                # hata_mesaji zaten check_arac_kapatma içinde _() ile çevrildi
+                raise UserError(hata_mesaji)
     
     def _validate_capacity(self) -> None:
         """Araç günlük kapasitesini erken (dostça) kontrol et.

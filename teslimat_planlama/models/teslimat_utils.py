@@ -305,16 +305,21 @@ def check_arac_kapatma(env, arac_id: int, teslimat_tarihi: date, bypass_for_mana
         arac = env["teslimat.arac"].browse(arac_id)
         arac_name = arac.name if arac else "Bilinmiyor"
 
-        mesaj = (
-            f"Bu tarihte araç kapalı!\n\n"
-            f"Tarih: {teslimat_tarihi.strftime('%d.%m.%Y')}\n"
-            f"Araç: {arac_name}\n"
-            f"Sebep: {sebep_text}\n"
-            f"Kapatan: {kapatan_kisi}"
-        )
+        mesaj = _(
+            "Bu tarihte araç kapalı!\n\n"
+            "Tarih: %(tarih)s\n"
+            "Araç: %(arac)s\n"
+            "Sebep: %(sebep)s\n"
+            "Kapatan: %(kapatan)s"
+        ) % {
+            "tarih": teslimat_tarihi.strftime('%d.%m.%Y'),
+            "arac": arac_name,
+            "sebep": sebep_text,
+            "kapatan": kapatan_kisi,
+        }
         if kapatma.aciklama:
-            mesaj += f"\nAçıklama: {kapatma.aciklama}"
-        mesaj += "\n\nLütfen başka bir tarih seçin."
+            mesaj += _("\nAçıklama: %(aciklama)s") % {"aciklama": kapatma.aciklama}
+        mesaj += _("\n\nLütfen başka bir tarih seçin.")
 
         return False, mesaj
 
