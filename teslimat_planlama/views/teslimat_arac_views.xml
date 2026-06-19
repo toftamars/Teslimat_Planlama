@@ -21,18 +21,12 @@
                 <field name="mevcut_kapasite"/>
                 <field name="kalan_kapasite"/>
                 <field name="aktif"/>
-                <field name="gecici_kapatma" invisible="1"/>
-                <button name="action_update_uygun_ilceler" string="🔄 İlçeleri Güncelle" type="object" 
+                <button name="action_update_uygun_ilceler" string="🔄 İlçeleri Güncelle" type="object"
                         class="btn-info"
                         groups="teslimat_planlama.group_teslimat_manager"
                         help="Bu aracın ilçe eşleştirmesini güncelle"/>
-                <button name="action_aktif_et" string="Aktif Et" type="object" 
-                        class="btn-primary"
-                        attrs="{'invisible': [('gecici_kapatma', '=', False)]}"
-                        groups="teslimat_planlama.group_teslimat_manager"/>
-                <button name="action_gecici_kapat" string="Kapat" type="object" 
+                <button name="action_gecici_kapat" string="Kapat" type="object"
                         class="btn-secondary"
-                        attrs="{'invisible': [('gecici_kapatma', '=', True)]}"
                         groups="teslimat_planlama.group_teslimat_manager"/>
             </tree>
         </field>
@@ -50,13 +44,8 @@
                             class="btn-info"
                             groups="teslimat_planlama.group_teslimat_manager"
                             help="Araç tipine göre uygun ilçeleri otomatik günceller"/>
-                    <button name="action_aktif_et" string="Aktif Et" type="object" 
-                            class="oe_highlight"
-                            attrs="{'invisible': [('gecici_kapatma', '=', False)]}"
-                            groups="teslimat_planlama.group_teslimat_manager"/>
-                    <button name="action_gecici_kapat" string="Geçici Kapat" type="object" 
+                    <button name="action_gecici_kapat" string="Geçici Kapat" type="object"
                             class="btn-secondary"
-                            attrs="{'invisible': [('gecici_kapatma', '=', True)]}"
                             groups="teslimat_planlama.group_teslimat_manager"/>
                 </header>
                 <sheet>
@@ -69,20 +58,12 @@
                         <group>
                             <field name="arac_tipi"/>
                             <field name="aktif"/>
-                            <field name="gecici_kapatma" readonly="1"/>
                         </group>
                         <group>
                             <field name="gunluk_teslimat_limiti" 
                                    groups="teslimat_planlama.group_teslimat_manager"/>
                             <field name="mevcut_kapasite" readonly="1"/>
                             <field name="kalan_kapasite" readonly="1"/>
-                        </group>
-                    </group>
-                    <group string="Kapatma Bilgileri" attrs="{'invisible': [('gecici_kapatma', '=', False)]}">
-                        <group>
-                            <field name="kapatma_baslangic" readonly="1"/>
-                            <field name="kapatma_bitis" readonly="1"/>
-                            <field name="kapatma_sebebi" readonly="1"/>
                         </group>
                     </group>
                     <notebook>
@@ -132,7 +113,6 @@
                 <field name="arac_tipi"/>
                 <filter string="Aktif" name="aktif" domain="[('active','=',True)]"/>
                 <filter string="Arşivlendi" name="archived" domain="[('active','=',False)]"/>
-                <filter string="Geçici Kapatılmış" name="gecici_kapatma" domain="[('gecici_kapatma','=',True)]"/>
                 <filter string="Kapasitesi Var" name="kapasite_var" domain="[('kalan_kapasite','>',0)]"/>
             </search>
         </field>

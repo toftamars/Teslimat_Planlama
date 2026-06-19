@@ -60,11 +60,6 @@ class TeslimatArac(models.Model):
         readonly=False,
         help="Arşivlenen araçlar listede gizlenir. Arşivden çıkararak tekrar kullanılabilir.",
     )
-    gecici_kapatma = fields.Boolean(string="Geçici Kapatma")
-    kapatma_sebebi = fields.Text(string="Kapatma Sebebi")
-    kapatma_baslangic = fields.Datetime(string="Kapatma Başlangıç")
-    kapatma_bitis = fields.Datetime(string="Kapatma Bitiş")
-
     # İlçe Uyumluluğu
     uygun_ilceler = fields.Many2many("teslimat.ilce", string="Uygun İlçeler")
 
@@ -397,18 +392,6 @@ class TeslimatArac(models.Model):
             "context": {"default_arac_id": self.id},
         }
 
-    def action_aktif_et(self) -> None:
-        """Aracı aktif et ve kapatma bilgilerini temizle."""
-        self.ensure_one()
-        self.write(
-            {
-                "gecici_kapatma": False,
-                "kapatma_sebebi": False,
-                "kapatma_baslangic": False,
-                "kapatma_bitis": False,
-            }
-        )
-
     @api.model
     def get_uygun_araclar(
         self,
@@ -428,7 +411,6 @@ class TeslimatArac(models.Model):
         """
         domain = [
             ("aktif", "=", True),
-            ("gecici_kapatma", "=", False),
             ("kalan_kapasite", ">=", teslimat_sayisi),
         ]
 
@@ -439,14 +421,9 @@ class TeslimatArac(models.Model):
                 # Bu ilçeyi uygun ilçeler listesinde bulunan araçları filtrele
                 domain.append(("uygun_ilceler", "in", [ilce_id]))
 
-        # Kapatma tarihi kontrolü
-        if tarih:
-            domain += [
-                "|",
-                ("kapatma_bitis", "=", False),
-                ("kapatma_bitis", "<", tarih),
-            ]
-
+        # NOT: Tarih-bazlı araç-kapatma filtresi burada UYGULANMAZ; araç-kapatma
+        # kayıtları (teslimat.arac.kapatma) teslimat oluşturma kapısında
+        # arac_kapali_mi() ile zorlanır.
         return self.search(domain, order="kalan_kapasite desc")
 
     @api.model

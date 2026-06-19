@@ -19,7 +19,7 @@
                             <field name="teslimat_tarihi" readonly="1" force_save="1"/>
                             <field name="arac_id" 
                                    force_save="1"
-                                   domain="[('aktif','=',True),('gecici_kapatma','=',False)]"
+                                   domain="[('aktif','=',True)]"
                                    options="{'no_create': True, 'no_edit': True}"/>
                             <field name="arac_kucuk_mu" invisible="1"/>
                             <field name="ilce_id"

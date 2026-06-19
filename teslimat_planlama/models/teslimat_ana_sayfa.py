@@ -23,7 +23,7 @@ class TeslimatAnaSayfa(models.TransientModel):
     arac_id = fields.Many2one(
         "teslimat.arac",
         string="Araç",
-        domain=[("aktif", "=", True), ("gecici_kapatma", "=", False)],
+        domain=[("aktif", "=", True)],
     )
     state_id = fields.Many2one(
         "res.country.state",
