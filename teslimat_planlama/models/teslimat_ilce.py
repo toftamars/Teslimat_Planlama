@@ -85,32 +85,10 @@ class TeslimatIlce(models.Model):
     @api.model
     def apply_weekly_schedule(self):
         """Kullanıcının verdiği haftalık teslimat programını uygula."""
-        schedule = {
-            'pazartesi': [
-                'MALTEPE', 'KARTAL', 'PENDİK', 'TUZLA', 'SULTANBEYLİ',
-                'ŞİŞLİ', 'BEŞİKTAŞ', 'BEYOĞLU', 'KAĞITHANE'
-            ],
-            'sali': [
-                'ÜSKÜDAR', 'KADIKÖY', 'ÜMRANİYE', 'ATAŞEHİR',
-                'ŞİŞLİ', 'BEŞİKTAŞ', 'BEYOĞLU', 'KAĞITHANE'
-            ],
-            'carsamba': [
-                'ÜSKÜDAR', 'KADIKÖY', 'ÜMRANİYE', 'ATAŞEHİR',
-                'BAĞCILAR', 'BAHÇELİEVLER', 'BAKIRKÖY', 'GÜNGÖREN', 'ESENLER', 'ZEYTİNBURNU', 'BAYRAMPAŞA', 'FATİH'
-            ],
-            'persembe': [
-                'MALTEPE', 'KARTAL', 'PENDİK', 'TUZLA', 'SULTANBEYLİ',
-                'BÜYÜKÇEKMECE', 'SİLİVRİ', 'ÇATALCA', 'ARNAVUTKÖY', 'BAKIRKÖY'
-            ],
-            'cuma': [
-                'ÜSKÜDAR', 'KADIKÖY', 'ÜMRANİYE', 'ATAŞEHİR',
-                'ŞİŞLİ', 'BEŞİKTAŞ', 'BEYOĞLU', 'KAĞITHANE'
-            ],
-            'cumartesi': [
-                'BEYKOZ', 'ÇEKMEKÖY', 'SANCAKTEPE', 'ŞİLE',
-                'BÜYÜKÇEKMECE', 'SİLİVRİ', 'ÇATALCA', 'ARNAVUTKÖY', 'BAKIRKÖY'
-            ]
-        }
+        # Tek kaynak: haftalık gün→ilçe programı turkey_data.HAFTALIK_PROGRAM_SCHEDULE'de tanımlı.
+        from ..data.turkey_data import HAFTALIK_PROGRAM_SCHEDULE
+
+        schedule = HAFTALIK_PROGRAM_SCHEDULE
 
         # Tüm araçların ve günlerin limitlerini varsayılan değere ayarla
         from .teslimat_constants import DAILY_DELIVERY_LIMIT
