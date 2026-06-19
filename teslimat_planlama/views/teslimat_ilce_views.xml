@@ -52,12 +52,6 @@
                         <field name="teslimat_notlari" nolabel="1"/>
                     </group>
                     <notebook>
-                        <page string="Teslimat Günleri">
-                            <field name="gun_ids" readonly="1" widget="many2many_tags"/>
-                            <p class="text-muted">
-                                İlçe-gün eşleştirmeleri "Teslimat Günleri" menüsünden yapılabilir.
-                            </p>
-                        </page>
                         <page string="Uygun Araçlar">
                             <field name="arac_ids" widget="many2many_tags" readonly="1"/>
                             <p class="text-muted">

@@ -64,14 +64,6 @@ class TeslimatIlce(models.Model):
         default="normal",
     )
 
-    # İlişkiler
-    gun_ids = fields.Many2many(
-        "teslimat.gun", 
-        "teslimat_ilce_gun_rel", 
-        "ilce_id", 
-        "gun_id", 
-        string="Teslimat Günleri"
-    )
     # Uygun araçlar - Many2many ilişkisinin ters tarafı (otomatik hesaplanır)
     # Bu alan araçların uygun_ilceler alanından otomatik olarak hesaplanır
     arac_ids = fields.Many2many(
