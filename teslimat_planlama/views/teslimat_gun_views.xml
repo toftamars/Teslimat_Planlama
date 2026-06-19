@@ -13,8 +13,6 @@
                 <field name="aktif"/>
                 <field name="gecici_kapatma"/>
                 <field name="gunluk_maksimum_teslimat"/>
-                <field name="mevcut_teslimat_sayisi"/>
-                <field name="kalan_teslimat_kapasitesi"/>
                 <button name="action_aktif_et" string="Aktif Et" type="object" 
                         class="btn-primary" 
                         attrs="{'invisible': [('gecici_kapatma', '=', False)]}"
@@ -58,10 +56,8 @@
                             <field name="gecici_kapatma" readonly="1"/>
                         </group>
                         <group>
-                            <field name="gunluk_maksimum_teslimat" 
+                            <field name="gunluk_maksimum_teslimat"
                                    groups="teslimat_planlama.group_teslimat_manager"/>
-                            <field name="mevcut_teslimat_sayisi" readonly="1"/>
-                            <field name="kalan_teslimat_kapasitesi" readonly="1"/>
                         </group>
                     </group>
                     <group string="Kapatma Bilgileri" attrs="{'invisible': [('gecici_kapatma', '=', False)]}">

@@ -5,6 +5,8 @@ from typing import Optional
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 
+from .teslimat_constants import DAILY_DELIVERY_LIMIT
+
 _logger = logging.getLogger(__name__)
 
 
@@ -29,7 +31,7 @@ class TeslimatGunIlce(models.Model):
     )
 
     # Kapasite Bilgileri (Dinamik - Modülden ayarlanabilir)
-    maksimum_teslimat = fields.Integer(string="Maksimum Teslimat", default=10)
+    maksimum_teslimat = fields.Integer(string="Maksimum Teslimat", default=DAILY_DELIVERY_LIMIT)
     teslimat_sayisi = fields.Integer(string="Teslimat Sayısı", default=0)
     kalan_kapasite = fields.Integer(
         string="Kalan Kapasite", compute="_compute_kalan_kapasite", store=True
