@@ -11,33 +11,6 @@
             <!-- Notebook'a Teslimat Sekmesi Ekle -->
             <xpath expr="//notebook" position="inside">
                 <page string="Teslimat" name="teslimat">
-                    <group>
-                        <group>
-                            <!-- Tüm teslimat field'ları geçici olarak kaldırıldı -->
-                            <!-- Modül upgrade edildikten sonra aşağıdaki satırları aktif edin: -->
-                            <!-- <field name="teslimat_bolgesi"/> -->
-                            <!-- <field name="teslimat_suresi"/> -->
-                            <!-- <field name="tercih_edilen_teslimat_gunu"/> -->
-                            <!-- <field name="tercih_edilen_teslimat_saati"/> -->
-                        </group>
-                        <group>
-                            <!-- Konum bilgileri geçici olarak kaldırıldı -->
-                            <!-- Modül upgrade edildikten sonra aşağıdaki satırları aktif edin: -->
-                            <!-- <field name="enlem"/> -->
-                            <!-- <field name="boylam"/> -->
-                            <!-- <field name="konum_bilgisi" readonly="1"/> -->
-                            <!-- is_driver field'ı geçici olarak kaldırıldı -->
-                            <!-- Modül upgrade edildikten sonra aşağıdaki satırı aktif edin: -->
-                            <!-- <field name="is_driver"/> -->
-                        </group>
-                    </group>
-                    <!-- teslimat_notlari field'ı geçici olarak kaldırıldı -->
-                    <!-- Modül upgrade edildikten sonra aşağıdaki group'u aktif edin: -->
-                    <!--
-                    <group string="Notlar">
-                        <field name="teslimat_notlari" nolabel="1"/>
-                    </group>
-                    -->
                     <notebook>
                         <page string="Teslimat Belgeleri">
                             <field name="teslimat_belgesi_ids" readonly="1">

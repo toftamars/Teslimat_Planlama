@@ -44,7 +44,6 @@
         'data/teslimat_cron_data.xml',
         
         # Core Views
-        # 'views/teslimat_sehir_views.xml',  # Deprecated - using res.country.state
         'views/teslimat_ilce_views.xml',
         'views/teslimat_gun_views.xml',
         'views/teslimat_arac_views.xml',
