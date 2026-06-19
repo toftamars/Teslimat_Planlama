@@ -87,7 +87,6 @@ class TeslimatBelgesi(models.Model):
     surucu_id = fields.Many2one(
         "res.partner",
         string="Sürücü",
-        # domain=[("is_driver", "=", True)],  # Geçici olarak kaldırıldı - modül upgrade edildikten sonra aktif edilebilir
         tracking=True,
     )
 
@@ -284,6 +283,64 @@ class TeslimatBelgesi(models.Model):
                 )
             )
 
+    # ========================================================================
+    # KAPASİTE SAYIM KURALLARI — tek kaynak (4 ayrı sayım semantiği)
+    # Tüm teslimat.belgesi sayımları burada adlandırılmış olarak toplanır;
+    # validasyon kapıları ve wizard ön-kontrolleri aynı sayaçları kullanır.
+    # ========================================================================
+
+    @api.model
+    def _say_arac_gunluk(self, arac_id, tarih, haric_id=False):
+        """RULE A — Araç günlük yükü: aynı araç+tarih, TÜM ilçeler (iptal hariç).
+
+        Araç günlük teslimat limiti bu toplama uygulanır (ilçe bağımsız).
+        haric_id: kendi kaydını sayımdan çıkar (write/düzenle kontrolü için).
+        """
+        return self.search_count([
+            ("teslimat_tarihi", "=", tarih),
+            ("arac_id", "=", arac_id),
+            ("durum", "!=", CANCELLED_STATUS),
+            ("id", "!=", haric_id),
+        ])
+
+    @api.model
+    def _say_arac_ilce_gunluk(self, arac_id, ilce_id, tarih, haric_id=False):
+        """RULE B — Araç+ilçe günlük yükü: aynı araç+ilçe+tarih (iptal hariç).
+
+        İlçe-gün maksimum kapasitesi (ve araç limiti) bu toplama uygulanır.
+        """
+        return self.search_count([
+            ("teslimat_tarihi", "=", tarih),
+            ("arac_id", "=", arac_id),
+            ("ilce_id", "=", ilce_id),
+            ("durum", "!=", CANCELLED_STATUS),
+            ("id", "!=", haric_id),
+        ])
+
+    @api.model
+    def _say_ilce_gunluk(self, ilce_id, tarih):
+        """RULE C — İlçe günlük yükü: aynı ilçe+tarih, tüm araçlar (iptal hariç).
+
+        Yalnızca Ana Sayfa gösterimi (kullanılan kapasite). Engelleyici değildir.
+        """
+        return self.search_count([
+            ("teslimat_tarihi", "=", tarih),
+            ("ilce_id", "=", ilce_id),
+            ("durum", "!=", CANCELLED_STATUS),
+        ])
+
+    @api.model
+    def _say_kullanici_gunluk(self, user_id, tarih):
+        """RULE D — Kullanıcı günlük kotası: aynı create_uid+tarih.
+
+        Kişisel anti-spam kotası (DAILY_DELIVERY_LIMIT). Tüm durumlar dahildir
+        (iptal dahil) — mevcut davranış birebir korunur.
+        """
+        return self.search_count([
+            ("teslimat_tarihi", "=", tarih),
+            ("create_uid", "=", user_id),
+        ])
+
     def _check_daily_limit(self, teslimat_tarihi: fields.Date) -> None:
         """Günlük teslimat limiti kontrolü (sadece user grubu için).
 
@@ -297,12 +354,7 @@ class TeslimatBelgesi(models.Model):
         if user.has_group("teslimat_planlama.group_teslimat_manager"):
             return  # Yöneticiler için limit yok
 
-        bugun_teslimat_sayisi = self.search_count(
-            [
-                ("teslimat_tarihi", "=", teslimat_tarihi),
-                ("create_uid", "=", user.id),
-            ]
-        )
+        bugun_teslimat_sayisi = self._say_kullanici_gunluk(user.id, teslimat_tarihi)  # RULE D
 
         if bugun_teslimat_sayisi >= DAILY_DELIVERY_LIMIT:
             raise UserError(

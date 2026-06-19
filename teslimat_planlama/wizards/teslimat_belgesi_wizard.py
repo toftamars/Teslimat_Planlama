@@ -380,88 +380,33 @@ class TeslimatBelgesiWizard(models.TransientModel):
                 raise UserError(_(hata_mesaji))
     
     def _validate_capacity(self) -> None:
-        """Araç ve ilçe-gün kapasitelerini kontrol et.
-        
-        İki seviyeli kapasite kontrolü yapar:
-        1. Araç kapasitesi (günlük teslimat limiti)
-        2. İlçe-gün kapasitesi (eğer ilçe seçiliyse)
-        
+        """Araç ve ilçe-gün kapasitelerini erken (dostça) kontrol et.
+
+        Gerçek kapı teslimat.belgesi @api.constrains'tedir. Burada AYNI kapasite
+        metodları (RULE A / RULE B) çağrılarak kullanıcıya kayıt anından önce
+        erken uyarı verilir — tek kaynak, kural çoğaltması/drift yok.
+
         Raises:
-            UserError: Kapasite dolu ise
+            ValidationError: Kapasite dolu ise (validasyon metodları fırlatır)
         """
-        from ..models.teslimat_constants import CANCELLED_STATUS
-        
-        # 1. Araç kapasitesi kontrolü
-        domain = [
-            ("teslimat_tarihi", "=", self.teslimat_tarihi),
-            ("arac_id", "=", self.arac_id.id),
-            ("durum", "!=", CANCELLED_STATUS),
-        ]
-        
-        if self.ilce_id:
-            domain.append(("ilce_id", "=", self.ilce_id.id))
-            bugun_teslimatlar = self.env["teslimat.belgesi"].search_count(domain)
-            
-            if bugun_teslimatlar >= self.arac_id.gunluk_teslimat_limiti:
-                raise UserError(
-                    _(
-                        f"Araç kapasitesi dolu! Seçilen tarih için "
-                        f"{self.ilce_id.name} ilçesine araç kapasitesi: "
-                        f"{bugun_teslimatlar}/{self.arac_id.gunluk_teslimat_limiti}"
-                    )
-                )
-        else:
-            # İlçe yoksa (küçük araçlar için) genel kontrol
-            bugun_teslimatlar = self.env["teslimat.belgesi"].search_count(domain)
-            
-            if bugun_teslimatlar >= self.arac_id.gunluk_teslimat_limiti:
-                raise UserError(
-                    _(
-                        f"Araç kapasitesi dolu! Seçilen tarih için araç kapasitesi: "
-                        f"{bugun_teslimatlar}/{self.arac_id.gunluk_teslimat_limiti}"
-                    )
-                )
-        
-        # 2. İlçe-gün kapasitesi kontrolü
-        if self.ilce_id:
-            self._validate_ilce_gun_capacity()
-    
-    def _validate_ilce_gun_capacity(self) -> None:
-        """İlçe-gün kapasitesini kontrol et.
-        
-        Raises:
-            UserError: İlçe-gün kapasitesi dolu ise
-        """
-        from ..models.teslimat_utils import get_gun_kodu
-        
-        gun_kodu = get_gun_kodu(self.teslimat_tarihi)
-        if not gun_kodu:
-            return
-        
-        gun = self.env["teslimat.gun"].search(
-            [("gun_kodu", "=", gun_kodu)], limit=1
+        belge = self.env["teslimat.belgesi"]
+        ilce_id = self.ilce_id.id if self.ilce_id else False
+
+        # RULE A: araç günlük limiti (tüm ilçeler toplamı)
+        belge._validate_arac_kapasitesi(
+            teslimat_tarihi=self.teslimat_tarihi,
+            arac_id=self.arac_id.id,
+            ilce_id=ilce_id,
         )
-        if not gun:
-            return
-        
-        gun_ilce = self.env["teslimat.gun.ilce"].search(
-            [
-                ("gun_id", "=", gun.id),
-                ("ilce_id", "=", self.ilce_id.id),
-                ("tarih", "=", self.teslimat_tarihi),
-            ],
-            limit=1,
-        )
-        
-        if gun_ilce and gun_ilce.kalan_kapasite <= 0:
-            raise UserError(
-                _(
-                    f"İlçe-gün kapasitesi dolu! "
-                    f"Seçilen tarih için {self.ilce_id.name} ilçesi "
-                    f"{gun.name} günü kapasitesi dolu."
-                )
+
+        # RULE B: ilçe-gün kapasitesi (yalnızca ilçe seçiliyse)
+        if self.ilce_id:
+            belge._validate_ilce_gun_kapasitesi(
+                teslimat_tarihi=self.teslimat_tarihi,
+                arac_id=self.arac_id.id,
+                ilce_id=ilce_id,
             )
-    
+
     def _validate_ilce_arac_gun_compatibility(self) -> None:
         """İlçe-araç ve ilçe-gün uyumluluğunu kontrol et.
         

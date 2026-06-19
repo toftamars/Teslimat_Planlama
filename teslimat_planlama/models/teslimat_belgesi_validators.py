@@ -64,13 +64,6 @@ class TeslimatBelgesiValidators(models.AbstractModel):
             record._validate_arac_kapasitesi()
             record._validate_ilce_gun_kapasitesi()
 
-    @staticmethod
-    def _normalize_ilce_adi_for_schedule(adi: str) -> str:
-        """İlçe adını haftalık program eşleştirmesi için normalize et (Türkçe İ/I)."""
-        from .teslimat_utils import normalize_turkce
-
-        return normalize_turkce(adi)
-
     def _validate_gecmis_tarih(self):
         """Geçmiş tarihe teslimat kaydı yasak (düzenle ile de)."""
         if not self.teslimat_tarihi:
@@ -182,14 +175,9 @@ class TeslimatBelgesiValidators(models.AbstractModel):
         if tarih:
             tarih = fields.Date.to_date(tarih)
         if arac and tarih:
-            # Araç + tarih bazında say (ilçe yok) - Ana Sayfa ile aynı mantık
-            domain = [
-                ("teslimat_tarihi", "=", tarih),
-                ("arac_id", "=", arac.id if hasattr(arac, "id") else arac),
-                ("durum", "!=", "iptal"),
-                ("id", "!=", self.id),
-            ]
-            mevcut_teslimat_sayisi = self.env["teslimat.belgesi"].search_count(domain)
+            # RULE A: araç+tarih, tüm ilçeler (Ana Sayfa ile aynı mantık)
+            arac_id_val = arac.id if hasattr(arac, "id") else arac
+            mevcut_teslimat_sayisi = self._say_arac_gunluk(arac_id_val, tarih, self.id)
             toplam = mevcut_teslimat_sayisi + 1
             arac_rec = arac if hasattr(arac, "gunluk_teslimat_limiti") else self.env["teslimat.arac"].browse(arac)
             limit = arac_rec.gunluk_teslimat_limiti
@@ -236,38 +224,21 @@ class TeslimatBelgesiValidators(models.AbstractModel):
                 ],
                 limit=1,
             )
-        # Kapasite: önce ilçe-gün kaydı, yoksa haftalık program (gun yoksa da program uygulanır)
-        if gun_ilce:
-            maksimum = gun_ilce.maksimum_teslimat
-        else:
-            from ..data.turkey_data import HAFTALIK_PROGRAM_SCHEDULE
-
-            ilce_rec = ilce if hasattr(ilce, "name") else self.env["teslimat.ilce"].browse(ilce)
-            ilce_adi = ilce_rec.name or ""
-            ilce_adi_norm = self._normalize_ilce_adi_for_schedule(ilce_adi)
-            bugun_gun_programi = HAFTALIK_PROGRAM_SCHEDULE.get(gun_kodu, [])
-            varsayilan = 0
-            for program_ilce in bugun_gun_programi:
-                prog_norm = self._normalize_ilce_adi_for_schedule(program_ilce)
-                if prog_norm in ilce_adi_norm or ilce_adi_norm in prog_norm:
-                    varsayilan = DAILY_DELIVERY_LIMIT
-                    break
-            if varsayilan <= 0:
-                return  # Programda eşleşme yoksa ilçe-gün limiti uygulanmaz
-            maksimum = varsayilan
+        # Kapasite çözümü TEK KAYNAK: teslimat.gun.ilce.hesapla_maksimum
+        # (gun_ilce kaydı -> maksimum; yoksa haftalık program; yoksa 0)
+        ilce_rec = ilce if hasattr(ilce, "name") else self.env["teslimat.ilce"].browse(ilce)
+        maksimum = self.env["teslimat.gun.ilce"].hesapla_maksimum(
+            gun_ilce, gun_kodu, ilce_rec.name or "", DAILY_DELIVERY_LIMIT
+        )
+        if not gun_ilce and maksimum <= 0:
+            return  # Programda eşleşme yoksa ilçe-gün limiti uygulanmaz
 
         arac_rec = arac if hasattr(arac, "gunluk_teslimat_limiti") else self.env["teslimat.arac"].browse(arac)
         arac_limiti = (arac_rec.gunluk_teslimat_limiti or 0)
         if arac_limiti > 0:
             maksimum = min(maksimum, arac_limiti)
-        domain = [
-            ("teslimat_tarihi", "=", tarih),
-            ("arac_id", "=", arac_id_val),
-            ("ilce_id", "=", ilce_id_val),
-            ("durum", "!=", "iptal"),
-            ("id", "!=", self.id),
-        ]
-        mevcut = self.env["teslimat.belgesi"].search_count(domain)
+        # RULE B: araç+ilçe+tarih
+        mevcut = self._say_arac_ilce_gunluk(arac_id_val, ilce_id_val, tarih, self.id)
         toplam = mevcut + 1
         if toplam > maksimum:
             ilce_rec = ilce if hasattr(ilce, "name") else self.env["teslimat.ilce"].browse(ilce)

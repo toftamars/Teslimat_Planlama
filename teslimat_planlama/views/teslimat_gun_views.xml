@@ -78,8 +78,6 @@
                                     <field name="ilce_id"/>
                                     <field name="tarih"/>
                                     <field name="maksimum_teslimat" groups="teslimat_planlama.group_teslimat_manager"/>
-                                    <field name="teslimat_sayisi"/>
-                                    <field name="kalan_kapasite"/>
                                     <field name="ozel_durum"/>
                                 </tree>
                             </field>
@@ -132,8 +130,6 @@
                 <field name="ilce_id"/>
                 <field name="tarih"/>
                 <field name="maksimum_teslimat" groups="teslimat_planlama.group_teslimat_manager"/>
-                <field name="teslimat_sayisi"/>
-                <field name="kalan_kapasite"/>
                 <field name="ozel_durum"/>
             </tree>
         </field>
@@ -154,8 +150,6 @@
                         </group>
                         <group>
                             <field name="maksimum_teslimat" groups="teslimat_planlama.group_teslimat_manager"/>
-                            <field name="teslimat_sayisi"/>
-                            <field name="kalan_kapasite" readonly="1"/>
                             <field name="ozel_durum"/>
                         </group>
                     </group>

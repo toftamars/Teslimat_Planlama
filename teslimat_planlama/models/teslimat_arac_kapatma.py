@@ -88,13 +88,6 @@ class TeslimatAracKapatma(models.Model):
         help="Kapatma kaydı aktif mi?"
     )
     
-    # Display Name
-    display_name = fields.Char(
-        string="İsim",
-        compute="_compute_display_name",
-        store=True
-    )
-    
     gun_sayisi = fields.Integer(
         string="Gün Sayısı",
         compute="_compute_gun_sayisi",
@@ -102,20 +95,26 @@ class TeslimatAracKapatma(models.Model):
         help="Kapatma süresi (gün)"
     )
     
-    @api.depends("arac_id.name", "baslangic_tarihi", "bitis_tarihi", "sebep")
-    def _compute_display_name(self):
-        """Display name hesapla."""
+    def name_get(self):
+        """Kayıt etiketi: 'Araç - tarih(ler) (sebep)'.
+
+        Odoo 15 idiomatik etiket üretimi. display_name magic alanı bu metodu
+        kullanır; ayrı stored alan veya sihirli-metod (_compute_display_name)
+        override'ı gerekmez.
+        """
+        sebep_dict = dict(self._fields["sebep"].selection)
+        result = []
         for record in self:
             if record.arac_id and record.baslangic_tarihi and record.bitis_tarihi:
-                sebep_dict = dict(self._fields['sebep'].selection)
                 sebep_text = sebep_dict.get(record.sebep, record.sebep)
-                
                 if record.baslangic_tarihi == record.bitis_tarihi:
-                    record.display_name = f"{record.arac_id.name} - {record.baslangic_tarihi.strftime('%d.%m.%Y')} ({sebep_text})"
+                    isim = f"{record.arac_id.name} - {record.baslangic_tarihi.strftime('%d.%m.%Y')} ({sebep_text})"
                 else:
-                    record.display_name = f"{record.arac_id.name} - {record.baslangic_tarihi.strftime('%d.%m.%Y')} → {record.bitis_tarihi.strftime('%d.%m.%Y')} ({sebep_text})"
+                    isim = f"{record.arac_id.name} - {record.baslangic_tarihi.strftime('%d.%m.%Y')} → {record.bitis_tarihi.strftime('%d.%m.%Y')} ({sebep_text})"
             else:
-                record.display_name = "Yeni Araç Kapatma"
+                isim = "Yeni Araç Kapatma"
+            result.append((record.id, isim))
+        return result
     
     @api.depends("baslangic_tarihi", "bitis_tarihi")
     def _compute_gun_sayisi(self):

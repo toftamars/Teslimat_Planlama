@@ -6,7 +6,7 @@ from typing import Optional
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
-from .teslimat_utils import get_gun_kodu, get_istanbul_state, is_small_vehicle, normalize_turkce
+from .teslimat_utils import get_gun_kodu, get_istanbul_state, is_small_vehicle
 
 _logger = logging.getLogger(__name__)
 
@@ -298,13 +298,9 @@ class TeslimatAnaSayfa(models.TransientModel):
             if record.ilce_id and record.arac_id:
                 bugun = fields.Date.today()
 
-                # Bugün için teslimat sayısı (iptal hariç tüm durumlar)
-                record.teslimat_sayisi = self.env["teslimat.belgesi"].search_count(
-                    [
-                        ("teslimat_tarihi", "=", bugun),
-                        ("ilce_id", "=", record.ilce_id.id),
-                        ("durum", "!=", "iptal"),  # Sadece iptal hariç
-                    ]
+                # RULE C: ilçe+bugün, tüm araçlar (iptal hariç) — gösterim
+                record.teslimat_sayisi = self.env["teslimat.belgesi"]._say_ilce_gunluk(
+                    record.ilce_id.id, bugun
                 )
 
                 # Gün kodunu belirle
@@ -621,32 +617,16 @@ class TeslimatAnaSayfa(models.TransientModel):
         self, gun_ilce, gun_kodu: str, ilce_adi: str, default_limit: int
     ) -> int:
         """İlçe-gün için toplam kapasiteyi hesapla.
-        
-        Args:
-            gun_ilce: İlçe-gün eşleşme kaydı (varsa)
-            gun_kodu: Gün kodu (pazartesi, sali, vb.)
-            ilce_adi: İlçe adı
-            default_limit: Varsayılan limit
-            
+
+        Kapasite çözümü TEK KAYNAK: teslimat.gun.ilce.hesapla_maksimum
+        (validasyon kapısı ile birebir aynı kuralı kullanır → drift olmaz).
+
         Returns:
             int: Toplam kapasite (0 ise programda yok)
         """
-        if gun_ilce:
-            return gun_ilce.maksimum_teslimat
-        
-        # Haftalık programa göre varsayılan kapasite belirle
-        from ..data.turkey_data import HAFTALIK_PROGRAM_SCHEDULE
-        
-        # Tek util ile normalize et (İ/ı locale-bağımsız) - validasyon ile aynı kural
-        ilce_adi_norm = normalize_turkce(ilce_adi)
-        bugun_gun_programi = HAFTALIK_PROGRAM_SCHEDULE.get(gun_kodu, [])
-
-        for program_ilce in bugun_gun_programi:
-            prog_norm = normalize_turkce(program_ilce)
-            if prog_norm in ilce_adi_norm or ilce_adi_norm in prog_norm:
-                return default_limit
-        
-        return 0  # Programda yoksa
+        return self.env["teslimat.gun.ilce"].hesapla_maksimum(
+            gun_ilce, gun_kodu, ilce_adi, default_limit
+        )
     
     def _check_arac_kapali(self, arac_id: int, tarih: date) -> bool:
         """Aracın belirtilen tarihte kapalı olup olmadığını kontrol et.
