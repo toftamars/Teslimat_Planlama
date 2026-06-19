@@ -430,10 +430,14 @@ class TeslimatBelgesiWizard(models.TransientModel):
             
             raise UserError(
                 _(
-                    f"{self.arac_id.name} ({arac_tipi_label}) "
-                    f"{self.ilce_id.name} ilçesine uygun değil! "
+                    "%(arac)s (%(arac_tipi)s) "
+                    "%(ilce)s ilçesine uygun değil! "
                     "Lütfen uygun bir araç seçin."
-                )
+                ) % {
+                    "arac": self.arac_id.name,
+                    "arac_tipi": arac_tipi_label,
+                    "ilce": self.ilce_id.name,
+                }
             )
         
         # 2. İlçe-gün uyumluluğu
@@ -468,10 +472,13 @@ class TeslimatBelgesiWizard(models.TransientModel):
         if not gun_ilce:
             raise UserError(
                 _(
-                    f"Seçilen tarih ({gun.name}) için "
-                    f"{self.ilce_id.name} ilçesine teslimat yapılamaz! "
-                    f"İlçe-gün eşleştirmesi yok."
-                )
+                    "Seçilen tarih (%(gun)s) için "
+                    "%(ilce)s ilçesine teslimat yapılamaz! "
+                    "İlçe-gün eşleştirmesi yok."
+                ) % {
+                    "gun": gun.name,
+                    "ilce": self.ilce_id.name,
+                }
             )
     
     def _create_teslimat_belgesi(self):

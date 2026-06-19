@@ -274,13 +274,19 @@ class TeslimatBelgesi(models.Model):
 
             raise ValidationError(
                 _(
-                    f"Bu tarihte araç kapalı! Teslimat oluşturulamaz.\n\n"
-                    f"Tarih: {teslimat_tarihi.strftime('%d.%m.%Y')}\n"
-                    f"Araç: {arac_name}\n"
-                    f"Sebep: {sebep_text}\n"
-                    f"Kapatan: {kapatan_kisi}\n"
-                    f"{('Açıklama: ' + kapatma.aciklama) if kapatma.aciklama else ''}"
-                )
+                    "Bu tarihte araç kapalı! Teslimat oluşturulamaz.\n\n"
+                    "Tarih: %(tarih)s\n"
+                    "Araç: %(arac)s\n"
+                    "Sebep: %(sebep)s\n"
+                    "Kapatan: %(kapatan)s\n"
+                    "%(aciklama)s"
+                ) % {
+                    "tarih": teslimat_tarihi.strftime('%d.%m.%Y'),
+                    "arac": arac_name,
+                    "sebep": sebep_text,
+                    "kapatan": kapatan_kisi,
+                    "aciklama": ('Açıklama: ' + kapatma.aciklama) if kapatma.aciklama else '',
+                }
             )
 
     # ========================================================================
@@ -359,10 +365,10 @@ class TeslimatBelgesi(models.Model):
         if bugun_teslimat_sayisi >= DAILY_DELIVERY_LIMIT:
             raise UserError(
                 _(
-                    f"Günlük teslimat limiti aşıldı! "
-                    f"Bugün için en fazla {DAILY_DELIVERY_LIMIT} teslimat "
-                    f"oluşturabilirsiniz. Yönetici yetkisi gereklidir."
-                )
+                    "Günlük teslimat limiti aşıldı! "
+                    "Bugün için en fazla %(limit)s teslimat "
+                    "oluşturabilirsiniz. Yönetici yetkisi gereklidir."
+                ) % {"limit": DAILY_DELIVERY_LIMIT}
             )
     
     def write(self, vals: dict) -> bool:
@@ -559,12 +565,16 @@ class TeslimatBelgesi(models.Model):
             raise UserError(
                 _(
                     "Teslim edilmiş teslimat belgeleri düzenlenemez!\n\n"
-                    f"Belge: {self.name}\n"
-                    f"Durum: Teslim Edildi\n"
-                    f"Teslim Tarihi: {self.gercek_teslimat_saati or 'N/A'}\n"
-                    f"Teslim Alan: {self.teslim_alan_kisi or 'N/A'}\n\n"
+                    "Belge: %(belge)s\n"
+                    "Durum: Teslim Edildi\n"
+                    "Teslim Tarihi: %(teslim_tarihi)s\n"
+                    "Teslim Alan: %(teslim_alan)s\n\n"
                     "Bu belge arşivlenmiştir ve değiştirilemez."
-                )
+                ) % {
+                    "belge": self.name,
+                    "teslim_tarihi": self.gercek_teslimat_saati or 'N/A',
+                    "teslim_alan": self.teslim_alan_kisi or 'N/A',
+                }
             )
     
     def unlink(self) -> bool:
@@ -611,12 +621,16 @@ class TeslimatBelgesi(models.Model):
             raise UserError(
                 _(
                     "Teslim edilmiş teslimat belgeleri silinemez!\n\n"
-                    f"Belge: {self.name}\n"
-                    f"Durum: Teslim Edildi\n"
-                    f"Teslim Tarihi: {self.gercek_teslimat_saati or 'N/A'}\n"
-                    f"Teslim Alan: {self.teslim_alan_kisi or 'N/A'}\n\n"
+                    "Belge: %(belge)s\n"
+                    "Durum: Teslim Edildi\n"
+                    "Teslim Tarihi: %(teslim_tarihi)s\n"
+                    "Teslim Alan: %(teslim_alan)s\n\n"
                     "Bu belge arşivlenmiştir ve silinemez.\n"
                     "Veri bütünlüğü için teslim edilmiş belgeler korunur."
-                )
+                ) % {
+                    "belge": self.name,
+                    "teslim_tarihi": self.gercek_teslimat_saati or 'N/A',
+                    "teslim_alan": self.teslim_alan_kisi or 'N/A',
+                }
             )
 

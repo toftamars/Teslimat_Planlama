@@ -151,11 +151,14 @@ class TeslimatArac(models.Model):
             if not record.uygun_ilceler:
                 raise ValidationError(
                     _(
-                        f"Araç '{record.name}' için uygun ilçeler tanımlanmalıdır!\n\n"
-                        f"Araç Tipi: {dict(record._fields['arac_tipi'].selection).get(record.arac_tipi)}\n\n"
-                        f"Bu hata, araç kaydedilirken otomatik eşleştirme yapılmadığı anlamına gelir.\n"
-                        f"Lütfen aracı tekrar kaydedin veya yöneticiye başvurun."
-                    )
+                        "Araç '%(arac)s' için uygun ilçeler tanımlanmalıdır!\n\n"
+                        "Araç Tipi: %(arac_tipi)s\n\n"
+                        "Bu hata, araç kaydedilirken otomatik eşleştirme yapılmadığı anlamına gelir.\n"
+                        "Lütfen aracı tekrar kaydedin veya yöneticiye başvurun."
+                    ) % {
+                        "arac": record.name,
+                        "arac_tipi": dict(record._fields['arac_tipi'].selection).get(record.arac_tipi),
+                    }
                 )
 
     def _update_uygun_ilceler(self) -> None:
@@ -217,9 +220,9 @@ class TeslimatArac(models.Model):
                 if not data_mode:
                     raise ValidationError(
                         _(
-                            f"Araç '{record.name}' için araç tipi tanımlanmalıdır!\n"
-                            f"Lütfen araç tipini seçin."
-                        )
+                            "Araç '%(arac)s' için araç tipi tanımlanmalıdır!\n"
+                            "Lütfen araç tipini seçin."
+                        ) % {"arac": record.name}
                     )
                 continue
             
@@ -230,13 +233,16 @@ class TeslimatArac(models.Model):
             if not data_mode and not record.uygun_ilceler:
                 raise ValidationError(
                     _(
-                        f"Araç '{record.name}' için ilçe eşleştirmesi yapılamadı!\n\n"
-                        f"Araç Tipi: {dict(record._fields['arac_tipi'].selection).get(record.arac_tipi)}\n\n"
-                        f"Olası sebepler:\n"
-                        f"- İlçe kayıtları eksik olabilir\n"
-                        f"- Yaka tipleri tanımlı olmayabilir\n\n"
-                        f"Lütfen yöneticiye başvurun."
-                    )
+                        "Araç '%(arac)s' için ilçe eşleştirmesi yapılamadı!\n\n"
+                        "Araç Tipi: %(arac_tipi)s\n\n"
+                        "Olası sebepler:\n"
+                        "- İlçe kayıtları eksik olabilir\n"
+                        "- Yaka tipleri tanımlı olmayabilir\n\n"
+                        "Lütfen yöneticiye başvurun."
+                    ) % {
+                        "arac": record.name,
+                        "arac_tipi": dict(record._fields['arac_tipi'].selection).get(record.arac_tipi),
+                    }
                 )
             
             _logger.info(
@@ -289,8 +295,8 @@ class TeslimatArac(models.Model):
                         _(
                             "Anadolu Yakası araç sadece Anadolu Yakası "
                             "ilçelerine atanabilir! "
-                            f"Yanlış ilçeler: {', '.join(yanlis_ilceler.mapped('name'))}"
-                        )
+                            "Yanlış ilçeler: %(yanlis_ilceler)s"
+                        ) % {"yanlis_ilceler": ', '.join(yanlis_ilceler.mapped('name'))}
                     )
             elif record.arac_tipi == "avrupa_yakasi":
                 yanlis_ilceler = record.uygun_ilceler.filtered(
@@ -301,8 +307,8 @@ class TeslimatArac(models.Model):
                         _(
                             "Avrupa Yakası araç sadece Avrupa Yakası "
                             "ilçelerine atanabilir! "
-                            f"Yanlış ilçeler: {', '.join(yanlis_ilceler.mapped('name'))}"
-                        )
+                            "Yanlış ilçeler: %(yanlis_ilceler)s"
+                        ) % {"yanlis_ilceler": ', '.join(yanlis_ilceler.mapped('name'))}
                     )
 
     def action_update_uygun_ilceler(self) -> dict:
@@ -323,12 +329,17 @@ class TeslimatArac(models.Model):
             "params": {
                 "title": _("İlçe Eşleştirmesi Güncellendi"),
                 "message": _(
-                    f"Araç: {self.name}\n"
-                    f"Araç Tipi: {dict(self._fields['arac_tipi'].selection).get(self.arac_tipi)}\n"
-                    f"Önceki İlçe Sayısı: {eski_sayisi}\n"
-                    f"Yeni İlçe Sayısı: {yeni_sayisi}\n\n"
-                    f"✓ Eşleştirme başarıyla güncellendi!"
-                ),
+                    "Araç: %(arac)s\n"
+                    "Araç Tipi: %(arac_tipi)s\n"
+                    "Önceki İlçe Sayısı: %(eski_sayisi)s\n"
+                    "Yeni İlçe Sayısı: %(yeni_sayisi)s\n\n"
+                    "✓ Eşleştirme başarıyla güncellendi!"
+                ) % {
+                    "arac": self.name,
+                    "arac_tipi": dict(self._fields['arac_tipi'].selection).get(self.arac_tipi),
+                    "eski_sayisi": eski_sayisi,
+                    "yeni_sayisi": yeni_sayisi,
+                },
                 "type": "success",
                 "sticky": False,
             },

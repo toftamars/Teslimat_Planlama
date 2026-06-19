@@ -96,8 +96,8 @@ class TeslimatBelgesiActions(models.AbstractModel):
                     "warning": {
                         "title": _("Uyarı"),
                         "message": _(
-                            f"Transfer belgesi bulunamadı: {self.transfer_no}"
-                        ),
+                            "Transfer belgesi bulunamadı: %(transfer_no)s"
+                        ) % {"transfer_no": self.transfer_no},
                     }
                 }
         except Exception as e:
@@ -106,8 +106,8 @@ class TeslimatBelgesiActions(models.AbstractModel):
                 "warning": {
                     "title": _("Hata"),
                     "message": _(
-                        f"Transfer bilgileri alınırken hata oluştu: {str(e)}"
-                    ),
+                        "Transfer bilgileri alınırken hata oluştu: %(hata)s"
+                    ) % {"hata": str(e)},
                 }
             }
 
@@ -136,8 +136,8 @@ class TeslimatBelgesiActions(models.AbstractModel):
                 "warning": {
                     "title": _("Hata"),
                     "message": _(
-                        f"Transfer belgesi bilgileri alınırken hata oluştu: {str(e)}"
-                    ),
+                        "Transfer belgesi bilgileri alınırken hata oluştu: %(hata)s"
+                    ) % {"hata": str(e)},
                 }
             }
 

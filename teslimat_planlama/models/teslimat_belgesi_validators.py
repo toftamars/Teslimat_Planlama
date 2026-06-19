@@ -95,11 +95,15 @@ class TeslimatBelgesiValidators(models.AbstractModel):
 
         if self.teslimat_tarihi == bugun and (saat >= 12):
             raise ValidationError(
-                _(f"Aynı gün teslimat yazılamaz!\n\n"
-                  f"İstanbul Saati: {saat:02d}:{dakika:02d}\n"
-                  f"Teslimat Tarihi: {self.teslimat_tarihi}\n\n"
-                  f"Saat 12:00'dan sonra bugüne teslimat planlanamaz.\n"
-                  f"Lütfen yarın veya sonraki günler için teslimat planlayın.")
+                _("Aynı gün teslimat yazılamaz!\n\n"
+                  "İstanbul Saati: %(saat)02d:%(dakika)02d\n"
+                  "Teslimat Tarihi: %(teslimat_tarihi)s\n\n"
+                  "Saat 12:00'dan sonra bugüne teslimat planlanamaz.\n"
+                  "Lütfen yarın veya sonraki günler için teslimat planlayın.") % {
+                    "saat": saat,
+                    "dakika": dakika,
+                    "teslimat_tarihi": self.teslimat_tarihi,
+                }
             )
 
     def _validate_pazar_gunu(self):
@@ -127,11 +131,15 @@ class TeslimatBelgesiValidators(models.AbstractModel):
                     self.arac_id.arac_tipi, self.arac_id.arac_tipi
                 )
                 raise ValidationError(
-                    _(f"Araç-İlçe Uyumsuzluğu!\n\n"
-                      f"Araç: {self.arac_id.name} ({arac_tipi_label})\n"
-                      f"İlçe: {self.ilce_id.name}\n\n"
-                      f"Bu araç bu ilçeye teslimat yapamaz.\n"
-                      f"Lütfen uygun bir araç veya ilçe seçin.")
+                    _("Araç-İlçe Uyumsuzluğu!\n\n"
+                      "Araç: %(arac)s (%(arac_tipi)s)\n"
+                      "İlçe: %(ilce)s\n\n"
+                      "Bu araç bu ilçeye teslimat yapamaz.\n"
+                      "Lütfen uygun bir araç veya ilçe seçin.") % {
+                        "arac": self.arac_id.name,
+                        "arac_tipi": arac_tipi_label,
+                        "ilce": self.ilce_id.name,
+                    }
                 )
 
     def _validate_ilce_gun_eslesmesi(self):
@@ -155,11 +163,14 @@ class TeslimatBelgesiValidators(models.AbstractModel):
 
                     if not gun_ilce:
                         raise ValidationError(
-                            _(f"İlçe-Gün Eşleşmesi Hatası!\n\n"
-                              f"İlçe: {self.ilce_id.name}\n"
-                              f"Gün: {gun.name}\n\n"
-                              f"Bu ilçeye bu gün teslimat yapılamaz.\n"
-                              f"Lütfen uygun bir gün seçin.")
+                            _("İlçe-Gün Eşleşmesi Hatası!\n\n"
+                              "İlçe: %(ilce)s\n"
+                              "Gün: %(gun)s\n\n"
+                              "Bu ilçeye bu gün teslimat yapılamaz.\n"
+                              "Lütfen uygun bir gün seçin.") % {
+                                "ilce": self.ilce_id.name,
+                                "gun": gun.name,
+                            }
                         )
 
     def _validate_arac_kapasitesi(self, teslimat_tarihi=None, arac_id=None, ilce_id=None):
@@ -187,12 +198,18 @@ class TeslimatBelgesiValidators(models.AbstractModel):
                 ilce_rec = ilce if hasattr(ilce, "name") else (self.env["teslimat.ilce"].browse(ilce) if ilce else None)
                 ilce_bilgi = f" - {ilce_rec.name}" if ilce_rec else ""
                 raise ValidationError(
-                    _(f"Araç Kapasitesi Dolu!\n\n"
-                      f"Araç: {arac_rec.name}{ilce_bilgi}\n"
-                      f"Tarih: {tarih.strftime('%d.%m.%Y')}\n"
-                      f"Kapasite: {toplam}/{limit}\n\n"
-                      f"Bu tarih için araç kapasitesi dolmuştur.\n"
-                      f"Lütfen farklı bir tarih veya araç seçin.")
+                    _("Araç Kapasitesi Dolu!\n\n"
+                      "Araç: %(arac)s%(ilce_bilgi)s\n"
+                      "Tarih: %(tarih)s\n"
+                      "Kapasite: %(toplam)s/%(limit)s\n\n"
+                      "Bu tarih için araç kapasitesi dolmuştur.\n"
+                      "Lütfen farklı bir tarih veya araç seçin.") % {
+                        "arac": arac_rec.name,
+                        "ilce_bilgi": ilce_bilgi,
+                        "tarih": tarih.strftime('%d.%m.%Y'),
+                        "toplam": toplam,
+                        "limit": limit,
+                    }
                 )
 
     def _validate_ilce_gun_kapasitesi(self, teslimat_tarihi=None, arac_id=None, ilce_id=None):

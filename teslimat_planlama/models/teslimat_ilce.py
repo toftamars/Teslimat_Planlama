@@ -190,11 +190,15 @@ class TeslimatIlce(models.Model):
                 if record.yaka_tipi == "belirsiz":
                     raise ValidationError(
                         _(
-                            f"İstanbul ilçesi '{record.name}' için yaka tipi belirsiz olamaz!\n\n"
-                            f"Lütfen ilçe adını kontrol edin veya yöneticiye başvurun.\n\n"
-                            f"Anadolu Yakası İlçeleri: {', '.join(ANADOLU_ILCELERI[:5])}...\n"
-                            f"Avrupa Yakası İlçeleri: {', '.join(AVRUPA_ILCELERI[:5])}..."
-                        )
+                            "İstanbul ilçesi '%(ilce)s' için yaka tipi belirsiz olamaz!\n\n"
+                            "Lütfen ilçe adını kontrol edin veya yöneticiye başvurun.\n\n"
+                            "Anadolu Yakası İlçeleri: %(anadolu)s...\n"
+                            "Avrupa Yakası İlçeleri: %(avrupa)s..."
+                        ) % {
+                            "ilce": record.name,
+                            "anadolu": ', '.join(ANADOLU_ILCELERI[:5]),
+                            "avrupa": ', '.join(AVRUPA_ILCELERI[:5]),
+                        }
                     )
 
     @api.model_create_multi

@@ -102,16 +102,23 @@ class TeslimatGunIlce(models.Model):
                 if record.tarih:
                     raise ValidationError(
                         _(
-                            f"Bu gün ({record.gun_id.name}), ilçe ({record.ilce_id.name}) "
-                            f"ve tarih ({record.tarih}) için zaten bir eşleştirme mevcut."
-                        )
+                            "Bu gün (%(gun)s), ilçe (%(ilce)s) "
+                            "ve tarih (%(tarih)s) için zaten bir eşleştirme mevcut."
+                        ) % {
+                            "gun": record.gun_id.name,
+                            "ilce": record.ilce_id.name,
+                            "tarih": record.tarih,
+                        }
                     )
                 else:
                     raise ValidationError(
                         _(
-                            f"Bu gün ({record.gun_id.name}) ve ilçe ({record.ilce_id.name}) "
-                            f"için zaten genel bir kural mevcut."
-                        )
+                            "Bu gün (%(gun)s) ve ilçe (%(ilce)s) "
+                            "için zaten genel bir kural mevcut."
+                        ) % {
+                            "gun": record.gun_id.name,
+                            "ilce": record.ilce_id.name,
+                        }
                     )
 
     def init(self):
