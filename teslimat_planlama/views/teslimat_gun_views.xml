@@ -77,7 +77,6 @@
                                 <tree>
                                     <field name="ilce_id"/>
                                     <field name="tarih"/>
-                                    <field name="maksimum_teslimat" groups="teslimat_planlama.group_teslimat_manager"/>
                                     <field name="ozel_durum"/>
                                 </tree>
                             </field>
@@ -129,7 +128,6 @@
                 <field name="gun_id"/>
                 <field name="ilce_id"/>
                 <field name="tarih"/>
-                <field name="maksimum_teslimat" groups="teslimat_planlama.group_teslimat_manager"/>
                 <field name="ozel_durum"/>
             </tree>
         </field>
@@ -149,7 +147,6 @@
                             <field name="tarih"/>
                         </group>
                         <group>
-                            <field name="maksimum_teslimat" groups="teslimat_planlama.group_teslimat_manager"/>
                             <field name="ozel_durum"/>
                         </group>
                     </group>

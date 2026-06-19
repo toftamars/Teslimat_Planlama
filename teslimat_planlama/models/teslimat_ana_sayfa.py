@@ -153,24 +153,6 @@ class TeslimatAnaSayfa(models.TransientModel):
     )
 
 
-    # İlçe kapasite bilgileri
-    toplam_kapasite = fields.Integer(
-        string="Toplam Kapasite", compute="_compute_kapasite_bilgileri", store=False
-    )
-    kullanilan_kapasite = fields.Integer(
-        string="Kullanılan Kapasite",
-        compute="_compute_kapasite_bilgileri",
-        store=False,
-    )
-    kalan_kapasite = fields.Integer(
-        string="Kalan Kapasite", compute="_compute_kapasite_bilgileri", store=False
-    )
-    teslimat_sayisi = fields.Integer(
-        string="Teslimat Sayısı",
-        compute="_compute_kapasite_bilgileri",
-        store=False,
-    )
-
     # Uygun araçlar
     uygun_arac_ids = fields.Many2many(
         "teslimat.arac",
@@ -271,8 +253,6 @@ class TeslimatAnaSayfa(models.TransientModel):
             return False
 
         # Gün kodunu belirle
-        from .teslimat_utils import get_gun_kodu
-        
         tarih_obj = fields.Date.to_date(tarih)
         gun_kodu = get_gun_kodu(tarih_obj)
 
@@ -290,68 +270,6 @@ class TeslimatAnaSayfa(models.TransientModel):
         )
 
         return bool(gun_ilce)
-
-    @api.depends("ilce_id", "arac_id")
-    def _compute_kapasite_bilgileri(self) -> None:
-        """İlçe kapasite bilgilerini hesapla."""
-        for record in self:
-            if record.ilce_id and record.arac_id:
-                bugun = fields.Date.today()
-
-                # RULE C: ilçe+bugün, tüm araçlar (iptal hariç) — gösterim
-                record.teslimat_sayisi = self.env["teslimat.belgesi"]._say_ilce_gunluk(
-                    record.ilce_id.id, bugun
-                )
-
-                # Gün kodunu belirle
-                gun_kodu = get_gun_kodu(bugun)
-
-                if gun_kodu:
-                    gun = self.env["teslimat.gun"].search(
-                        [("gun_kodu", "=", gun_kodu)], limit=1
-                    )
-
-                    if gun:
-                        # Database'den ilçe-gün eşleşmesi kontrol et
-                        # Önce genel kuralı ara (tarih=False)
-                        gun_ilce = self.env["teslimat.gun.ilce"].search(
-                            [
-                                ("gun_id", "=", gun.id),
-                                ("ilce_id", "=", record.ilce_id.id),
-                                ("tarih", "=", False),  # Genel kural
-                            ],
-                            limit=1,
-                        )
-                        
-                        # Tek kaynak: ilçe-gün maksimum kapasite çözümü _get_toplam_kapasite'de.
-                        # (gun_ilce -> maksimum_teslimat; yoksa haftalık program -> varsayılan; yoksa 0)
-                        # NOT: Compute içinde create() yapmıyoruz - veri tutarlılığı için
-                        from .teslimat_constants import DAILY_DELIVERY_LIMIT
-
-                        toplam = self._get_toplam_kapasite(
-                            gun_ilce, gun_kodu, record.ilce_id.name, DAILY_DELIVERY_LIMIT
-                        )
-                        if gun_ilce or toplam > 0:
-                            record.toplam_kapasite = toplam
-                            record.kullanilan_kapasite = record.teslimat_sayisi
-                            record.kalan_kapasite = toplam - record.teslimat_sayisi
-                        else:
-                            record.toplam_kapasite = 0
-                            record.kullanilan_kapasite = 0
-                            record.kalan_kapasite = 0
-                    else:
-                        record.toplam_kapasite = 0
-                        record.kullanilan_kapasite = 0
-                        record.kalan_kapasite = 0
-                else:
-                    record.toplam_kapasite = 0
-                    record.kullanilan_kapasite = 0
-                    record.kalan_kapasite = 0
-            else:
-                record.toplam_kapasite = 0
-                record.kullanilan_kapasite = 0
-                record.kalan_kapasite = 0
-                record.teslimat_sayisi = 0
 
     @api.depends("ilce_id")
     def _compute_uygun_araclar(self) -> None:
@@ -572,22 +490,16 @@ class TeslimatAnaSayfa(models.TransientModel):
         if not gun:
             return None
         
-        # İlçe-gün eşleşmesi ve kapasite hesaplama
+        # İlçe-gün eşleşmesi: programda yoksa (gun_ilce kaydı yok) bu günü atla.
+        # (Kapı _validate_ilce_gun_eslesmesi ile aynı kural → gösterim = kapı.)
         key = (gun.id, record.ilce_id.id)
         gun_ilce = gun_ilce_dict.get(key)
-        
-        toplam_kapasite = self._get_toplam_kapasite(
-            gun_ilce, gun_kodu, record.ilce_id.name, DAILY_DELIVERY_LIMIT
-        )
-        
-        if toplam_kapasite == 0:
-            return None  # Programda yoksa bu günü atla
-        
-        # Araç günlük limitini de uygula: gösterilen kapasite ilçe-gün ve araç limitinin küçüğü
-        arac_limiti = (record.arac_id.gunluk_teslimat_limiti or 0)
-        if arac_limiti > 0:
-            toplam_kapasite = min(toplam_kapasite, arac_limiti)
-        
+        if not gun_ilce:
+            return None
+
+        # Tavan = araç günlük limiti (kural: araç günde TOPLAM, ilçe başına tavan yok)
+        toplam_kapasite = record.arac_id.gunluk_teslimat_limiti or DAILY_DELIVERY_LIMIT
+
         kalan_kapasite = toplam_kapasite - teslimat_sayisi
         
         # Kapasitesi dolu olsa bile listeye ekle; durum "Dolu" olarak gösterilir
@@ -612,21 +524,6 @@ class TeslimatAnaSayfa(models.TransientModel):
             "kalan_kapasite": kalan_kapasite,
             "durum_text": durum_text,
         }
-    
-    def _get_toplam_kapasite(
-        self, gun_ilce, gun_kodu: str, ilce_adi: str, default_limit: int
-    ) -> int:
-        """İlçe-gün için toplam kapasiteyi hesapla.
-
-        Kapasite çözümü TEK KAYNAK: teslimat.gun.ilce.hesapla_maksimum
-        (validasyon kapısı ile birebir aynı kuralı kullanır → drift olmaz).
-
-        Returns:
-            int: Toplam kapasite (0 ise programda yok)
-        """
-        return self.env["teslimat.gun.ilce"].hesapla_maksimum(
-            gun_ilce, gun_kodu, ilce_adi, default_limit
-        )
     
     def _check_arac_kapali(self, arac_id: int, tarih: date) -> bool:
         """Aracın belirtilen tarihte kapalı olup olmadığını kontrol et.

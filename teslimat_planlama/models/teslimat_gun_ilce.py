@@ -4,8 +4,6 @@ import logging
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 
-from .teslimat_constants import DAILY_DELIVERY_LIMIT
-
 _logger = logging.getLogger(__name__)
 
 
@@ -29,10 +27,10 @@ class TeslimatGunIlce(models.Model):
              "Tarih girilirse sadece o tarihe özel kural."
     )
 
-    # Kapasite Bilgisi (Dinamik - Modülden ayarlanabilir)
-    # Not: Gerçek kullanılan/kalan kapasite teslimat.belgesi sayımından gelir
-    # (validators RULE B + Ana Sayfa). Burada yalnızca tavan (maksimum) tutulur.
-    maksimum_teslimat = fields.Integer(string="Maksimum Teslimat", default=DAILY_DELIVERY_LIMIT)
+    # Not: Bu model SADECE "o gün o ilçeye gidiliyor mu" programını (gün-ilçe
+    # eşleşmesi) tutar. Kapasite tavanı burada DEĞİL: araç günde TOPLAM
+    # gunluk_teslimat_limiti teslimat yapar (ilçe başına tavan yok). Eski
+    # maksimum_teslimat (ilçe-başına sayı tavanı) ve hesapla_maksimum kaldırıldı.
 
     # Özel Durumlar
     ozel_durum = fields.Selection(
@@ -47,34 +45,6 @@ class TeslimatGunIlce(models.Model):
     )
 
     notlar = fields.Text(string="Notlar")
-
-    @api.model
-    def hesapla_maksimum(self, gun_ilce, gun_kodu, ilce_adi, default_limit=DAILY_DELIVERY_LIMIT):
-        """İlçe-gün için maksimum teslimat kapasitesini çöz — TEK KAYNAK.
-
-        Hem Ana Sayfa gösterimi hem de teslimat belgesi validasyonu bu metodu
-        kullanır; kapasite kuralı tek yerde tanımlı olur (kopya/drift önlenir).
-
-        Öncelik sırası:
-        1) Genel kural kaydı (gun_ilce) varsa  -> kaydın maksimum_teslimat'ı
-        2) Yoksa haftalık programda ilçe eşleşiyorsa -> default_limit
-        3) Hiçbiri -> 0 (o gün o ilçe programda yok)
-
-        İlçe eşleştirmesi locale-bağımsız normalize_turkce ile yapılır
-        (İ/ı tutarlılığı; gösterim ve validasyon aynı kuralı kullanır).
-        """
-        if gun_ilce:
-            return gun_ilce.maksimum_teslimat
-
-        from ..data.turkey_data import HAFTALIK_PROGRAM_SCHEDULE
-        from .teslimat_utils import normalize_turkce
-
-        ilce_adi_norm = normalize_turkce(ilce_adi or "")
-        for program_ilce in HAFTALIK_PROGRAM_SCHEDULE.get(gun_kodu, []):
-            prog_norm = normalize_turkce(program_ilce)
-            if prog_norm in ilce_adi_norm or ilce_adi_norm in prog_norm:
-                return default_limit
-        return 0
 
     @api.constrains("gun_id", "ilce_id", "tarih")
     def _check_unique_eslesme(self) -> None:

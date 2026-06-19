@@ -14,7 +14,6 @@ from odoo.exceptions import ValidationError
 from .teslimat_constants import (
     CANCELLED_STATUS,
     COMPLETED_STATUS,
-    DAILY_DELIVERY_LIMIT,
     SMALL_VEHICLE_TYPES,
 )
 from .teslimat_utils import (
@@ -62,7 +61,6 @@ class TeslimatBelgesiValidators(models.AbstractModel):
                 record._validate_arac_ilce_uyumlulugu()
 
             record._validate_arac_kapasitesi()
-            record._validate_ilce_gun_kapasitesi()
 
     def _validate_gecmis_tarih(self):
         """Geçmiş tarihe teslimat kaydı yasak (düzenle ile de)."""
@@ -212,68 +210,9 @@ class TeslimatBelgesiValidators(models.AbstractModel):
                     }
                 )
 
-    def _validate_ilce_gun_kapasitesi(self, teslimat_tarihi=None, arac_id=None, ilce_id=None):
-        """İlçe-gün kapasitesi kontrolü (çakışma / aşım engeli).
-
-        Ana Sayfa'da görünen kapasite ile aynı kural: aynı (araç, ilçe, tarih)
-        için kayıt sayısı ilçe-gün maksimum_teslimat'ı (ve araç günlük limiti) aşmasın.
-        Opsiyonel parametreler write öncesi kontrol için (düzenle ile tarih değişince).
-        """
-        tarih = teslimat_tarihi if teslimat_tarihi is not None else self.teslimat_tarihi
-        arac = arac_id if arac_id is not None else self.arac_id
-        ilce = ilce_id if ilce_id is not None else self.ilce_id
-        if not ilce or not arac or not tarih:
-            return
-        tarih = fields.Date.to_date(tarih)
-        gun_kodu = get_gun_kodu(tarih)
-        if not gun_kodu:
-            return
-        ilce_id_val = ilce.id if hasattr(ilce, "id") else ilce
-        arac_id_val = arac.id if hasattr(arac, "id") else arac
-        gun_ilce = None
-        gun = self.env["teslimat.gun"].search([("gun_kodu", "=", gun_kodu)], limit=1)
-        if gun:
-            gun_ilce = self.env["teslimat.gun.ilce"].search(
-                [
-                    ("gun_id", "=", gun.id),
-                    ("ilce_id", "=", ilce_id_val),
-                    ("tarih", "=", False),
-                ],
-                limit=1,
-            )
-        # Kapasite çözümü TEK KAYNAK: teslimat.gun.ilce.hesapla_maksimum
-        # (gun_ilce kaydı -> maksimum; yoksa haftalık program; yoksa 0)
-        ilce_rec = ilce if hasattr(ilce, "name") else self.env["teslimat.ilce"].browse(ilce)
-        maksimum = self.env["teslimat.gun.ilce"].hesapla_maksimum(
-            gun_ilce, gun_kodu, ilce_rec.name or "", DAILY_DELIVERY_LIMIT
-        )
-        if not gun_ilce and maksimum <= 0:
-            return  # Programda eşleşme yoksa ilçe-gün limiti uygulanmaz
-
-        arac_rec = arac if hasattr(arac, "gunluk_teslimat_limiti") else self.env["teslimat.arac"].browse(arac)
-        arac_limiti = (arac_rec.gunluk_teslimat_limiti or 0)
-        if arac_limiti > 0:
-            maksimum = min(maksimum, arac_limiti)
-        # RULE B: araç+ilçe+tarih
-        mevcut = self._say_arac_ilce_gunluk(arac_id_val, ilce_id_val, tarih, self.id)
-        toplam = mevcut + 1
-        if toplam > maksimum:
-            ilce_rec = ilce if hasattr(ilce, "name") else self.env["teslimat.ilce"].browse(ilce)
-            raise ValidationError(
-                _(
-                    "İlçe-Gün Kapasitesi Dolu!\n\n"
-                    "Bu tarih ve ilçe için kapasite başka bir teslimat ile doldurulmuş.\n"
-                    "Araç: %(arac)s\n"
-                    "İlçe: %(ilce)s\n"
-                    "Tarih: %(tarih)s\n"
-                    "Kapasite: %(toplam)s/%(maks)s\n\n"
-                    "Lütfen sayfayı yenileyip güncel kapasiteye göre farklı bir gün seçin."
-                )
-                % {
-                    "arac": arac_rec.name,
-                    "ilce": ilce_rec.name,
-                    "tarih": tarih.strftime("%d.%m.%Y"),
-                    "toplam": toplam,
-                    "maks": maksimum,
-                }
-            )
+# İŞ KURALI: Araç günde TOPLAM en fazla gunluk_teslimat_limiti teslimat yapar
+# (tüm ilçeler birlikte). İlçe BAŞINA ayrı tavan YOKTUR → bu kuralı RULE A
+# (_validate_arac_kapasitesi) tek başına uygular. Eski ilçe-başına tavan kontrolü
+# (_validate_ilce_gun_kapasitesi / RULE B) ve gun_ilce.maksimum_teslimat sayı
+# limiti kaldırıldı. İlçe-gün EŞLEŞMESİ (_validate_ilce_gun_eslesmesi) = "o gün
+# o ilçeye gidiliyor mu" programı, ayrı bir yes/no kontrolü olarak korunur.

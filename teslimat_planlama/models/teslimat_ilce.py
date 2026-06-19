@@ -117,22 +117,20 @@ class TeslimatIlce(models.Model):
                     if old_specific_records:
                         old_specific_records.unlink()
 
-                    # Genel (her hafta geçerli) kuralı oluştur/güncelle
+                    # Genel (her hafta geçerli) gün-ilçe eşleşmesini oluştur (yoksa).
+                    # Kapasite tavanı tutmaz; sadece "o gün o ilçeye gidiliyor" kaydı.
                     existing_rel = self.env['teslimat.gun.ilce'].search([
                         ('gun_id', '=', gun.id),
                         ('ilce_id', '=', ilce.id),
                         ('tarih', '=', False)
                     ], limit=1)
-                    
+
                     if not existing_rel:
                         self.env['teslimat.gun.ilce'].create({
                             'gun_id': gun.id,
                             'ilce_id': ilce.id,
-                            'maksimum_teslimat': 7,
                             'tarih': False,
                         })
-                    else:
-                        existing_rel.write({'maksimum_teslimat': 7})
         return True
 
     @api.depends("name", "yaka_tipi")

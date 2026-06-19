@@ -380,14 +380,14 @@ class TeslimatBelgesiWizard(models.TransientModel):
                 raise UserError(_(hata_mesaji))
     
     def _validate_capacity(self) -> None:
-        """Araç ve ilçe-gün kapasitelerini erken (dostça) kontrol et.
+        """Araç günlük kapasitesini erken (dostça) kontrol et.
 
         Gerçek kapı teslimat.belgesi @api.constrains'tedir. Burada AYNI kapasite
-        metodları (RULE A / RULE B) çağrılarak kullanıcıya kayıt anından önce
-        erken uyarı verilir — tek kaynak, kural çoğaltması/drift yok.
+        metodu (RULE A: araç günde toplam ≤ limit) çağrılarak kullanıcıya kayıt
+        anından önce erken uyarı verilir — tek kaynak, kural çoğaltması yok.
 
         Raises:
-            ValidationError: Kapasite dolu ise (validasyon metodları fırlatır)
+            ValidationError: Kapasite dolu ise (validasyon metodu fırlatır)
         """
         belge = self.env["teslimat.belgesi"]
         ilce_id = self.ilce_id.id if self.ilce_id else False
@@ -398,14 +398,6 @@ class TeslimatBelgesiWizard(models.TransientModel):
             arac_id=self.arac_id.id,
             ilce_id=ilce_id,
         )
-
-        # RULE B: ilçe-gün kapasitesi (yalnızca ilçe seçiliyse)
-        if self.ilce_id:
-            belge._validate_ilce_gun_kapasitesi(
-                teslimat_tarihi=self.teslimat_tarihi,
-                arac_id=self.arac_id.id,
-                ilce_id=ilce_id,
-            )
 
     def _validate_ilce_arac_gun_compatibility(self) -> None:
         """İlçe-araç ve ilçe-gün uyumluluğunu kontrol et.

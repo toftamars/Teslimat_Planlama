@@ -290,9 +290,11 @@ class TeslimatBelgesi(models.Model):
             )
 
     # ========================================================================
-    # KAPASİTE SAYIM KURALLARI — tek kaynak (4 ayrı sayım semantiği)
-    # Tüm teslimat.belgesi sayımları burada adlandırılmış olarak toplanır;
-    # validasyon kapıları ve wizard ön-kontrolleri aynı sayaçları kullanır.
+    # KAPASİTE SAYIM KURALLARI — tek kaynak
+    # RULE A: araç günlük yükü (araç+tarih, tüm ilçeler) — asıl kapasite kuralı.
+    # RULE D: kullanıcı günlük kotası (create_uid+tarih) — kişisel anti-spam.
+    # (İlçe-başına RULE B + gösterim RULE C, "ilçe başına tavan yok" kuralı
+    #  gereği kaldırıldı; kapasite tek eksen = araç günlük toplamı.)
     # ========================================================================
 
     @api.model
@@ -307,32 +309,6 @@ class TeslimatBelgesi(models.Model):
             ("arac_id", "=", arac_id),
             ("durum", "!=", CANCELLED_STATUS),
             ("id", "!=", haric_id),
-        ])
-
-    @api.model
-    def _say_arac_ilce_gunluk(self, arac_id, ilce_id, tarih, haric_id=False):
-        """RULE B — Araç+ilçe günlük yükü: aynı araç+ilçe+tarih (iptal hariç).
-
-        İlçe-gün maksimum kapasitesi (ve araç limiti) bu toplama uygulanır.
-        """
-        return self.search_count([
-            ("teslimat_tarihi", "=", tarih),
-            ("arac_id", "=", arac_id),
-            ("ilce_id", "=", ilce_id),
-            ("durum", "!=", CANCELLED_STATUS),
-            ("id", "!=", haric_id),
-        ])
-
-    @api.model
-    def _say_ilce_gunluk(self, ilce_id, tarih):
-        """RULE C — İlçe günlük yükü: aynı ilçe+tarih, tüm araçlar (iptal hariç).
-
-        Yalnızca Ana Sayfa gösterimi (kullanılan kapasite). Engelleyici değildir.
-        """
-        return self.search_count([
-            ("teslimat_tarihi", "=", tarih),
-            ("ilce_id", "=", ilce_id),
-            ("durum", "!=", CANCELLED_STATUS),
         ])
 
     @api.model
@@ -481,9 +457,6 @@ class TeslimatBelgesi(models.Model):
         self._acquire_capacity_lock(new_arac_id, new_ilce_id, new_tarih)
         # Düzenle ile dolu güne taşımayı engelle (yönetici dahil; kapasite herkes için geçerli)
         self._validate_arac_kapasitesi(
-            teslimat_tarihi=new_tarih, arac_id=new_arac_id, ilce_id=new_ilce_id
-        )
-        self._validate_ilce_gun_kapasitesi(
             teslimat_tarihi=new_tarih, arac_id=new_arac_id, ilce_id=new_ilce_id
         )
 
