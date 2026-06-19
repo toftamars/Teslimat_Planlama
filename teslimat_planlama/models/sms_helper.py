@@ -80,6 +80,7 @@ class SMSHelper:
                 SMSHelper._mask_phone(phone_number),
             )
             return True
-        except Exception as e:
-            _logger.error("SMS hatası: %s - %s", record_name, str(e))
+        except Exception:
+            # Best-effort SMS: hata teslimatı bloklamaz. Traceback ile logla.
+            _logger.exception("SMS hatası - Kayıt: %s", record_name)
             return False

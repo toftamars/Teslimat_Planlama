@@ -1,7 +1,7 @@
 """Araç Kapatma Modeli - Araçların belirli günlerde kapatılması."""
 import logging
 
-from odoo import api, fields, models
+from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 
 from .teslimat_utils import calculate_day_count
@@ -129,7 +129,7 @@ class TeslimatAracKapatma(models.Model):
             if record.baslangic_tarihi and record.bitis_tarihi:
                 if record.bitis_tarihi < record.baslangic_tarihi:
                     raise ValidationError(
-                        "Bitiş tarihi başlangıç tarihinden önce olamaz!"
+                        _("Bitiş tarihi başlangıç tarihinden önce olamaz!")
                     )
     
     @api.constrains("baslangic_tarihi", "bitis_tarihi", "arac_id")
@@ -156,8 +156,13 @@ class TeslimatAracKapatma(models.Model):
             cakisan = self.search(domain, limit=1)
             if cakisan:
                 raise ValidationError(
-                    f"Bu tarih aralığında {record.arac_id.name} için zaten bir kapatma kaydı var!\n"
-                    f"Çakışan kayıt: {cakisan.display_name}"
+                    _(
+                        "Bu tarih aralığında %(arac)s için zaten bir kapatma kaydı var!\n"
+                        "Çakışan kayıt: %(kapatma)s"
+                    ) % {
+                        "arac": record.arac_id.name,
+                        "kapatma": cakisan.display_name,
+                    }
                 )
     
     @api.model

@@ -1,7 +1,7 @@
 """Araç Kapatma Wizard - Hızlı araç kapatma işlemi."""
 import logging
 
-from odoo import api, fields, models
+from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
 from ..models.teslimat_utils import calculate_day_count
@@ -77,7 +77,7 @@ class TeslimatAracKapatmaWizard(models.TransientModel):
             if record.baslangic_tarihi and record.bitis_tarihi:
                 if record.bitis_tarihi < record.baslangic_tarihi:
                     raise UserError(
-                        "Bitiş tarihi başlangıç tarihinden önce olamaz!"
+                        _("Bitiş tarihi başlangıç tarihinden önce olamaz!")
                     )
     
     def action_kapat(self):
@@ -86,13 +86,13 @@ class TeslimatAracKapatmaWizard(models.TransientModel):
         
         # Validasyonlar
         if not self.arac_id:
-            raise UserError("Lütfen bir araç seçin!")
+            raise UserError(_("Lütfen bir araç seçin!"))
         
         if not self.sebep:
-            raise UserError("Lütfen bir sebep seçin!")
+            raise UserError(_("Lütfen bir sebep seçin!"))
         
         if self.bitis_tarihi < self.baslangic_tarihi:
-            raise UserError("Bitiş tarihi başlangıç tarihinden önce olamaz!")
+            raise UserError(_("Bitiş tarihi başlangıç tarihinden önce olamaz!"))
         
         # Kapatma kaydı oluştur
         kapatma = self.env["teslimat.arac.kapatma"].create({

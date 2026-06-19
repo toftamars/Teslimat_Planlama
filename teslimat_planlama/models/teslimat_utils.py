@@ -4,6 +4,8 @@ from typing import Optional
 
 import pytz
 
+from odoo import _
+
 from .teslimat_constants import (
     GUN_KODU_MAP,
     ISTANBUL_TIMEZONE,
@@ -222,8 +224,8 @@ def check_pazar_gunu_validation(tarih, bypass_for_manager: bool = True, env=None
 
     if is_pazar_gunu(tarih):
         raise ValidationError(
-            "Pazar günü teslimat yapılamaz! "
-            "Lütfen başka bir gün seçin."
+            _("Pazar günü teslimat yapılamaz! "
+              "Lütfen başka bir gün seçin.")
         )
 
 

@@ -117,11 +117,17 @@ class TeslimatAnaSayfaGun(models.TransientModel):
         # Araç kapalı mı kontrol et
         if self.arac_kapali_mi:
             raise UserError(
-                f"Bu tarihte araç kapalı!\n\n"
-                f"Tarih: {self.tarih_str}\n"
-                f"Sebep: {self.kapatma_sebep}\n"
-                f"Kapatan: {self.kapatan_kisi}\n\n"
-                f"Lütfen başka bir tarih veya araç seçin."
+                _(
+                    "Bu tarihte araç kapalı!\n\n"
+                    "Tarih: %(tarih)s\n"
+                    "Sebep: %(sebep)s\n"
+                    "Kapatan: %(kapatan)s\n\n"
+                    "Lütfen başka bir tarih veya araç seçin."
+                ) % {
+                    "tarih": self.tarih_str,
+                    "sebep": self.kapatma_sebep,
+                    "kapatan": self.kapatan_kisi,
+                }
             )
 
         # Wizard'ı aç

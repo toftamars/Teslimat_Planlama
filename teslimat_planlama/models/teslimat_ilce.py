@@ -337,7 +337,8 @@ class TeslimatIlce(models.Model):
         except Exception as e:
             _logger.exception("İlçe oluşturma hatası:")
             raise UserError(
-                f"İlçe oluşturma işlemi sırasında hata oluştu:\n{str(e)}"
+                _("İlçe oluşturma işlemi sırasında hata oluştu:\n%(hata)s")
+                % {"hata": str(e)}
             )
 
     def _update_istanbul_yaka_tipleri(self):
