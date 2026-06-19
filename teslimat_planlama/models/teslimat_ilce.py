@@ -1,8 +1,7 @@
 """Teslimat İlçe Yönetimi Modeli."""
 import logging
-from typing import Optional
 
-from odoo import api, fields, models
+from odoo import _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
 
 _logger = logging.getLogger(__name__)

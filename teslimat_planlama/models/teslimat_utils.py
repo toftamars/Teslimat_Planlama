@@ -1,26 +1,16 @@
 """Teslimat Yardımcı Fonksiyonlar."""
 from datetime import date, datetime
-from typing import Optional, TYPE_CHECKING
+from typing import Optional
 
 import pytz
 
 from .teslimat_constants import (
-    ACTIVE_STATUSES,
-    ARAC_KAPATMA_SEBEP_LABELS,
-    CANCELLED_STATUS,
-    COMPLETED_STATUS,
-    FORECAST_DAYS,
-    GUN_ESLESMESI,
     GUN_KODU_MAP,
-    IN_TRANSIT_STATUSES,
     ISTANBUL_TIMEZONE,
     SAME_DAY_DELIVERY_CUTOFF_HOUR,
     SMALL_VEHICLE_TYPES,
     get_arac_kapatma_sebep_label,
 )
-
-if TYPE_CHECKING:
-    from odoo import models
 
 
 def normalize_turkce(adi: str) -> str:

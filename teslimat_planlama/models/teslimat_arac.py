@@ -1,6 +1,6 @@
 """Teslimat Araç Yönetimi Modeli."""
 import logging
-from typing import List, Optional
+from typing import Optional
 
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError

@@ -102,7 +102,7 @@ class TeslimatAracKapatma(models.Model):
         help="Kapatma süresi (gün)"
     )
     
-    @api.depends("arac_id", "baslangic_tarihi", "bitis_tarihi", "sebep")
+    @api.depends("arac_id.name", "baslangic_tarihi", "bitis_tarihi", "sebep")
     def _compute_display_name(self):
         """Display name hesapla."""
         for record in self:

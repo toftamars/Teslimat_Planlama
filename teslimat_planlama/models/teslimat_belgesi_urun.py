@@ -1,7 +1,7 @@
 """Teslimat Belgesi Ürün Modeli."""
 import logging
 
-from odoo import _, api, fields, models
+from odoo import fields, models
 
 _logger = logging.getLogger(__name__)
 

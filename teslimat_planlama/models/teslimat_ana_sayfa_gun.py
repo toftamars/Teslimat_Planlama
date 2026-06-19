@@ -1,7 +1,4 @@
 """Teslimat Ana Sayfa Gün Modeli - Uygun günler listesi için."""
-from datetime import date
-from typing import Optional
-
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 

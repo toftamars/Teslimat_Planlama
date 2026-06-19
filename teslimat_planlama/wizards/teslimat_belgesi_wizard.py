@@ -73,27 +73,28 @@ class TeslimatBelgesiWizard(models.TransientModel):
         store=False,
     )
 
-    @api.model
-    def create(self, vals):
-        """Create metodunu override et - context'ten veya Ana Sayfa kaydından ilce_id al."""
+    @api.model_create_multi
+    def create(self, vals_list):
+        """Create metodunu override et (batch) - context'ten veya Ana Sayfa kaydından ilce_id al."""
         ctx = self.env.context
-        if "ilce_id" not in vals or not vals.get("ilce_id"):
-            ilce_id = None
-            if ctx.get("default_ana_sayfa_res_id"):
-                try:
-                    ana = self.env["teslimat.ana.sayfa"].browse(int(ctx["default_ana_sayfa_res_id"]))
-                    if ana.exists() and ana.ilce_id:
-                        ilce_id = ana.ilce_id.id
-                except (TypeError, ValueError):
-                    pass
-            if ilce_id is None and ctx.get("default_ilce_id"):
-                try:
-                    ilce_id = int(ctx["default_ilce_id"])
-                except (TypeError, ValueError):
-                    pass
-            if ilce_id:
-                vals["ilce_id"] = ilce_id
-        return super().create(vals)
+        for vals in vals_list:
+            if "ilce_id" not in vals or not vals.get("ilce_id"):
+                ilce_id = None
+                if ctx.get("default_ana_sayfa_res_id"):
+                    try:
+                        ana = self.env["teslimat.ana.sayfa"].browse(int(ctx["default_ana_sayfa_res_id"]))
+                        if ana.exists() and ana.ilce_id:
+                            ilce_id = ana.ilce_id.id
+                    except (TypeError, ValueError):
+                        pass
+                if ilce_id is None and ctx.get("default_ilce_id"):
+                    try:
+                        ilce_id = int(ctx["default_ilce_id"])
+                    except (TypeError, ValueError):
+                        pass
+                if ilce_id:
+                    vals["ilce_id"] = ilce_id
+        return super().create(vals_list)
 
     @api.model
     def default_get(self, fields_list: list) -> dict:

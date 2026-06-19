@@ -7,7 +7,7 @@ Mixin pattern kullanılarak ana model'den ayrılmıştır.
 import logging
 from urllib.parse import quote
 
-from odoo import _, api, fields, models
+from odoo import _, api, models
 from odoo.exceptions import UserError
 
 from .teslimat_constants import (
@@ -16,7 +16,6 @@ from .teslimat_constants import (
     IN_TRANSIT_STATUSES,
     IN_TRANSIT_STATUS,
     READY_STATUS,
-    get_arac_kapatma_sebep_label,
 )
 from .teslimat_utils import is_manager
 from . import sms_helper

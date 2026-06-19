@@ -6,7 +6,7 @@ from typing import Optional
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
-from .teslimat_utils import GUN_KODU_MAP, get_gun_kodu, get_istanbul_state, is_small_vehicle, normalize_turkce
+from .teslimat_utils import get_gun_kodu, get_istanbul_state, is_small_vehicle, normalize_turkce
 
 _logger = logging.getLogger(__name__)
 
