@@ -15,14 +15,6 @@ class StockPicking(models.Model):
 
     _inherit = "stock.picking"
 
-    # Teslimat planlama alanları
-    teslimat_planlama_id = fields.Many2one(
-        "teslimat.planlama", string="Teslimat Planlaması"
-    )
-    teslimat_transfer_id = fields.Many2one(
-        "teslimat.transfer", string="Teslimat Transfer"
-    )
-
     # Teslimat Belgeleri
     teslimat_belgesi_ids = fields.One2many(
         "teslimat.belgesi",

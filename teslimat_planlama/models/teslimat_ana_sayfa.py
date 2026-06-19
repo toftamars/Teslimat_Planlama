@@ -6,7 +6,7 @@ from typing import Optional
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
-from .teslimat_utils import GUN_KODU_MAP, get_gun_kodu, get_istanbul_state, is_small_vehicle
+from .teslimat_utils import GUN_KODU_MAP, get_gun_kodu, get_istanbul_state, is_small_vehicle, normalize_turkce
 
 _logger = logging.getLogger(__name__)
 
@@ -637,12 +637,13 @@ class TeslimatAnaSayfa(models.TransientModel):
         # Haftalık programa göre varsayılan kapasite belirle
         from ..data.turkey_data import HAFTALIK_PROGRAM_SCHEDULE
         
-        ilce_adi_upper = ilce_adi.upper()
+        # Tek util ile normalize et (İ/ı locale-bağımsız) - validasyon ile aynı kural
+        ilce_adi_norm = normalize_turkce(ilce_adi)
         bugun_gun_programi = HAFTALIK_PROGRAM_SCHEDULE.get(gun_kodu, [])
-        
+
         for program_ilce in bugun_gun_programi:
-            if (program_ilce.upper() in ilce_adi_upper or 
-                ilce_adi_upper in program_ilce.upper()):
+            prog_norm = normalize_turkce(program_ilce)
+            if prog_norm in ilce_adi_norm or ilce_adi_norm in prog_norm:
                 return default_limit
         
         return 0  # Programda yoksa

@@ -23,6 +23,18 @@ if TYPE_CHECKING:
     from odoo import models
 
 
+def normalize_turkce(adi: str) -> str:
+    """İlçe/metin adını locale-bağımsız eşleştirme için normalize eder.
+
+    Türkçe noktalı İ (U+0130) ve noktasız ı (U+0131) ASCII karşılığına çevrilir,
+    sonra büyük harfe alınır. Diğer Türkçe harfler (Ş/Ö/Ü/Ç/Ğ) eşleştirmenin
+    iki tarafında da korunduğu için ayrıca foldlanmaz.
+    """
+    if not adi:
+        return ""
+    return (adi or "").replace("İ", "I").replace("ı", "i").upper()
+
+
 def calculate_day_count(start_date: date, end_date: date) -> int:
     """İki tarih arasındaki gün sayısını hesapla (başlangıç ve bitiş dahil).
 

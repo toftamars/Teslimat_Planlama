@@ -73,11 +73,6 @@ class TeslimatArac(models.Model):
         "teslimat.belgesi", "arac_id", string="Teslimatlar"
     )
 
-    # Transfer Geçmişi
-    transfer_ids = fields.One2many(
-        "teslimat.transfer", "arac_id", string="Transferler"
-    )
-
     @api.depends("teslimat_ids", "teslimat_ids.durum", "teslimat_ids.teslimat_tarihi")
     def _compute_mevcut_kapasite(self) -> None:
         """Bugün için mevcut kapasiteyi hesapla.

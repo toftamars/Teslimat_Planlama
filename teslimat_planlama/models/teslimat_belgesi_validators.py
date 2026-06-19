@@ -67,11 +67,9 @@ class TeslimatBelgesiValidators(models.AbstractModel):
     @staticmethod
     def _normalize_ilce_adi_for_schedule(adi: str) -> str:
         """İlçe adını haftalık program eşleştirmesi için normalize et (Türkçe İ/I)."""
-        if not adi:
-            return ""
-        # Türkçe büyük İ (U+0130) ve küçük ı (U+0131) -> ASCII I; sonra büyük harf
-        s = (adi or "").replace("\u0130", "I").replace("\u0131", "i")
-        return s.upper()
+        from .teslimat_utils import normalize_turkce
+
+        return normalize_turkce(adi)
 
     def _validate_gecmis_tarih(self):
         """Geçmiş tarihe teslimat kaydı yasak (düzenle ile de)."""

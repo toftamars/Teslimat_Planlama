@@ -28,7 +28,7 @@
         'contacts',
         'stock',
         'mail',
-        'account',
+        'analytic',
         'sms',
     ],
     'data': [
@@ -56,10 +56,6 @@
 
         # Menu (Tüm action'lar yuklendikten sonra)
         'views/menu_views.xml',
-        
-        # Business Logic Views
-        'views/teslimat_planlama_views.xml',
-        'views/teslimat_transfer_views.xml',
         
         # Wizard Views
         'views/teslimat_belgesi_wizard_views.xml',
