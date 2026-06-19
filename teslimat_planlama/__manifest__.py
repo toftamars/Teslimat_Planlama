@@ -21,8 +21,8 @@
         - Manager grubu sınırsız teslimat oluşturabilir
         - Tüm yapılandırmalar modül içinden yapılabilir (dinamik)
     """,
-    'author': 'Your Company',
-    'website': 'https://www.yourcompany.com',
+    'author': 'Alper Tofta',
+    'website': 'https://github.com/toftamars/Teslimat_Planlama',
     'depends': [
         'base',
         'contacts',

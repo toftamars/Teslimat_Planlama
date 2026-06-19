@@ -33,7 +33,7 @@
                     <button name="action_aktif_et" string="Tekrar Aktif Et" type="object" 
                             class="btn-success"
                             attrs="{'invisible': [('aktif', '=', True)]}"/>
-                    <field name="aktif" widget="statusbar" statusbar_visible="1"/>
+                    <field name="aktif" widget="boolean_toggle" readonly="1"/>
                 </header>
                 
                 <sheet>

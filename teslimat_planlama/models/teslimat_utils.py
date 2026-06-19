@@ -150,35 +150,19 @@ def is_small_vehicle(arac) -> bool:
 
 
 def get_istanbul_state(env):
-    """İstanbul şehrini döndür (cached).
+    """İstanbul şehrini döndür.
 
     Args:
         env: Odoo environment
 
     Returns:
-        res.country.state: İstanbul kaydı veya None
+        res.country.state: İstanbul kaydı (yoksa boş recordset)
     """
-    # Cache key
-    cache_key = '_istanbul_state_cache'
-
-    # Check if already cached in environment context
-    if hasattr(env, 'context') and cache_key in env.context:
-        state_id = env.context[cache_key]
-        if state_id:
-            return env["res.country.state"].browse(state_id)
-        return None
-
-    # Search for Istanbul
-    istanbul = env["res.country.state"].search(
+    # Not: ORM zaten search sonucunu cache'liyor; ekstra context-cache gerekmez.
+    return env["res.country.state"].search(
         [("country_id.code", "=", "TR"), ("name", "=", "İstanbul")],
-        limit=1
+        limit=1,
     )
-
-    # Cache the result (store ID to avoid recordset serialization issues)
-    if istanbul:
-        env.context = dict(env.context, **{cache_key: istanbul.id})
-
-    return istanbul
 
 
 def validate_arac_ilce_eslesmesi(arac, ilce, bypass_for_manager: bool = True) -> tuple[bool, str]:

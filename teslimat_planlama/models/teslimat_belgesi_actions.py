@@ -151,7 +151,7 @@ class TeslimatBelgesiActions(models.AbstractModel):
         # Buraya ek bilgiler eklenebilir
         pass
 
-    def _update_transfer_urunleri(self, picking: "stock.picking") -> None:
+    def _update_transfer_urunleri(self, picking) -> None:
         """Transfer belgesindeki ürünleri güncelle (Bellek içi komutlar kullanarak).
 
         Not: Onchange içinde veritabanına create/unlink işlemi yapmak işlemi kilitler.
