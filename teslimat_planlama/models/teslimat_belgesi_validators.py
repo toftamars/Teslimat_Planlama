@@ -60,6 +60,8 @@ class TeslimatBelgesiValidators(models.AbstractModel):
             if not yonetici_mi and not small_vehicle:
                 record._validate_arac_ilce_uyumlulugu()
 
+            # ORTAK kapasite gate'i (create + write, post-CRUD, lock altında).
+            # write ayrıca write-öncesi fail-fast için _check_capacity_on_write.
             record._validate_arac_kapasitesi()
 
     def _validate_gecmis_tarih(self):

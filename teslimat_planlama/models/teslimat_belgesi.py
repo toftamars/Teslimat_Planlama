@@ -203,6 +203,11 @@ class TeslimatBelgesi(models.Model):
             # Aynı slot için eşzamanlı oluşturmayı engelle (race condition önleme)
             ilce_id = vals.get("ilce_id")
             self._acquire_capacity_lock(arac_id, ilce_id, teslimat_tarihi)
+            # NOT: Araç-kapasite doğrulaması @api.constrains (validators
+            # _check_teslimat_validations → _validate_arac_kapasitesi) ile insert
+            # SONRASI, bu transaction-kapsamlı lock altında çalışır = create+write
+            # ORTAK gate'i. write yolu ayrıca write-ÖNCESİ fail-fast pre-check için
+            # _check_capacity_on_write kullanır (create/write asimetrisi bilinçli).
 
         return super(TeslimatBelgesi, self).create(vals_list)
 
@@ -425,12 +430,19 @@ class TeslimatBelgesi(models.Model):
             )
 
     def _check_capacity_on_write(self, vals: dict) -> None:
-        """Write öncesi kapasite kontrolleri (yeni değerlerle).
+        """Write öncesi kapasite pre-check'i (yeni değerlerle, fail-fast).
 
         Tarih/araç/ilçe değişince mutlaka çalışır; dolu güne kayıt engellenir.
         Form sadece değişen alanları gönderdiği için araç/ilçe vals'ta yoksa
         belgedeki mevcut Araç ve İlçe kullanılır (düzenle ile sadece tarih
         değişince belgenin İlçe bilgisi dikkate alınır).
+
+        TASARIM (create/write asimetrisi, bilinçli): Asıl kapasite gate'i
+        @api.constrains _validate_arac_kapasitesi'dir; HEM create HEM write'ta
+        çalışır. Bu metot write'a ÖZGÜ EK bir pre-check'tir: (1) yazımdan önce
+        reddeder (fail-fast), (2) lock'u yeni slot için açıkça alır, (3)
+        constrains'in atladığı durum=completed/cancelled kayıtlarını da kapsar.
+        create yolu lock'u create()'te alıp doğrulamayı constrains'e bırakır.
         """
         relevant = {"teslimat_tarihi", "arac_id", "ilce_id"}
         if not (relevant & set(vals.keys())):
