@@ -467,7 +467,7 @@ class TeslimatArac(models.Model):
                     guncellenen_sayisi += 1
                 else:
                     _logger.warning("%s: Araç tipi tanımlı değil, atlandı", arac.name)
-            except Exception as e:
+            except Exception:
                 hata_sayisi += 1
                 _logger.exception("%s: Senkronizasyon hatası", arac.name)
         
