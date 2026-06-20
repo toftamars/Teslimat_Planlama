@@ -357,7 +357,7 @@ class TeslimatBelgesiActions(models.AbstractModel):
             self.musteri_id.mobile or self.musteri_id.phone or ""
         ).strip()
 
-    def _send_sms_mesaj(self, mesaj: str, konu: str = "SMS Gönderildi") -> bool:
+    def _send_sms_mesaj(self, mesaj: str, konu: str = None) -> bool:
         """Müşteriye SMS metnini gönder (Odoo sms.sms ile), chatter'a not düş."""
         self.ensure_one()
         telefon = self._get_sms_telefon()
@@ -386,7 +386,7 @@ class TeslimatBelgesiActions(models.AbstractModel):
                     "kaynak": telefon_kaynak,
                     "mesaj": mesaj,
                 },
-                subject=_(konu),
+                subject=konu or _("SMS Gönderildi"),
                 message_type="notification",
             )
         else:
@@ -417,7 +417,7 @@ class TeslimatBelgesiActions(models.AbstractModel):
             "Sayın %(musteri)s, ekiplerimiz ürün teslimatı ve kurulum için "
             "adresinize doğru yola çıkmıştır. Teslimat No: %(no)s"
         ) % {"musteri": self.musteri_id.name or "Müşteri", "no": self.name}
-        return self._send_sms_mesaj(mesaj, konu="SMS (Yolda) Gönderildi")
+        return self._send_sms_mesaj(mesaj, konu=_("SMS (Yolda) Gönderildi"))
 
     def send_sms_tamamlandi(self) -> bool:
         """Müşteriye 'teslimat tamamlandı' SMS'i gönder (2. SMS)."""
@@ -430,7 +430,7 @@ class TeslimatBelgesiActions(models.AbstractModel):
             "Sayın %(musteri)s, ürün teslimatınız ve kurulumunuz tamamlanmıştır. "
             "Bizi tercih ettiğiniz için teşekkür ederiz. Teslimat No: %(no)s"
         ) % {"musteri": self.musteri_id.name or "Müşteri", "no": self.name}
-        return self._send_sms_mesaj(mesaj, konu="SMS (Tamamlandı) Gönderildi")
+        return self._send_sms_mesaj(mesaj, konu=_("SMS (Tamamlandı) Gönderildi"))
 
     def send_teslimat_sms(self) -> bool:
         """Müşteriye teslimat oluşturulduğunda SMS'i gönder (wizard sonrası)."""
@@ -448,4 +448,4 @@ class TeslimatBelgesiActions(models.AbstractModel):
             "tarih": self.teslimat_tarihi.strftime("%d.%m.%Y"),
             "arac": self.arac_id.name or "-",
         }
-        return self._send_sms_mesaj(mesaj, konu="SMS Gönderildi")
+        return self._send_sms_mesaj(mesaj, konu=_("SMS Gönderildi"))

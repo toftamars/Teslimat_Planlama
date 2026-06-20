@@ -187,30 +187,30 @@ def validate_arac_ilce_eslesmesi(arac, ilce, bypass_for_manager: bool = True) ->
         tuple: (Geçerli mi?, Mesaj)
     """
     if not arac or not ilce:
-        return False, "Araç veya ilçe bulunamadı"
-    
+        return False, _("Araç veya ilçe bulunamadı")
+
     # Yönetici kontrolü - Yöneticiler her şeyi yapabilir
     if bypass_for_manager and hasattr(arac, 'env') and is_manager(arac.env):
-        return True, "Yönetici yetkisi - tüm eşleştirmeler geçerli"
-    
+        return True, _("Yönetici yetkisi - tüm eşleştirmeler geçerli")
+
     # Küçük araçlar her yere gidebilir
     if arac.arac_tipi in SMALL_VEHICLE_TYPES:
-        return True, "Küçük araç - tüm ilçelere gidebilir"
-    
+        return True, _("Küçük araç - tüm ilçelere gidebilir")
+
     # Yaka bazlı kontrol
     if arac.arac_tipi == "anadolu_yakasi":
         if ilce.yaka_tipi == "anadolu":
-            return True, "Anadolu Yakası araç - Anadolu Yakası ilçe"
+            return True, _("Anadolu Yakası araç - Anadolu Yakası ilçe")
         else:
-            return False, f"Anadolu Yakası araç sadece Anadolu Yakası ilçelerine gidebilir (İlçe: {ilce.yaka_tipi})"
-    
+            return False, _("Anadolu Yakası araç sadece Anadolu Yakası ilçelerine gidebilir (İlçe: %(yaka)s)") % {"yaka": ilce.yaka_tipi}
+
     elif arac.arac_tipi == "avrupa_yakasi":
         if ilce.yaka_tipi == "avrupa":
-            return True, "Avrupa Yakası araç - Avrupa Yakası ilçe"
+            return True, _("Avrupa Yakası araç - Avrupa Yakası ilçe")
         else:
-            return False, f"Avrupa Yakası araç sadece Avrupa Yakası ilçelerine gidebilir (İlçe: {ilce.yaka_tipi})"
-    
-    return False, "Bilinmeyen araç tipi"
+            return False, _("Avrupa Yakası araç sadece Avrupa Yakası ilçelerine gidebilir (İlçe: %(yaka)s)") % {"yaka": ilce.yaka_tipi}
+
+    return False, _("Bilinmeyen araç tipi")
 
 
 def check_pazar_gunu_validation(tarih, bypass_for_manager: bool = True, env=None) -> None:
