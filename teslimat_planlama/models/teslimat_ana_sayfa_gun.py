@@ -78,22 +78,47 @@ class TeslimatAnaSayfaGun(models.TransientModel):
     
     @api.depends("tarih", "ana_sayfa_id.arac_id")
     def _compute_arac_kapatma(self):
-        """Araç kapatma bilgilerini hesapla."""
+        """Araç kapatma bilgilerini hesapla (toplu sorgu — N+1 önlenir).
+
+        İlgili araçların aktif kapatma kayıtları TEK search ile çekilir; her gün
+        için bellek-içi tarih-aralığı kontrolü yapılır. Çakışma engeli
+        (_check_cakisan_kapatma) sayesinde bellek-içi ilk eşleşme,
+        arac_kapali_mi'nin search(limit=1, _order="baslangic_tarihi desc")
+        sonucuyla özdeştir.
+        """
+        # İlgili araçların aktif kapatma kayıtlarını tek sorguda çek
+        arac_ids = self.mapped("ana_sayfa_id.arac_id").ids
+        kapatmalar = (
+            self.env["teslimat.arac.kapatma"].search(
+                [("arac_id", "in", arac_ids), ("aktif", "=", True)]
+            )
+            if arac_ids
+            else self.env["teslimat.arac.kapatma"]
+        )
+        # arac_id -> kapatma kayıtları (search _order="baslangic_tarihi desc" korunur)
+        by_arac = {}
+        for k in kapatmalar:
+            by_arac.setdefault(k.arac_id.id, []).append(k)
+
         for rec in self:
-            if not rec.tarih or not rec.ana_sayfa_id.arac_id:
+            arac = rec.ana_sayfa_id.arac_id
+            if not rec.tarih or not arac:
                 rec.arac_kapali_mi = False
                 rec.kapatma_sebep = ""
                 rec.kapatma_aciklama = ""
                 rec.kapatan_kisi = ""
                 continue
 
-            # Araç kapatma kontrolü
-            kapali, kapatma = self.env["teslimat.arac.kapatma"].arac_kapali_mi(
-                rec.ana_sayfa_id.arac_id.id,
-                rec.tarih
+            kapatma = next(
+                (
+                    k
+                    for k in by_arac.get(arac.id, [])
+                    if k.baslangic_tarihi <= rec.tarih <= k.bitis_tarihi
+                ),
+                None,
             )
 
-            if kapali and kapatma:
+            if kapatma:
                 rec.arac_kapali_mi = True
                 rec.kapatma_sebep = get_arac_kapatma_sebep_label(kapatma.sebep)
                 rec.kapatma_aciklama = kapatma.aciklama or ""
