@@ -21,10 +21,7 @@ from .teslimat_utils import (
     is_manager,
     prepare_maps_destination,
 )
-from .teslimat_route_service import (
-    is_route_api_configured,
-    sort_deliveries_by_traffic,
-)
+from .teslimat_route_service import sort_deliveries_by_traffic
 from . import sms_helper
 
 _logger = logging.getLogger(__name__)
@@ -272,84 +269,17 @@ class TeslimatBelgesiActions(models.AbstractModel):
                 "message": message,
                 "type": "success",
                 "sticky": False,
+                "next": {"type": "ir.actions.client", "tag": "reload"},
             },
         }
 
     def action_rota_optimizasyonu(self) -> dict:
-        """Seçili teslimatların adreslerini Google Maps çoklu durak ile aç.
+        """Seçili teslimatları Google Routes API ile Odoo'da trafik sırasına göre sırala.
 
-        Liste görünümünde birden fazla teslimat seçildiğinde Aksiyon menüsünden
-        çağrılır. Adresi olan teslimatlar sırayla waypoints olarak Google Maps'e
-        gönderilir.
-
-        Returns:
-            dict: ir.actions.act_url ile yeni sekmede harita açar
-
-        Raises:
-            UserError: Hiç kayıt seçilmediyse veya hiçbirinde adres yoksa
+        Harita açmaz; yalnızca sira_no günceller. Tek teslimat haritası için
+        formdaki Yol Tarifi butonunu kullanın.
         """
-        if not self:
-            raise UserError(_("Lütfen en az bir teslimat seçin."))
-
-        records = self
-        arac_ids = records.mapped("arac_id")
-        tarihler = records.mapped("teslimat_tarihi")
-        if (
-            is_route_api_configured(self.env)
-            and len(arac_ids) == 1
-            and len(tarihler) == 1
-            and len(records) >= 2
-        ):
-            try:
-                sort_deliveries_by_traffic(records)
-            except UserError as exc:
-                _logger.warning("Rota öncesi trafik sıralaması atlandı: %s", exc.args[0])
-
-        records = records.sorted(key=lambda r: (r.sira_no, r.id))
-
-        # Adresi olan kayıtları filtrele (Maps için optimize edilmiş hedef)
-        adresli = []
-        for rec in records:
-            if not rec.musteri_id:
-                continue
-            adres = prepare_maps_destination(rec.musteri_id)
-            if adres:
-                adresli.append((rec, adres))
-
-        if not adresli:
-            raise UserError(
-                _(
-                    "Seçili teslimatların hiçbirinde müşteri adresi bulunamadı.\n\n"
-                    "Müşteri kaydında adres (sokak, ilçe, il) tanımlı olmalıdır."
-                )
-            )
-
-        # Google Maps: max 9 waypoints + origin + destination = 11 durak
-        if len(adresli) > 11:
-            adresli = adresli[:11]
-            _logger.warning(
-                "Rota optimizasyonu: 11'den fazla adres seçildi, ilk 11 kullanıldı"
-            )
-
-        adresler = [a for _, a in adresli]
-
-        if len(adresler) == 1:
-            url = build_google_maps_directions_url(adresler[0])
-        else:
-            origin = adresler[0]
-            destination = adresler[-1]
-            waypoints = "|".join(adresler[1:-1]) if len(adresler) > 2 else None
-            url = build_google_maps_directions_url(
-                destination,
-                origin=origin,
-                waypoints=waypoints,
-            )
-
-        return {
-            "type": "ir.actions.act_url",
-            "url": url,
-            "target": "new",
-        }
+        return self.action_trafik_sirasina_gore_sirala()
 
     def action_iptal_et(self) -> None:
         """Teslimatı iptal et (Yönetici veya transferi oluşturan).

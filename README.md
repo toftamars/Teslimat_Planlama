@@ -183,31 +183,22 @@ Ekranda görünen **Müşteri Adresi** (resmi format) değişmez. **Yol Tarifi**
 
 Adres yoksa `UserError` döner.
 
-### 🗺️ Rota Optimizasyonu (çoklu durak)
+### 🚦 Rota Optimizasyonu (Odoo sıralama)
 
 | | |
 |---|---|
 | **Kim** | Tüm iç kullanıcılar (liste **Aksiyon** menüsü) |
-| **Nerede** | Teslimat Belgeleri **liste** görünümü — kayıtları seç → **🗺️ Rota Optimizasyonu Oluştur** |
-| **Ne yapar** | Önce trafik sıralaması (API varsa), sonra `sira_no` sırasıyla Google Maps çoklu durak |
-| **Sıra** | `sira_no` (trafik sıralaması sonrası) |
-| **Limit** | En fazla **11** adres (Google Maps URL sınırı); fazlası kesilir, log uyarısı |
-| **Kod** | `teslimat.belgesi.actions.action_rota_optimizasyonu()` |
+| **Nerede** | Teslimat Belgeleri **liste** — kayıtları seç → **🚦 Rota Optimizasyonu (Odoo Sırala)** |
+| **Ne yapar** | Google Routes API ile trafik süresine göre **`sira_no` günceller** — **harita açmaz** |
+| **Koşul** | Aynı **araç** + aynı **gün**; durum **Hazır** veya **Yolda**; en az 2 kayıt |
+| **Kod** | `action_rota_optimizasyonu()` → `sort_deliveries_by_traffic()` |
 
-### 🚦 Trafik sırasına göre sırala (Odoo otomatik)
+Harita için: formda **🗺️ Yol Tarifi** (tek teslimat, sürücü).
 
-| | |
-|---|---|
-| **API** | Google **Routes API — Compute Route Matrix (Pro)**, trafik duyarlı |
-| **Kim** | Tüm iç kullanıcılar (liste **Aksiyon** menüsü) |
-| **Ne zaman** | Aynı **araç** + aynı **teslimat tarihi** seçimi; durum **Hazır** veya **Yolda** |
-| **Ne yapar** | Depodan başlayarak minimum sürüş süresi sırasını hesaplar → `sira_no` günceller |
-| **Otomatik cron** | Her gün **05:30** — bugünkü teslimatlar araç bazında (API key gerekir) |
-| **Kod** | `teslimat_route_service.sort_deliveries_by_traffic()` |
-
-**Sistem parametreleri:** `teslimat_planlama.google_maps_api_key`, `teslimat_planlama.rota_baslangic_adres`
-
-**Tahmini maliyet:** 5 araç × 7 teslimat × 22 gün ≈ **~21 USD/ay** (Pro SKU, trafik dahil). Bkz. [`docs/GOOGLE_MAPS_API.md`](docs/GOOGLE_MAPS_API.md).
+**API:** Google Routes API — Compute Route Matrix (Pro), trafik duyarlı.  
+**Sistem parametreleri:** `teslimat_planlama.google_maps_api_key`, `teslimat_planlama.rota_baslangic_adres`  
+**Tahmini maliyet:** Bkz. [`docs/GOOGLE_MAPS_API.md`](docs/GOOGLE_MAPS_API.md).  
+**Cron:** Varsayılan kapalı; yalnızca liste aksiyonu ile sıralama.
 
 ### Sürücü akışı
 
@@ -217,10 +208,8 @@ Adres yoksa `UserError` döner.
 
 ### Harita sınırlamaları
 
-- Trafik sıralama **API anahtarı olmadan çalışmaz** (cron sessizce atlanır).
-- Rota URL en fazla 11 durak.
-- Adres kalitesi düşükse Google sonuç bulamayabilir.
-- Koordinat yoksa metin adresine güvenilir.
+- Trafik sıralama **API anahtarı olmadan çalışmaz**.
+- Adres kalitesi düşükse Google/API sonuç döndürmeyebilir.
 
 ---
 
