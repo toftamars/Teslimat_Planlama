@@ -204,6 +204,7 @@ def get_rota_optimizasyon_groups(env, selected_records=None):
             )
 
     result = []
+    Arac = env["teslimat.arac"]
     for arac_id, tarih in sorted(keys, key=lambda k: (k[1], k[0])):
         group = Belge.search(
             [
@@ -213,7 +214,13 @@ def get_rota_optimizasyon_groups(env, selected_records=None):
             ]
         )
         if group:
-            result.append(group)
+            result.append(
+                {
+                    "records": group,
+                    "arac_name": Arac.browse(arac_id).display_name,
+                    "teslimat_tarihi": tarih,
+                }
+            )
     if not result:
         raise UserError(_("Sıralanacak teslimat grubu bulunamadı."))
     return result
@@ -292,8 +299,8 @@ def sort_deliveries_by_traffic(records) -> Tuple[int, int]:
     )
     total_count = 0
     total_minutes = 0
-    for group in groups:
-        count, minutes = _sort_single_vehicle_day(group)
+    for entry in groups:
+        count, minutes = _sort_single_vehicle_day(entry["records"])
         total_count += count
         total_minutes += minutes
     return total_count, total_minutes
