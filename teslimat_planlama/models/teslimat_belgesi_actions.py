@@ -5,7 +5,6 @@ Mixin pattern kullanılarak ana model'den ayrılmıştır.
 """
 
 import logging
-from urllib.parse import quote
 
 from odoo import _, api, models
 from odoo.exceptions import UserError
@@ -17,7 +16,11 @@ from .teslimat_constants import (
     IN_TRANSIT_STATUS,
     READY_STATUS,
 )
-from .teslimat_utils import is_manager
+from .teslimat_utils import (
+    build_google_maps_directions_url,
+    is_manager,
+    prepare_maps_destination,
+)
 from . import sms_helper
 
 _logger = logging.getLogger(__name__)
@@ -235,17 +238,13 @@ class TeslimatBelgesiActions(models.AbstractModel):
         """
         self.ensure_one()
 
-        if not self.musteri_adres:
+        destination = prepare_maps_destination(self.musteri_id)
+        if not destination:
             raise UserError(_("Müşteri adresi bulunamadı!"))
-
-        # Google Maps URL (/ gibi özel karakterler quote ile encode edilmeli)
-        base_url = "https://www.google.com/maps/dir/?api=1&travelmode=driving"
-        destination = quote(self.musteri_adres.strip(), safe="")
-        url = f"{base_url}&destination={destination}"
 
         return {
             "type": "ir.actions.act_url",
-            "url": url,
+            "url": build_google_maps_directions_url(destination),
             "target": "new",
         }
 
@@ -265,10 +264,12 @@ class TeslimatBelgesiActions(models.AbstractModel):
         if not self:
             raise UserError(_("Lütfen en az bir teslimat seçin."))
 
-        # Adresi olan kayıtları filtrele (musteri_adres computed, oku)
+        # Adresi olan kayıtları filtrele (Maps için optimize edilmiş hedef)
         adresli = []
         for rec in self:
-            adres = (rec.musteri_adres or "").strip()
+            if not rec.musteri_id:
+                continue
+            adres = prepare_maps_destination(rec.musteri_id)
             if adres:
                 adresli.append((rec, adres))
 
@@ -287,27 +288,19 @@ class TeslimatBelgesiActions(models.AbstractModel):
                 "Rota optimizasyonu: 11'den fazla adres seçildi, ilk 11 kullanıldı"
             )
 
-        # URL için adresleri encode et
-        def _encode(addr):
-            return quote(addr.strip(), safe="")
-
-        adresler = [_encode(a) for _, a in adresli]
-
-        # Google Maps: origin, destination, waypoints
-        # En fazla 9 waypoint (desktop), 3 (mobil) - hepsini waypoints yaparsak
-        # origin=ilk, destination=son, waypoints=aradakiler
-        base_url = "https://www.google.com/maps/dir/?api=1&travelmode=driving"
+        adresler = [a for _, a in adresli]
 
         if len(adresler) == 1:
-            url = f"{base_url}&destination={adresler[0]}"
+            url = build_google_maps_directions_url(adresler[0])
         else:
             origin = adresler[0]
             destination = adresler[-1]
-            # Waypoints arada: pipe URL'de %7C olmalı
-            waypoints = "%7C".join(adresler[1:-1]) if len(adresler) > 2 else ""
-            url = f"{base_url}&origin={origin}&destination={destination}"
-            if waypoints:
-                url += f"&waypoints={waypoints}"
+            waypoints = "|".join(adresler[1:-1]) if len(adresler) > 2 else None
+            url = build_google_maps_directions_url(
+                destination,
+                origin=origin,
+                waypoints=waypoints,
+            )
 
         return {
             "type": "ir.actions.act_url",

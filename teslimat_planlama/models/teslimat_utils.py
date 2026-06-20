@@ -1,6 +1,8 @@
 """Teslimat Yardımcı Fonksiyonlar."""
+import re
 from datetime import date, datetime
-from typing import Optional
+from typing import List, Optional, Tuple
+from urllib.parse import urlencode
 
 import pytz
 
@@ -78,6 +80,200 @@ def format_partner_address(partner) -> str:
         return ", ".join(adres_parcalari)
     
     return "Adres bilgisi bulunamadı"
+
+
+def _title_case_tr(text: str) -> str:
+    """Resmi BÜYÜK HARF Türkçe adresleri Google Maps formatına çevir."""
+    if not text:
+        return ""
+    return " ".join(_turkish_capitalize_word(word) for word in text.strip().split())
+
+
+def _turkish_lower(text: str) -> str:
+    """Resmi adreslerdeki ASCII I (ı) ve İ ayrımını koruyarak küçült."""
+    return text.replace("I", "ı").replace("İ", "i").lower()
+
+
+def _turkish_capitalize_word(word: str) -> str:
+    """Tek kelimeyi Türkçe title case'e çevir."""
+    lower = _turkish_lower(word)
+    if not lower:
+        return lower
+    first = lower[0]
+    if first == "i":
+        return "İ" + lower[1:]
+    if first == "ı":
+        return "I" + lower[1:]
+    return first.upper() + lower[1:]
+
+
+def _parse_turkish_street_for_maps(street: str) -> Optional[Tuple[str, str, str]]:
+    """Resmi sokak satırını Google Maps formatına ayır.
+
+    Örnek girdi:
+        ÖRNEK MAH. ÇINAR SK. NO: 5 İÇ KAPI NO: 3 KADIKÖY / İSTANBUL
+    Örnek çıktı:
+        ("Çınar Sokağı", "5", "Örnek")
+    """
+    if not street:
+        return None
+
+    text = street.strip()
+
+    # Sokak sonundaki "ILCE / IL" kalıbını kaldır
+    text = re.sub(
+        r"\s+[A-Za-zÇĞİÖŞÜçğıöşü\s]+\s*/\s*[A-Za-zÇĞİÖŞÜçğıöşü\s]+$",
+        "",
+        text,
+    ).strip()
+
+    # İç kapı numarası haritalarda gürültü — ana kapı/blok no yeterli
+    text = re.sub(r"\s*İÇ\s+KAPI\s+NO[:\s]*\d+", "", text, flags=re.IGNORECASE).strip()
+
+    mahalle = ""
+    mah_match = re.match(r"^(?P<mahalle>.+?)\s+MAH(?:\.|ALLESI)\s+", text, re.IGNORECASE)
+    if mah_match:
+        mahalle = _title_case_tr(mah_match.group("mahalle"))
+        text = text[mah_match.end() :].strip()
+
+    door_no = ""
+    no_match = re.search(r"(?:BLOK\s+)?NO[:\s]*(?P<no>\d+)", text, re.IGNORECASE)
+    if no_match:
+        door_no = no_match.group("no")
+
+    street_patterns = (
+        (r"(?P<name>.+?)\s+SK\.", "Sokağı"),
+        (r"(?P<name>.+?)\s+SOK\.", "Sokağı"),
+        (r"(?P<name>.+?)\s+SOKAK", "Sokağı"),
+        (r"(?P<name>.+?)\s+CD\.", "Caddesi"),
+        (r"(?P<name>.+?)\s+CAD\.", "Caddesi"),
+        (r"(?P<name>.+?)\s+CADDE", "Caddesi"),
+        (r"(?P<name>.+?)\s+BULVAR", "Bulvarı"),
+        (r"(?P<name>.+?)\s+BLV\.", "Bulvarı"),
+    )
+    for pattern, suffix in street_patterns:
+        match = re.match(pattern, text, re.IGNORECASE)
+        if match:
+            sokak = f"{_title_case_tr(match.group('name').strip())} {suffix}"
+            return sokak, door_no, mahalle
+
+    return None
+
+
+def _format_maps_location(city: str, state: str, zip_code: str) -> str:
+    """34660 Üsküdar/İstanbul biçiminde konum parçası."""
+    city_t = _title_case_tr(city)
+    state_t = _title_case_tr(state)
+    if zip_code and city_t and state_t:
+        return f"{zip_code} {city_t}/{state_t}"
+    if city_t and state_t:
+        return f"{city_t}/{state_t}"
+    if city_t:
+        return city_t
+    if state_t:
+        return state_t
+    return zip_code
+
+
+def format_address_for_google_maps(partner) -> str:
+    """Resmi müşteri adresini Google Maps'in anlayacağı formata çevir.
+
+    Örnek: Çınar Sokağı No:5, Örnek, 34710 Kadıköy/İstanbul
+    """
+    if not partner:
+        return ""
+
+    lat = partner.partner_latitude
+    lng = partner.partner_longitude
+    if lat and lng:
+        return f"{lat},{lng}"
+
+    street = (partner.street or "").strip()
+    city = (partner.city or "").strip()
+    state = partner.state_id.name.strip() if partner.state_id else ""
+    zip_code = (partner.zip or "").strip()
+    location = _format_maps_location(city, state, zip_code)
+
+    parsed = _parse_turkish_street_for_maps(street)
+    if parsed:
+        sokak, door_no, mahalle = parsed
+        if door_no and mahalle and location:
+            return f"{sokak} No:{door_no}, {mahalle}, {location}"
+        if door_no and location:
+            return f"{sokak} No:{door_no}, {location}"
+        if mahalle and location:
+            return f"{sokak}, {mahalle}, {location}"
+        if location:
+            return f"{sokak}, {location}"
+        if door_no:
+            return f"{sokak} No:{door_no}"
+        return sokak
+
+    # Resmi format parse edilemezse sadeleştirilmiş yedek
+    return prepare_maps_destination_fallback(partner)
+
+
+def prepare_maps_destination_fallback(partner) -> str:
+    """Parse edilemeyen adresler için sadeleştirilmiş yedek format."""
+    street = (partner.street or "").strip()
+    street2 = (partner.street2 or "").strip()
+    city = (partner.city or "").strip()
+    state = partner.state_id.name.strip() if partner.state_id else ""
+    zip_code = (partner.zip or "").strip()
+
+    if street and " / " in street:
+        prefix, suffix = street.rsplit(" / ", 1)
+        suffix_norm = normalize_turkce(suffix)
+        if state and suffix_norm == normalize_turkce(state):
+            street = prefix.strip()
+        elif city and suffix_norm == normalize_turkce(city):
+            street = prefix.strip()
+
+    if street and city:
+        city_norm = normalize_turkce(city)
+        street_norm = normalize_turkce(street)
+        if street_norm.endswith(city_norm):
+            street = street[: len(street) - len(city)].strip()
+
+    location = _format_maps_location(city, state, zip_code)
+    parts = _dedupe_address_parts([street, street2, location])
+    return ", ".join(parts)
+
+
+def prepare_maps_destination(partner) -> str:
+    """Google Maps yol tarifi için hedef metnini hazırla."""
+    return format_address_for_google_maps(partner)
+
+
+def _dedupe_address_parts(parts: List[str]) -> List[str]:
+    """Adres parçalarında büyük/küçük harf farkını yok sayarak tekrarı önle."""
+    seen = set()
+    result = []
+    for part in parts:
+        part = (part or "").strip()
+        if not part:
+            continue
+        key = normalize_turkce(part)
+        if key in seen:
+            continue
+        seen.add(key)
+        result.append(part)
+    return result
+
+
+def build_google_maps_directions_url(
+    destination: str,
+    origin: Optional[str] = None,
+    waypoints: Optional[str] = None,
+) -> str:
+    """Google Maps yol tarifi URL'si oluştur (query string tam encode)."""
+    params = [("api", "1"), ("travelmode", "driving")]
+    if origin:
+        params.append(("origin", origin))
+    params.append(("destination", destination))
+    if waypoints:
+        params.append(("waypoints", waypoints))
+    return f"https://www.google.com/maps/dir/?{urlencode(params)}"
 
 
 def get_gun_kodu(tarih: date) -> Optional[str]:
