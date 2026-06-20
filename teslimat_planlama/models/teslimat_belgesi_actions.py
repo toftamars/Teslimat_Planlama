@@ -279,9 +279,10 @@ class TeslimatBelgesiActions(models.AbstractModel):
             count, minutes = sort_vehicle_day_deliveries(group)
             total_count += count
             total_minutes += minutes
-            tarih_str = fields.Date.to_string(group.teslimat_tarihi)
+            ref = group[:1]
+            tarih_str = fields.Date.to_string(ref.teslimat_tarihi)
             line = _("%(arac)s / %(tarih)s: %(count)s teslimat") % {
-                "arac": group.arac_id.name,
+                "arac": ref.arac_id.name,
                 "tarih": tarih_str,
                 "count": count,
             }
