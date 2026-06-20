@@ -30,7 +30,6 @@ def post_init_hook(cr, registry):
             # Haftalık programı uygula
             _logger.info("Haftalık program uygulanıyor...")
             ilce_model.apply_weekly_schedule()
-            cr.commit()
             _logger.info("Haftalık program uygulandı")
         else:
             _logger.warning("İstanbul ili bulunamadı")
