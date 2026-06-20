@@ -39,10 +39,6 @@ class TeslimatGun(models.Model):
     kapatma_baslangic = fields.Date(string="Kapatma Başlangıç")
     kapatma_bitis = fields.Date(string="Kapatma Bitiş")
 
-    # Kapasite Bilgileri (Dinamik - Modülden ayarlanabilir)
-    gunluk_maksimum_teslimat = fields.Integer(
-        string="Günlük Maksimum Teslimat", default=7
-    )
     # İlçe Eşleşmeleri (Dinamik - Database'den yönetilir)
     ilce_ids = fields.One2many(
         "teslimat.gun.ilce", "gun_id", string="İlçe Eşleşmeleri"
