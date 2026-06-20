@@ -152,22 +152,23 @@ class TeslimatBelgesiActions(models.AbstractModel):
         pass
 
     def _update_transfer_urunleri(self, picking) -> None:
-        """Transfer belgesindeki ürünleri güncelle (Bellek içi komutlar kullanarak).
+        """Transfer belgesindeki ürünleri ORM Command tuple'larıyla güncelle.
 
-        Not: Onchange içinde veritabanına create/unlink işlemi yapmak işlemi kilitler.
-        Bu yüzden sadece Command metodlarını kullanıyoruz.
+        İki yoldan çağrılır:
+          1. _onchange_stock_picking (NewId / bellek-içi): Command kullanımı
+             onchange içinde DB create/unlink kilidini önler.
+          2. Wizard create sonrası gerçek kayıt (teslimat_belgesi_wizard.py):
+             aynı Command'lar burada write'a çevrilir.
+        Her iki bağlamda da (5,0,0) clear + (0,0,vals) add doğru çalışır.
 
         Args:
             picking: Stock picking kaydı
         """
-        # Mevcut ürünleri temizle (Command.clear)
-        self.transfer_urun_ids = [(5, 0, 0)]
-
-        # Transfer belgesi ürünlerini ekle
+        # Tek atama: önce temizle (5,0,0), transfer satırları varsa ekle.
+        commands = [(5, 0, 0)]
         if picking and picking.move_ids_without_package:
-            lines = []
             for seq, move in enumerate(picking.move_ids_without_package, start=1):
-                lines.append(
+                commands.append(
                     (
                         0,
                         0,
@@ -180,7 +181,7 @@ class TeslimatBelgesiActions(models.AbstractModel):
                         },
                     )
                 )
-            self.transfer_urun_ids = [(5, 0, 0)] + lines
+        self.transfer_urun_ids = commands
 
     # =========================================================================
     # ACTION METHODS
