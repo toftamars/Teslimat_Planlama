@@ -238,9 +238,9 @@ class TeslimatBelgesiActions(models.AbstractModel):
         if not self.musteri_adres:
             raise UserError(_("Müşteri adresi bulunamadı!"))
 
-        # Google Maps URL
-        base_url = "https://www.google.com/maps/dir/?api=1"
-        destination = self.musteri_adres.replace(" ", "+")
+        # Google Maps URL (/ gibi özel karakterler quote ile encode edilmeli)
+        base_url = "https://www.google.com/maps/dir/?api=1&travelmode=driving"
+        destination = quote(self.musteri_adres.strip(), safe="")
         url = f"{base_url}&destination={destination}"
 
         return {
