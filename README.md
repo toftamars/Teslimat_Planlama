@@ -190,8 +190,8 @@ Adres yoksa `UserError` döner.
 | **Kim** | Tüm iç kullanıcılar (liste **Aksiyon** menüsü) |
 | **Nerede** | Teslimat Belgeleri **liste** — kayıtları seç → **🚦 Rota Optimizasyonu (Odoo Sırala)** |
 | **Ne yapar** | Google Routes API ile trafik süresine göre **`sira_no` günceller** — **harita açmaz** |
-| **Koşul** | Aynı **araç** + aynı **gün**; durum **Hazır** veya **Yolda**; en az 2 kayıt |
-| **Kod** | `action_rota_optimizasyonu()` → `sort_deliveries_by_traffic()` |
+| **Koşul** | Seçim yoksa bugünün tüm grupları; seçim varsa her araç+gün için o günkü tüm teslimatlar (karışık tarih seçimi olabilir). Durum **Hazır** veya **Yolda** |
+| **Kod** | `action_rota_optimizasyonu()` → `get_rota_optimizasyon_groups()` + `sort_vehicle_day_deliveries()` |
 
 Harita için: formda **🗺️ Yol Tarifi** (tek teslimat, sürücü).
 

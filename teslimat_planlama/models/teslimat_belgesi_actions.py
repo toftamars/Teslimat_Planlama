@@ -22,8 +22,10 @@ from .teslimat_utils import (
     prepare_maps_destination,
 )
 from .teslimat_route_service import (
-    ROTA_SIRALANABILIR_DURUMLAR,
-    sort_deliveries_by_traffic,
+    PARAM_API_KEY,
+    get_maps_route_config,
+    get_rota_optimizasyon_groups,
+    sort_vehicle_day_deliveries,
 )
 from . import sms_helper
 
@@ -252,76 +254,29 @@ class TeslimatBelgesiActions(models.AbstractModel):
             "target": "new",
         }
 
-    def _get_rota_optimizasyon_groups(self):
-        """Araç + gün bazında sıralanacak tam teslimat gruplarını döndür.
-
-        Seçim yoksa bugünkü tüm hazır/yolda teslimatlar.
-        Seçim varsa ilgili her araç+gün için o günkü TÜM teslimatlar (sadece
-        seçilen satırlar değil) — günlük 7 teslimatın tamamı sıralanır.
-        """
-        Belge = self.env["teslimat.belgesi"]
-        durumlar = list(ROTA_SIRALANABILIR_DURUMLAR)
-
-        if self:
-            keys = {
-                (rec.arac_id.id, rec.teslimat_tarihi)
-                for rec in self
-                if rec.arac_id
-                and rec.teslimat_tarihi
-                and rec.durum in ROTA_SIRALANABILIR_DURUMLAR
-            }
-            if not keys:
-                raise UserError(
-                    _(
-                        "Seçili kayıtlarda sıralanacak teslimat yok.\n\n"
-                        "Durum Hazır veya Yolda olan teslimatları seçin."
-                    )
-                )
-        else:
-            today = fields.Date.context_today(self)
-            keys = {
-                (rec.arac_id.id, rec.teslimat_tarihi)
-                for rec in Belge.search(
-                    [
-                        ("teslimat_tarihi", "=", today),
-                        ("durum", "in", durumlar),
-                    ]
-                )
-                if rec.arac_id
-            }
-            if not keys:
-                raise UserError(
-                    _(
-                        "Bugün sıralanacak teslimat bulunamadı.\n\n"
-                        "Hazır veya Yolda durumunda teslimat olmalı."
-                    )
-                )
-
-        result = []
-        for arac_id, tarih in sorted(keys, key=lambda k: (k[1], k[0])):
-            group = Belge.search(
-                [
-                    ("arac_id", "=", arac_id),
-                    ("teslimat_tarihi", "=", tarih),
-                    ("durum", "in", durumlar),
-                ]
-            )
-            if group:
-                result.append(group)
-        if not result:
-            raise UserError(_("Sıralanacak teslimat grubu bulunamadı."))
-        return result
-
     def action_trafik_sirasina_gore_sirala(self) -> dict:
         """Günlük teslimatları araç bazında trafik süresine göre sırala."""
-        group_list = self._get_rota_optimizasyon_groups()
+        config = get_maps_route_config(self.env)
+        if not config["api_key"]:
+            raise UserError(
+                _(
+                    "Google Maps API anahtarı tanımlı değil.\n\n"
+                    "Ayarlar → Teknik → Sistem Parametreleri → "
+                    "%(key)s"
+                )
+                % {"key": PARAM_API_KEY}
+            )
+
+        group_list = get_rota_optimizasyon_groups(
+            self.env, selected_records=self if self else None
+        )
 
         total_count = 0
         total_minutes = 0
         lines = []
 
         for group in group_list:
-            count, minutes = sort_deliveries_by_traffic(group)
+            count, minutes = sort_vehicle_day_deliveries(group)
             total_count += count
             total_minutes += minutes
             tarih_str = fields.Date.to_string(group.teslimat_tarihi)

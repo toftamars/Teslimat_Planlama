@@ -159,44 +159,78 @@ def _solve_open_tsp(matrix: List[List[Optional[int]]], delivery_count: int) -> L
     return best_order
 
 
-def sort_deliveries_by_traffic(records) -> Tuple[int, int]:
-    """Teslimat kayıtlarını trafik süresine göre sırala, sira_no güncelle.
+def get_rota_optimizasyon_groups(env, selected_records=None):
+    """Araç + gün bazında sıralanacak tam teslimat grupları.
 
-    Args:
-        records: teslimat.belgesi recordset (aynı araç + aynı gün)
-
-    Returns:
-        (sıralanan kayıt sayısı, tahmini toplam süre dakika)
+    Seçim yoksa bugünkü tüm hazır/yolda teslimatlar.
+    Seçim varsa ilgili her araç+gün için o günkü TÜM teslimatlar.
     """
+    Belge = env["teslimat.belgesi"]
+    durumlar = list(ROTA_SIRALANABILIR_DURUMLAR)
+
+    if selected_records:
+        keys = {
+            (rec.arac_id.id, rec.teslimat_tarihi)
+            for rec in selected_records
+            if rec.arac_id
+            and rec.teslimat_tarihi
+            and rec.durum in ROTA_SIRALANABILIR_DURUMLAR
+        }
+        if not keys:
+            raise UserError(
+                _(
+                    "Seçili kayıtlarda sıralanacak teslimat yok.\n\n"
+                    "Durum Hazır veya Yolda olan teslimatları seçin."
+                )
+            )
+    else:
+        today = fields.Date.context_today(Belge)
+        keys = {
+            (rec.arac_id.id, rec.teslimat_tarihi)
+            for rec in Belge.search(
+                [
+                    ("teslimat_tarihi", "=", today),
+                    ("durum", "in", durumlar),
+                ]
+            )
+            if rec.arac_id
+        }
+        if not keys:
+            raise UserError(
+                _(
+                    "Bugün sıralanacak teslimat bulunamadı.\n\n"
+                    "Hazır veya Yolda durumunda teslimat olmalı."
+                )
+            )
+
+    result = []
+    for arac_id, tarih in sorted(keys, key=lambda k: (k[1], k[0])):
+        group = Belge.search(
+            [
+                ("arac_id", "=", arac_id),
+                ("teslimat_tarihi", "=", tarih),
+                ("durum", "in", durumlar),
+            ]
+        )
+        if group:
+            result.append(group)
+    if not result:
+        raise UserError(_("Sıralanacak teslimat grubu bulunamadı."))
+    return result
+
+
+def _sort_single_vehicle_day(records) -> Tuple[int, int]:
+    """Tek araç + tek gün teslimatlarını trafik süresine göre sırala."""
     records = records.exists()
     if not records:
         return 0, 0
 
     config = get_maps_route_config(records.env)
-    if not config["api_key"]:
-        raise UserError(
-            _(
-                "Google Maps API anahtarı tanımlı değil.\n\n"
-                "Ayarlar → Teknik → Sistem Parametreleri → "
-                "%(key)s"
-            )
-            % {"key": PARAM_API_KEY}
-        )
-
-    arac_ids = records.mapped("arac_id")
-    tarihler = records.mapped("teslimat_tarihi")
-    if len(arac_ids) != 1 or len(tarihler) != 1:
-        raise UserError(
-            _("Trafik sıralaması için aynı araç ve aynı teslimat tarihi seçilmelidir.")
-        )
-
     active = records.filtered(
         lambda r: r.durum in ROTA_SIRALANABILIR_DURUMLAR
     ).sorted(key=lambda r: (r.sira_no, r.id))
     if not active:
-        raise UserError(
-            _("Sıralanacak teslimat yok (durum Hazır veya Yolda olmalı).")
-        )
+        return 0, 0
 
     if len(active) == 1:
         active.write({"sira_no": 1})
@@ -228,11 +262,41 @@ def sort_deliveries_by_traffic(records) -> Tuple[int, int]:
             total_seconds += leg
 
     ordered_recs = [active[i - 1] for i in order_indices]
-
     for sira, rec in enumerate(ordered_recs, start=1):
         rec.write({"sira_no": sira})
 
     return len(ordered_recs), int(total_seconds / 60)
+
+
+def sort_vehicle_day_deliveries(records) -> Tuple[int, int]:
+    """Tek araç + tek gün teslimatlarını trafik süresine göre sırala."""
+    return _sort_single_vehicle_day(records)
+
+
+def sort_deliveries_by_traffic(records) -> Tuple[int, int]:
+    """Teslimatları araç+gün grupları halinde trafik sırasına göre sırala."""
+    env = records.env
+    config = get_maps_route_config(env)
+    if not config["api_key"]:
+        raise UserError(
+            _(
+                "Google Maps API anahtarı tanımlı değil.\n\n"
+                "Ayarlar → Teknik → Sistem Parametreleri → "
+                "%(key)s"
+            )
+            % {"key": PARAM_API_KEY}
+        )
+
+    groups = get_rota_optimizasyon_groups(
+        env, selected_records=records if records else None
+    )
+    total_count = 0
+    total_minutes = 0
+    for group in groups:
+        count, minutes = _sort_single_vehicle_day(group)
+        total_count += count
+        total_minutes += minutes
+    return total_count, total_minutes
 
 
 def cron_sort_today_deliveries(env) -> None:
@@ -241,32 +305,17 @@ def cron_sort_today_deliveries(env) -> None:
         _logger.info("Trafik rota cron: API anahtarı yok, atlandı")
         return
 
-    Belge = env["teslimat.belgesi"]
-    today_date = fields.Date.context_today(Belge)
-    candidates = Belge.search(
-        [
-            ("teslimat_tarihi", "=", today_date),
-            ("durum", "in", list(ROTA_SIRALANABILIR_DURUMLAR)),
-        ]
-    )
-    for arac in candidates.mapped("arac_id"):
-        arac_recs = candidates.filtered(lambda r: r.arac_id == arac)
-        if len(arac_recs) < 2:
-            continue
-        try:
-            count, minutes = sort_deliveries_by_traffic(arac_recs)
-            _logger.info(
-                "Trafik rota cron: %s / %s → %s teslimat, ~%s dk",
-                arac.name,
-                today_date,
-                count,
-                minutes,
-            )
-        except UserError as exc:
-            _logger.warning(
-                "Trafik rota cron atlandı (%s): %s",
-                arac.name,
-                exc.args[0] if exc.args else exc,
-            )
-        except Exception:
-            _logger.exception("Trafik rota cron hatası: arac=%s", arac.name)
+    try:
+        count, minutes = sort_deliveries_by_traffic(env["teslimat.belgesi"].browse())
+        _logger.info(
+            "Trafik rota cron: %s teslimat sıralandı, ~%s dk",
+            count,
+            minutes,
+        )
+    except UserError as exc:
+        _logger.warning(
+            "Trafik rota cron atlandı: %s",
+            exc.args[0] if exc.args else exc,
+        )
+    except Exception:
+        _logger.exception("Trafik rota cron hatası")
