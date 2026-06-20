@@ -374,16 +374,30 @@ class TeslimatBelgesiActions(models.AbstractModel):
             record_name=self.name,
             phone_override=telefon,
         )
+        # PII: chatter kalıcı/değişmez kayıt → telefonu maskele (son 4 hane).
+        # Tam numara form alanlarında (musteri_telefon/manuel_telefon) durur.
+        maskeli_telefon = sms_helper.SMSHelper._mask_phone(telefon)
+        telefon_kaynak = _("manuel") if self.manuel_telefon else _("müşteri")
         if sms_sent:
             self.message_post(
-                body=_("SMS gönderildi: %s\n\n%s") % (telefon, mesaj),
+                body=_("SMS gönderildi: %(telefon)s (%(kaynak)s)\n\n%(mesaj)s") % {
+                    "telefon": maskeli_telefon,
+                    "kaynak": telefon_kaynak,
+                    "mesaj": mesaj,
+                },
                 subject=_(konu),
                 message_type="notification",
             )
         else:
             self.message_post(
-                body=_("SMS gönderilemedi (servis hatası). Alıcı: %s, Telefon: %s")
-                % (self.musteri_id.name or "-", telefon),
+                body=_(
+                    "SMS gönderilemedi (servis hatası). "
+                    "Alıcı: %(alici)s, Telefon: %(telefon)s (%(kaynak)s)"
+                ) % {
+                    "alici": self.musteri_id.name or "-",
+                    "telefon": maskeli_telefon,
+                    "kaynak": telefon_kaynak,
+                },
                 subject=_("SMS Gönderim Hatası"),
                 message_type="notification",
             )
