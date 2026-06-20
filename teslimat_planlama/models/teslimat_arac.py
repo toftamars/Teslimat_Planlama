@@ -335,7 +335,7 @@ class TeslimatArac(models.Model):
                     "Araç Tipi: %(arac_tipi)s\n"
                     "Önceki İlçe Sayısı: %(eski_sayisi)s\n"
                     "Yeni İlçe Sayısı: %(yeni_sayisi)s\n\n"
-                    "✓ Eşleştirme başarıyla güncellendi!"
+                    "Eşleştirme başarıyla güncellendi!"
                 ) % {
                     "arac": self.name,
                     "arac_tipi": dict(self._fields['arac_tipi'].selection).get(self.arac_tipi),
@@ -359,7 +359,7 @@ class TeslimatArac(models.Model):
         result = self.sync_all_arac_ilce_eslesmesi()
         
         mesaj = _(
-            "✓ Senkronizasyon Tamamlandı!\n\n"
+            "Senkronizasyon Tamamlandı!\n\n"
             "Güncellenen Araç Sayısı: %(guncellenen)s\n"
             "Hata Sayısı: %(hata)s\n\n"
         ) % {

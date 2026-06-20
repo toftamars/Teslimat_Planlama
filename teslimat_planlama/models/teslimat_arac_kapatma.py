@@ -209,8 +209,8 @@ class TeslimatAracKapatma(models.Model):
             "type": "ir.actions.client",
             "tag": "display_notification",
             "params": {
-                "title": "Başarılı",
-                "message": f"{self.arac_id.name} kapatma kaydı iptal edildi",
+                "title": _("Başarılı"),
+                "message": _("%(arac)s kapatma kaydı iptal edildi") % {"arac": self.arac_id.name},
                 "type": "success",
                 "sticky": False,
             }
@@ -224,8 +224,8 @@ class TeslimatAracKapatma(models.Model):
             "type": "ir.actions.client",
             "tag": "display_notification",
             "params": {
-                "title": "Başarılı",
-                "message": f"{self.arac_id.name} kapatma kaydı tekrar aktif edildi",
+                "title": _("Başarılı"),
+                "message": _("%(arac)s kapatma kaydı tekrar aktif edildi") % {"arac": self.arac_id.name},
                 "type": "success",
                 "sticky": False,
             }
