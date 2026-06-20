@@ -34,5 +34,7 @@ def post_init_hook(cr, registry):
         else:
             _logger.warning("İstanbul ili bulunamadı")
 
+        env["teslimat.belgesi"].init_maps_config_parameters()
+
     except Exception as e:
         _logger.warning("Post-init hook hatası (ignored): %s", e)

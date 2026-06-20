@@ -626,3 +626,10 @@ class TeslimatBelgesi(models.Model):
 
         cron_sort_today_deliveries(self.env)
 
+    @api.model
+    def init_maps_config_parameters(self) -> None:
+        """Modül kurulum/yükseltme: harita parametrelerini yalnızca yoksa oluştur."""
+        from .teslimat_route_service import ensure_maps_config_parameters
+
+        ensure_maps_config_parameters(self.env)
+

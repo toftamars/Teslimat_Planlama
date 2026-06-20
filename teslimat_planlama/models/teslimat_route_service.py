@@ -19,7 +19,19 @@ GOOGLE_ROUTE_MATRIX_URL = (
 )
 PARAM_API_KEY = "teslimat_planlama.google_maps_api_key"
 PARAM_DEPOT = "teslimat_planlama.rota_baslangic_adres"
+DEFAULT_DEPOT_ADDRESS = (
+    "İstanbul, Türkiye"
+)
 ROTA_SIRALANABILIR_DURUMLAR = ("hazir", "yolda")
+
+
+def ensure_maps_config_parameters(env) -> None:
+    """Sistem parametrelerini yalnızca yoksa oluştur (manuel kayıtları ezmez)."""
+    icp = env["ir.config_parameter"].sudo()
+    if not icp.search([("key", "=", PARAM_API_KEY)], limit=1):
+        icp.set_param(PARAM_API_KEY, "")
+    if not icp.search([("key", "=", PARAM_DEPOT)], limit=1):
+        icp.set_param(PARAM_DEPOT, DEFAULT_DEPOT_ADDRESS)
 
 
 def get_maps_route_config(env) -> dict:
@@ -28,7 +40,7 @@ def get_maps_route_config(env) -> dict:
     return {
         "api_key": (icp.get_param(PARAM_API_KEY) or "").strip(),
         "depot": (icp.get_param(PARAM_DEPOT) or "").strip()
-        or "İstanbul, Türkiye",
+        or DEFAULT_DEPOT_ADDRESS,
     }
 
 
