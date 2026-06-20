@@ -5,6 +5,7 @@ from typing import Optional
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 
+from .teslimat_constants import DAILY_DELIVERY_LIMIT
 from .teslimat_utils import is_small_vehicle
 
 _logger = logging.getLogger(__name__)
@@ -38,7 +39,7 @@ class TeslimatArac(models.Model):
     # Kapasite Bilgileri (Dinamik - Modülden ayarlanabilir)
     # Varsayılan: 7 teslimat/gün (user grubu için)
     gunluk_teslimat_limiti = fields.Integer(
-        string="Günlük Teslimat Limiti", default=7
+        string="Günlük Teslimat Limiti", default=DAILY_DELIVERY_LIMIT
     )
     mevcut_kapasite = fields.Integer(
         string="Mevcut Kapasite",

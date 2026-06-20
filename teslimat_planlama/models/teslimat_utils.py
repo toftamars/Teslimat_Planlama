@@ -332,15 +332,3 @@ def check_arac_kapatma(env, arac_id: int, teslimat_tarihi: date, bypass_for_mana
         return False, mesaj
 
     return True, None
-
-
-# Haftalık program sabiti (tekrarlayan kod önleme)
-HAFTALIK_PROGRAM = {
-    "pazartesi": 0,
-    "sali": 1,
-    "carsamba": 2,
-    "persembe": 3,
-    "cuma": 4,
-    "cumartesi": 5,
-    "pazar": 6,
-}
