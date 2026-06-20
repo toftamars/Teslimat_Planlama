@@ -1,12 +1,29 @@
 """Teslimat Ana Sayfa - Kapasite Sorgulama Modeli."""
 import logging
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from typing import Optional
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
-from .teslimat_utils import get_gun_kodu, get_istanbul_state, is_small_vehicle
+from .teslimat_constants import (
+    CANCELLED_STATUS,
+    DAILY_DELIVERY_LIMIT,
+    FORECAST_DAYS,
+    GUN_ESLESMESI,
+    GUN_KODU_MAP,
+    LOW_CAPACITY_THRESHOLD,
+    SAME_DAY_DELIVERY_CUTOFF_HOUR,
+)
+from .teslimat_utils import (
+    get_gun_kodu,
+    get_istanbul_state,
+    get_istanbul_time,
+    is_manager,
+    is_pazar_gunu,
+    is_small_vehicle,
+    validate_arac_ilce_eslesmesi,
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -82,8 +99,6 @@ class TeslimatAnaSayfa(models.TransientModel):
             domain.append(("state_id", "=", self.state_id.id))
         
         # Yönetici kontrolü - Yöneticiler tüm ilçeleri görebilir
-        from .teslimat_utils import is_manager
-        
         if is_manager(self.env):
             # Yöneticiler için kısıtlama yok
             return {"domain": {"ilce_id": domain}}
@@ -178,8 +193,6 @@ class TeslimatAnaSayfa(models.TransientModel):
                 continue
 
             # Validasyon fonksiyonunu kullan
-            from .teslimat_utils import validate_arac_ilce_eslesmesi
-            
             gecerli, mesaj = validate_arac_ilce_eslesmesi(record.arac_id, record.ilce_id)
             
             # Many2many ilişkisini kullanarak kontrol et
@@ -281,9 +294,6 @@ class TeslimatAnaSayfa(models.TransientModel):
         - Kapasite durumunu hesaplar
         - Araç kapatma durumunu kontrol eder
         """
-        from .teslimat_utils import is_manager
-        from .teslimat_constants import FORECAST_DAYS, SAME_DAY_DELIVERY_CUTOFF_HOUR
-        
         for record in self:
             if not record.ilce_id or not record.arac_id or not record.ilce_uygun_mu:
                 record.uygun_gunler = [(5, 0, 0)]
@@ -292,7 +302,6 @@ class TeslimatAnaSayfa(models.TransientModel):
             yonetici_mi = is_manager(self.env)
             small_vehicle = record.arac_kucuk_mu
             # Bugün = İstanbul tarihi (geçmiş gün görünmesin, yarın doğru görünsün)
-            from .teslimat_utils import get_istanbul_time
             simdi_istanbul = get_istanbul_time()
             bugun = simdi_istanbul.date()
             saat = simdi_istanbul.hour
@@ -351,8 +360,6 @@ class TeslimatAnaSayfa(models.TransientModel):
         Returns:
             dict: {tarih: teslimat_sayisi} mapping (araç+gün toplamı)
         """
-        from .teslimat_constants import CANCELLED_STATUS
-        
         bitis_tarihi = bugun + timedelta(days=forecast_days)
         
         # Araç + tarih bazında say (ilçe yok): tüm ilçelerdeki teslimat toplamı
@@ -395,8 +402,6 @@ class TeslimatAnaSayfa(models.TransientModel):
                 gun_dict: {gun_kodu: gun_record}
                 gun_ilce_dict: {(gun_id, ilce_id): gun_ilce_record}
         """
-        from .teslimat_constants import GUN_KODU_MAP
-        
         # Tüm günleri önceden çek
         gun_kodlari = list(GUN_KODU_MAP.values())
         gunler = self.env["teslimat.gun"].search([("gun_kodu", "in", gun_kodlari)])
@@ -430,8 +435,6 @@ class TeslimatAnaSayfa(models.TransientModel):
         Returns:
             bool: Tarih uygunsa True
         """
-        from .teslimat_utils import is_pazar_gunu
-        
         # Pazar gününü atla
         if is_pazar_gunu(tarih):
             return False
@@ -464,8 +467,6 @@ class TeslimatAnaSayfa(models.TransientModel):
         Returns:
             dict: Gün bilgileri veya None (uygun değilse)
         """
-        from .teslimat_constants import GUN_KODU_MAP, GUN_ESLESMESI, DAILY_DELIVERY_LIMIT
-        
         teslimat_sayisi = teslimat_sayisi_by_date.get(tarih, 0)
         
         # Araç kapasitesi dolsa bile günü listeye ekle (Dolu olarak göster)
@@ -545,7 +546,6 @@ class TeslimatAnaSayfa(models.TransientModel):
         Returns:
             str: Durum metni
         """
-        from .teslimat_constants import LOW_CAPACITY_THRESHOLD
         
         if arac_kapali:
             return "Kapalı"
@@ -599,9 +599,6 @@ class TeslimatAnaSayfa(models.TransientModel):
 
         Sadece yöneticiler bu işlemi yapabilir.
         """
-        from .teslimat_utils import is_manager
-        from odoo.exceptions import UserError
-
         if not is_manager(self.env):
             raise UserError(_("Bu işlem sadece yöneticiler tarafından yapılabilir."))
 
@@ -629,7 +626,6 @@ class TeslimatAnaSayfa(models.TransientModel):
             raise UserError(_("İlçe seçimi gereklidir."))
 
         # Tarih string'den date'e çevir
-        from datetime import datetime
         if isinstance(tarih, str):
             tarih = datetime.strptime(tarih, '%Y-%m-%d').date()
 
