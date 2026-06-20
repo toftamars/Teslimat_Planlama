@@ -168,7 +168,15 @@ def get_istanbul_state(env):
 
 
 def validate_arac_ilce_eslesmesi(arac, ilce, bypass_for_manager: bool = True) -> tuple[bool, str]:
-    """Araç-ilçe eşleştirmesini doğrula.
+    """Araç-ilçe eşleştirmesini doğrula (CANLI yaka kuralı).
+
+    Mimari (araç-ilçe uyumu — kaynak ilişkisi):
+      Bu "kural"dır: arac_tipi ↔ ilce.yaka_tipi'ni CANLI karşılaştırır
+      (aktif/teslimat_aktif'e BAKMAZ). Yetkili KAPI DEĞİLDİR — sadece ekran
+      mesajı ve yumuşak UI domain'i içindir. Asıl kapı (teslimat engeli)
+      `arac.uygun_ilceler` ÜYELİĞİdir (validators + wizard); o liste bu
+      kuralın `_update_uygun_ilceler` ile üretilmiş materialized cache'idir.
+      Kapıyı buna çevirme: inaktif-ilçe engeli sessizce kalkar.
     
     Args:
         arac: Araç kaydı

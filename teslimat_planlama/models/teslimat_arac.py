@@ -162,6 +162,12 @@ class TeslimatArac(models.Model):
         - Anadolu Yakası araçları → Sadece Anadolu Yakası ilçeleri
         - Avrupa Yakası araçları → Sadece Avrupa Yakası ilçeleri
         - Küçük araçlar ve ek araç → Tüm ilçeler
+
+        Mimari: bu metot, araç-ilçe uyum KAPISININ kaynağı olan `uygun_ilceler`
+        materialized cache'ini (yaka kuralından, aktif+teslimat_aktif filtreli)
+        ÜRETİR. MANUEL tetiklenir (create/write arac_tipi, ilçe değişimi, sync
+        butonu) — cron yok, yeniden-sync edilmezse bayatlayabilir. Canlı kural:
+        teslimat_utils.validate_arac_ilce_eslesmesi.
         """
         for record in self:
             if not record.arac_tipi:

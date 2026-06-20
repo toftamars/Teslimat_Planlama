@@ -123,7 +123,12 @@ class TeslimatBelgesiValidators(models.AbstractModel):
                 raise ValidationError(hata_mesaji)
 
     def _validate_arac_ilce_uyumlulugu(self):
-        """Araç-İlçe uyumluluğu kontrolü."""
+        """Araç-İlçe uyumluluğu kontrolü (YETKİLİ KAPI).
+
+        Kaynak = `arac.uygun_ilceler` ÜYELİĞİ (materialized cache,
+        aktif/teslimat_aktif filtreli). Canlı yaka kuralı (mesaj/UI; kapı
+        değil): teslimat_utils.validate_arac_ilce_eslesmesi.
+        """
         if self.ilce_id and self.arac_id:
             if self.ilce_id not in self.arac_id.uygun_ilceler:
                 arac_tipi_label = dict(self.arac_id._fields["arac_tipi"].selection).get(
