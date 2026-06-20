@@ -41,6 +41,7 @@
         'data/teslimat_program_kurulum_data.xml',
         'data/istanbul_ilceleri_data.xml',
         'data/sms_parameter_data.xml',
+        'data/maps_parameter_data.xml',
         'data/teslimat_cron_data.xml',
         
         # Core Views

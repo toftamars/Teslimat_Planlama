@@ -43,7 +43,8 @@
         <field name="name">teslimat.belgesi.tree</field>
         <field name="model">teslimat.belgesi</field>
         <field name="arch" type="xml">
-            <tree string="Teslimat Belgeleri" create="false" delete="0" decoration-info="durum == 'hazir'" decoration-success="durum == 'teslim_edildi'" decoration-danger="durum == 'iptal'">
+            <tree string="Teslimat Belgeleri" create="false" delete="0" default_order="sira_no asc" decoration-info="durum == 'hazir'" decoration-success="durum == 'teslim_edildi'" decoration-danger="durum == 'iptal'">
+                <field name="sira_no"/>
                 <field name="name"/>
                 <field name="teslimat_tarihi"/>
                 <field name="musteri_id"/>
@@ -266,6 +267,16 @@
         <field name="binding_view_types">list</field>
         <field name="state">code</field>
         <field name="code">action = records.action_rota_optimizasyonu()</field>
+    </record>
+
+    <!-- Trafik sıralama: aynı araç + gün seçimi → sira_no güncellenir -->
+    <record id="action_teslimat_belgesi_trafik_sirala" model="ir.actions.server">
+        <field name="name">🚦 Trafik Sırasına Göre Sırala</field>
+        <field name="model_id" ref="model_teslimat_belgesi"/>
+        <field name="binding_model_id" ref="model_teslimat_belgesi"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">action = records.action_trafik_sirasina_gore_sirala()</field>
     </record>
 </odoo>
 

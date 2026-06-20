@@ -40,7 +40,7 @@ class TeslimatBelgesi(models.Model):
         "teslimat.belgesi.validators",  # Validasyon mixin
         "teslimat.belgesi.actions",  # Action ve onchange mixin
     ]
-    _order = "teslimat_tarihi asc, name"
+    _order = "teslimat_tarihi asc, sira_no asc, name"
 
     # Performans: Composite indeksler (kapasite sorgularında kritik)
     _sql_constraints = []
@@ -618,4 +618,11 @@ class TeslimatBelgesi(models.Model):
                     "teslim_alan": self.teslim_alan_kisi or 'N/A',
                 }
             )
+
+    @api.model
+    def _cron_trafik_rota_sirala(self) -> None:
+        """Günlük cron: bugünkü teslimatları trafik süresine göre sırala."""
+        from .teslimat_route_service import cron_sort_today_deliveries
+
+        cron_sort_today_deliveries(self.env)
 

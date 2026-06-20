@@ -19,5 +19,19 @@
             <field name="nextcall"
                    eval="(datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d 02:00:00')"/>
         </record>
+
+        <!-- Sabah 05:30: bugünkü teslimatları trafik süresine göre sırala (varsayılan KAPALI; API key gerekir) -->
+        <record id="ir_cron_trafik_rota_sirala" model="ir.cron">
+            <field name="name">Teslimat: Trafik Rota Sıralama (bugün)</field>
+            <field name="model_id" ref="model_teslimat_belgesi"/>
+            <field name="state">code</field>
+            <field name="code">model._cron_trafik_rota_sirala()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="active" eval="False"/>
+            <field name="nextcall"
+                   eval="(datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d 05:30:00')"/>
+        </record>
     </data>
 </odoo>

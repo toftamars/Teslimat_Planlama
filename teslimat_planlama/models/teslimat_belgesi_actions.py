@@ -21,6 +21,10 @@ from .teslimat_utils import (
     is_manager,
     prepare_maps_destination,
 )
+from .teslimat_route_service import (
+    is_route_api_configured,
+    sort_deliveries_by_traffic,
+)
 from . import sms_helper
 
 _logger = logging.getLogger(__name__)
@@ -248,6 +252,29 @@ class TeslimatBelgesiActions(models.AbstractModel):
             "target": "new",
         }
 
+    def action_trafik_sirasina_gore_sirala(self) -> dict:
+        """Seçili teslimatları Google Routes API ile trafik süresine göre sırala."""
+        if not self:
+            raise UserError(_("Lütfen en az bir teslimat seçin."))
+
+        count, minutes = sort_deliveries_by_traffic(self)
+        message = _("%(count)s teslimat trafik sırasına göre sıralandı.") % {
+            "count": count,
+        }
+        if minutes:
+            message += " " + _("Tahmini rota süresi: ~%(min)s dk.") % {"min": minutes}
+
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": _("Rota sıralandı"),
+                "message": message,
+                "type": "success",
+                "sticky": False,
+            },
+        }
+
     def action_rota_optimizasyonu(self) -> dict:
         """Seçili teslimatların adreslerini Google Maps çoklu durak ile aç.
 
@@ -264,9 +291,25 @@ class TeslimatBelgesiActions(models.AbstractModel):
         if not self:
             raise UserError(_("Lütfen en az bir teslimat seçin."))
 
+        records = self
+        arac_ids = records.mapped("arac_id")
+        tarihler = records.mapped("teslimat_tarihi")
+        if (
+            is_route_api_configured(self.env)
+            and len(arac_ids) == 1
+            and len(tarihler) == 1
+            and len(records) >= 2
+        ):
+            try:
+                sort_deliveries_by_traffic(records)
+            except UserError as exc:
+                _logger.warning("Rota öncesi trafik sıralaması atlandı: %s", exc.args[0])
+
+        records = records.sorted(key=lambda r: (r.sira_no, r.id))
+
         # Adresi olan kayıtları filtrele (Maps için optimize edilmiş hedef)
         adresli = []
-        for rec in self:
+        for rec in records:
             if not rec.musteri_id:
                 continue
             adres = prepare_maps_destination(rec.musteri_id)
