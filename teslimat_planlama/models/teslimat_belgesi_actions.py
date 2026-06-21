@@ -150,16 +150,6 @@ class TeslimatBelgesiActions(models.AbstractModel):
                 }
             }
 
-    @api.onchange("musteri_id")
-    def _onchange_musteri(self) -> None:
-        """Müşteri değiştiğinde bilgileri güncelle."""
-        if not self.musteri_id:
-            return
-
-        # Müşteri adres bilgileri varsa kullanılabilir
-        # Buraya ek bilgiler eklenebilir
-        pass
-
     def _update_transfer_urunleri(self, picking) -> None:
         """Transfer belgesindeki ürünleri ORM Command tuple'larıyla güncelle.
 

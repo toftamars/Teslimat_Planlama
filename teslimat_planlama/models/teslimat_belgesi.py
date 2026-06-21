@@ -42,9 +42,6 @@ class TeslimatBelgesi(models.Model):
     ]
     _order = "teslimat_tarihi asc, sira_no asc, name"
 
-    # Performans: Composite indeksler (kapasite sorgularında kritik)
-    _sql_constraints = []
-
     name = fields.Char(
         string="Teslimat No",
         required=True,

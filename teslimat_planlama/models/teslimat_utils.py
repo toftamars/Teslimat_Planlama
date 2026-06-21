@@ -11,7 +11,6 @@ from odoo import _
 from .teslimat_constants import (
     GUN_KODU_MAP,
     ISTANBUL_TIMEZONE,
-    SAME_DAY_DELIVERY_CUTOFF_HOUR,
     SMALL_VEHICLE_TYPES,
     get_arac_kapatma_sebep_label,
 )
@@ -444,42 +443,6 @@ def get_istanbul_time() -> datetime:
         datetime: İstanbul timezone'unda şimdiki zaman
     """
     return datetime.now(_ISTANBUL_TZ)
-
-
-def check_ayni_gun_saat_kontrolu(teslimat_tarihi: date, bypass_for_manager: bool = True, env=None) -> tuple[bool, str]:
-    """Aynı gün teslimat için saat kontrolü yap.
-
-    Saat 12:00'den sonra aynı güne teslimat yazılamaz.
-
-    Args:
-        teslimat_tarihi: Teslimat tarihi
-        bypass_for_manager: Yöneticiler için kontrolü atla
-        env: Odoo environment (yönetici kontrolü için)
-
-    Returns:
-        tuple: (Geçerli mi?, Mesaj)
-    """
-    # Yönetici kontrolü
-    if bypass_for_manager and env and is_manager(env):
-        return True, "Yönetici yetkisi - saat kontrolü atlandı"
-
-    simdi = get_istanbul_time()
-    bugun = simdi.date()
-
-    if teslimat_tarihi != bugun:
-        return True, "Farklı gün - saat kontrolü gerekmiyor"
-
-    saat = simdi.hour
-    dakika = simdi.minute
-
-    if saat >= SAME_DAY_DELIVERY_CUTOFF_HOUR:
-        return False, (
-            f"Aynı gün teslimat yazılamaz!\n\n"
-            f"İstanbul Saati: {saat:02d}:{dakika:02d}\n"
-            f"Saat {SAME_DAY_DELIVERY_CUTOFF_HOUR}:00'dan sonra bugüne teslimat planlanamaz."
-        )
-
-    return True, f"Saat kontrolü geçti (şu an: {saat:02d}:{dakika:02d})"
 
 
 def check_arac_kapatma(env, arac_id: int, teslimat_tarihi: date, bypass_for_manager: bool = True) -> tuple[bool, Optional[str]]:
