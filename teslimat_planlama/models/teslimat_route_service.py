@@ -120,8 +120,45 @@ def _fetch_travel_matrix(api_key: str, addresses: List[str]) -> List[List[Option
     return matrix
 
 
+TSP_BRUTE_FORCE_LIMIT = 8  # 8! = 40320 perm (~hızlı). Üstünde greedy'ye düş:
+# N! büyük N'de (yönetici kapasite-bypass / araç limiti=0) worker CPU'sunu kilitler.
+
+
+def _greedy_nearest_neighbor(
+    matrix: List[List[Optional[int]]], delivery_count: int
+) -> List[int]:
+    """Nearest-neighbor sıralama (büyük N için brute-force yerine, O(N²)).
+
+    Depodan (0) başlar, her adımda en yakın ziyaret edilmemiş durağı seçer.
+    Geçerli komşu kalmazsa brute-force ile AYNI UserError'u verir.
+    """
+    order: List[int] = []
+    unvisited = set(range(1, delivery_count + 1))
+    cur = 0
+    while unvisited:
+        best_next = None
+        best_leg = None
+        for nxt in sorted(unvisited):  # deterministik tie-break
+            leg = matrix[cur][nxt]
+            if leg is None:
+                continue
+            if best_leg is None or leg < best_leg:
+                best_leg, best_next = leg, nxt
+        if best_next is None:
+            raise UserError(
+                _("Trafik matrisi tamamlanamadı; adresler Google tarafından çözülemedi.")
+            )
+        order.append(best_next)
+        unvisited.discard(best_next)
+        cur = best_next
+    return order
+
+
 def _solve_open_tsp(matrix: List[List[Optional[int]]], delivery_count: int) -> List[int]:
     """Depodan (0) başlayıp tüm teslimatları minimum sürede ziyaret sırası.
+
+    N ≤ TSP_BRUTE_FORCE_LIMIT için optimal brute-force; üstünde greedy fallback
+    (worker kilidini önler).
 
     Returns:
         matrix indeksleri (1..delivery_count)
@@ -130,6 +167,13 @@ def _solve_open_tsp(matrix: List[List[Optional[int]]], delivery_count: int) -> L
         return []
     if delivery_count == 1:
         return [1]
+
+    if delivery_count > TSP_BRUTE_FORCE_LIMIT:
+        _logger.info(
+            "Rota: büyük grup (%s teslimat) — greedy sıralama (brute-force atlandı)",
+            delivery_count,
+        )
+        return _greedy_nearest_neighbor(matrix, delivery_count)
 
     stops = list(range(1, delivery_count + 1))
     best_order = stops
