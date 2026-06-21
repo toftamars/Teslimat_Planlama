@@ -291,6 +291,9 @@ class TeslimatBelgesiActions(models.AbstractModel):
             message += "\n" + _("Toplam tahmini süre: ~%(min)s dk.") % {
                 "min": total_minutes
             }
+        # Maliyet farkındalığı: her sıralama faturalı Google API çağrısı yapar.
+        # Sık/gereksiz tıklama maliyeti artırır (rate-limit yok, bilinçli kullanın).
+        message += "\n" + _("Not: Her sıralama Google API çağrısı yapar (faturalı).")
 
         return {
             "type": "ir.actions.client",
