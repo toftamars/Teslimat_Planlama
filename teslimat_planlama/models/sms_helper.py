@@ -100,6 +100,7 @@ class SMSHelper:
                     "number": phone_number,
                     "body": message,
                     "partner_id": partner.id if partner else False,
+                    "teslimat_planlama_sms": True,
                 }
             )
             sms.sudo().send()

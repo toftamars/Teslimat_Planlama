@@ -13,5 +13,6 @@ from . import teslimat_belgesi_urun
 from . import teslimat_ana_sayfa
 from . import teslimat_ana_sayfa_gun
 from . import res_partner
+from . import sms_sms
 from . import stock_picking
 
