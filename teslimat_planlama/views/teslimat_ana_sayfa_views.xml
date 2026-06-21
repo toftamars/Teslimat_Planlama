@@ -104,6 +104,7 @@
                                             <field name="ana_sayfa_id" invisible="1"/>
                                             <field name="toplam_kapasite" invisible="1"/>
                                             <field name="arac_kapali_mi" invisible="1"/>
+                                            <field name="yonetici_bypass" invisible="1"/>
                                             <field name="tarih_str" string="Tarih" readonly="1" 
                                                    optional="show"/>
                                             <field name="teslimat_sayisi" readonly="1" string="Teslimat" optional="show"/>

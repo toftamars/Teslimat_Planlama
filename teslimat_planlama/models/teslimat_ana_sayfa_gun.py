@@ -20,6 +20,11 @@ class TeslimatAnaSayfaGun(models.TransientModel):
     teslimat_sayisi = fields.Integer(string="Teslimat Sayısı", default=0)
     toplam_kapasite = fields.Integer(string="Toplam Kapasite", default=0)
     kalan_kapasite = fields.Integer(string="Kalan Kapasite", default=0)
+    yonetici_bypass = fields.Boolean(
+        string="Yönetici Bypass",
+        default=False,
+        help="Yönetici ise kapasite dolu olsa da bu güne teslimat oluşturabilir.",
+    )
     doluluk_yuzdesi = fields.Float(string="Doluluk %", compute="_compute_doluluk_yuzdesi", store=False)
     durum_text = fields.Char(string="Durum")
     tarih_str = fields.Char(string="Tarih", compute="_compute_tarih_str")

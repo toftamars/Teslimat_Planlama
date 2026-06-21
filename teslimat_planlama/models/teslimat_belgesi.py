@@ -471,7 +471,8 @@ class TeslimatBelgesi(models.Model):
             return
         # Aynı slot için eşzamanlı yazmayı engelle (race condition önleme)
         self._acquire_capacity_lock(new_arac_id, new_ilce_id, new_tarih)
-        # Düzenle ile dolu güne taşımayı engelle (yönetici dahil; kapasite herkes için geçerli)
+        # Düzenle ile dolu güne taşımayı engelle (yönetici MUAF — _validate_arac_kapasitesi
+        # başında is_manager bypass var; normal kullanıcı için kapasite geçerli).
         self._validate_arac_kapasitesi(
             teslimat_tarihi=new_tarih, arac_id=new_arac_id, ilce_id=new_ilce_id
         )

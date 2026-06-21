@@ -185,7 +185,13 @@ class TeslimatBelgesiValidators(models.AbstractModel):
         Araç günlük limiti tüm ilçeler toplamı için geçerlidir (Ana Sayfa ile uyumlu).
         İlçe bazlı sayım yapılmaz; aynı araç+tarih için toplam teslimat sayılır.
         Opsiyonel parametreler write öncesi kontrol için (düzenle ile tarih değişince).
+
+        Yönetici araç kapasitesinde MUAFTIR (kişisel kota RULE D ile tutarlı —
+        belgesi.py _check_daily_limit). 3 çağrı yolu (constrains, write pre-check,
+        wizard) bu tek metoda indiği için muafiyet burada tek noktada uygulanır.
         """
+        if is_manager(self.env):
+            return
         tarih = teslimat_tarihi if teslimat_tarihi is not None else self.teslimat_tarihi
         arac = arac_id if arac_id is not None else self.arac_id
         ilce = ilce_id if ilce_id is not None else self.ilce_id

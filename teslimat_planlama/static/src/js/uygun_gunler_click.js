@@ -150,9 +150,9 @@ odoo.define('teslimat_planlama.uygun_gunler_click', function (require) {
                     return;
                 }
 
-                // Check remaining capacity
+                // Check remaining capacity (yönetici muaf: backend RULE A da bypass eder)
                 var kalanKapasite = record.data.kalan_kapasite;
-                if (kalanKapasite <= 0) {
+                if (kalanKapasite <= 0 && !record.data.yonetici_bypass) {
                     Dialog.alert(this, 'Bu tarih için kapasite dolmuştur.');
                     return;
                 }

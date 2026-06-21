@@ -511,6 +511,8 @@ class TeslimatAnaSayfa(models.TransientModel):
             "toplam_kapasite": toplam_kapasite,
             "kalan_kapasite": kalan_kapasite,
             "durum_text": durum_text,
+            # Yönetici dolu/aşım gününe de tıklayabilsin (JS bloğunu atlar).
+            "yonetici_bypass": yonetici_mi,
         }
     
     def _check_arac_kapali(self, arac_id: int, tarih: date) -> bool:
