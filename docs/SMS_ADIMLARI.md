@@ -51,4 +51,5 @@ Kaydettiğiniz anda yeni işlemlerde SMS tekrar gönderilir; sunucuyu yeniden ba
 
 - **Gönderim:** `models/sms_helper.py` → `SMSHelper.send_sms(env, partner, message, record_name, phone_override)` → `env['sms.sms'].sudo().create()` + `.send()`.
 - **Telefon:** Önce manuel telefon, yoksa müşteri telefonu, yoksa müşteri kaydındaki mobile/phone.
-- **Devre dışı:** `ir.config_parameter` anahtarı `teslimat_planlama.sms_disabled` = `True` (veya 1/yes) ise gönderim atlanır, `True` döner.
+- **Devre dışı:** `ir.config_parameter` anahtarı `teslimat_planlama.sms_disabled` = `True` (veya `1` / `yes`) ise gönderim atlanır; chatter’da **SMS Devre Dışı** notu görünür.
+- **Teknik not:** Parametre okuması ormcache yerine doğrudan SQL ile yapılır (çoklu worker’da gecikme olmaması için).

@@ -364,9 +364,21 @@ class TeslimatBelgesiActions(models.AbstractModel):
         if not self.musteri_id:
             _logger.warning("SMS atlanıyor: müşteri yok (teslimat %s)", self.name)
             return False
+
+        if sms_helper.is_sms_disabled(self.env):
+            self.message_post(
+                body=_(
+                    "SMS gönderilmedi: %(key)s parametresi etkin "
+                    "(değer: True / 1 / yes)."
+                ) % {"key": sms_helper.PARAM_SMS_DISABLED},
+                subject=_("SMS Devre Dışı"),
+                message_type="notification",
+            )
+            return False
+
         # Odoo sms modülü ile gönder (Arıza Onarım ile aynı sistem)
         sms_sent = sms_helper.SMSHelper.send_sms(
-            self.sudo().env,
+            self.env,
             self.musteri_id,
             mesaj,
             record_name=self.name,

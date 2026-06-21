@@ -9,6 +9,34 @@ import logging
 
 _logger = logging.getLogger(__name__)
 
+PARAM_SMS_DISABLED = "teslimat_planlama.sms_disabled"
+_TRUTHY_VALUES = frozenset({"true", "1", "yes"})
+
+
+def _parse_config_flag(value):
+    """Sistem parametresi değerini boolean bayrağa çevir."""
+    if value is None or value is False:
+        return False
+    if isinstance(value, bool):
+        return value
+    return str(value).strip().lower() in _TRUTHY_VALUES
+
+
+def is_sms_disabled(env):
+    """SMS geçici kapalı mı?
+
+    ir.config_parameter.get_param ormcache kullanır; çoklu worker ortamında
+    eski değer kalabiliyor. Bu yüzden doğrudan SQL ile okunur.
+    """
+    env.cr.execute(
+        "SELECT value FROM ir_config_parameter WHERE key = %s",
+        [PARAM_SMS_DISABLED],
+    )
+    row = env.cr.fetchone()
+    if not row:
+        return False
+    return _parse_config_flag(row[0])
+
 
 class SMSHelper:
     """SMS işlemleri için helper metodlar."""
@@ -36,18 +64,15 @@ class SMSHelper:
             phone_override: Opsiyonel; verilirse bu numara kullanılır (örn. manuel_telefon)
 
         Returns:
-            bool: Başarılı ise True, değilse False
+            bool: Gönderildiyse True; devre dışı / hata / telefon yoksa False
         """
-        # Geçici devre dışı: Sistem parametresi teslimat_planlama.sms_disabled = True ise SMS gönderilmez
-        if env.get("ir.config_parameter"):
-            raw = env["ir.config_parameter"].sudo().get_param("teslimat_planlama.sms_disabled")
-            # .strip() KRİTİK: değerde boşluk/satırsonu olsa bile ("True " gibi)
-            # SMS doğru şekilde devre dışı kalsın. Ham değer log'a yazılır (teşhis).
-            if (raw or "").strip().lower() in ("true", "1", "yes"):
-                _logger.info(
-                    "SMS devre dışı (sms_disabled=%r) - Kayıt: %s", raw, record_name
-                )
-                return True
+        if is_sms_disabled(env):
+            _logger.info(
+                "SMS devre dışı (%s=True) - Kayıt: %s",
+                PARAM_SMS_DISABLED,
+                record_name,
+            )
+            return False
 
         phone_number = phone_override
         if not phone_number and partner:
