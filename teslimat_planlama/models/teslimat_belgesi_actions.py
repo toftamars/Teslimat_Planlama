@@ -263,13 +263,15 @@ class TeslimatBelgesiActions(models.AbstractModel):
 
         total_count = 0
         total_minutes = 0
+        total_skipped = 0
         lines = []
 
         for entry in group_list:
             group = entry["records"]
-            count, minutes = sort_vehicle_day_deliveries(group)
+            count, minutes, skipped = sort_vehicle_day_deliveries(group)
             total_count += count
             total_minutes += minutes
+            total_skipped += skipped
             tarih_str = fields.Date.to_string(entry["teslimat_tarihi"])
             line = _("%(arac)s / %(tarih)s: %(count)s teslimat") % {
                 "arac": entry["arac_name"],
@@ -278,6 +280,8 @@ class TeslimatBelgesiActions(models.AbstractModel):
             }
             if minutes:
                 line += _(" (~%(min)s dk)") % {"min": minutes}
+            if skipped:
+                line += _(" — %(skip)s atlandı (adres çözülemedi)") % {"skip": skipped}
             lines.append(line)
 
         message = "\n".join(lines) if lines else _(
@@ -294,8 +298,8 @@ class TeslimatBelgesiActions(models.AbstractModel):
             "params": {
                 "title": _("Rota sıralandı"),
                 "message": message,
-                "type": "success",
-                "sticky": False,
+                "type": "warning" if total_skipped else "success",
+                "sticky": bool(total_skipped),
                 "next": {"type": "ir.actions.client", "tag": "reload"},
             },
         }

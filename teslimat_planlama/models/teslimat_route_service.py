@@ -269,41 +269,88 @@ def get_rota_optimizasyon_groups(env, selected_records=None):
     return result
 
 
-def _sort_single_vehicle_day(records) -> Tuple[int, int]:
-    """Tek araç + tek gün teslimatlarını trafik süresine göre sırala."""
+def _sort_single_vehicle_day(records) -> Tuple[int, int, int]:
+    """Tek araç + tek gün teslimatlarını trafik süresine göre sırala.
+
+    KISMİ BAŞARI: müşteri/adres olmayan veya Google'ın çözemediği (ulaşılamaz)
+    teslimatlar ATLANIR (sira_no'da sona alınır), kalanlar sıralanır — tek kötü
+    kayıt tüm grubu durdurmasın.
+
+    Returns:
+        (sıralanan_sayısı, ~dakika, atlanan_sayısı)
+    """
     records = records.exists()
     if not records:
-        return 0, 0
+        return 0, 0, 0
 
     config = get_maps_route_config(records.env)
     active = records.filtered(
         lambda r: r.durum in ROTA_SIRALANABILIR_DURUMLAR
     ).sorted(key=lambda r: (r.sira_no, r.id))
     if not active:
-        return 0, 0
+        return 0, 0, 0
 
-    if len(active) == 1:
-        active.write({"sira_no": 1})
-        return 1, 0
+    def _finish(sorted_recs, skipped_recs):
+        """Sıralananlar 1..k, atlananlar sona (k+1..)."""
+        for sira, rec in enumerate(sorted_recs, start=1):
+            rec.write({"sira_no": sira})
+        for sira, rec in enumerate(skipped_recs, start=len(sorted_recs) + 1):
+            rec.write({"sira_no": sira})
 
-    adres_map = {}
+    # 1) Pre-filter: müşteri + harita adresi olanlar routable; olmayanlar atlanır.
+    routable = []  # [(rec, adres), ...]
+    skipped = []   # sıralanamayan kayıtlar
     for rec in active:
-        if not rec.musteri_id:
-            raise UserError(
-                _("%(name)s kaydında müşteri tanımlı değil.")
-                % {"name": rec.name}
-            )
-        adres = prepare_maps_destination(rec.musteri_id)
-        if not adres:
-            raise UserError(
-                _("%(name)s için harita adresi üretilemedi.")
-                % {"name": rec.name}
-            )
-        adres_map[rec.id] = adres
+        adres = prepare_maps_destination(rec.musteri_id) if rec.musteri_id else ""
+        if adres:
+            routable.append((rec, adres))
+        else:
+            skipped.append(rec)
 
-    addresses = [config["depot"]] + [adres_map[r.id] for r in active]
+    if not routable:
+        _finish([], skipped)
+        return 0, 0, len(skipped)
+    if len(routable) == 1:
+        _finish([routable[0][0]], skipped)
+        return 1, 0, len(skipped)
+
+    # 2) Matris SADECE routable için kurulur (tek indeks uzayı: matrix[i] ↔ routable[i-1]).
+    addresses = [config["depot"]] + [adres for _r, adres in routable]
     matrix = _fetch_travel_matrix(config["api_key"], addresses)
-    order_indices = _solve_open_tsp(matrix, len(active))
+
+    # 3) Google'ın çözemediği (tüm-None: gelinemez VE/VEYA gidilemez) durakları çıkar;
+    #    matrisi YENİDEN kur (dilimleme yok → indeks kayması yok).
+    bad = [
+        i
+        for i in range(1, len(routable) + 1)
+        if not (
+            any(matrix[j][i] is not None for j in range(len(routable) + 1) if j != i)
+            and any(matrix[i][j] is not None for j in range(len(routable) + 1) if j != i)
+        )
+    ]
+    if bad:
+        bad_set = set(bad)
+        skipped += [routable[i - 1][0] for i in bad]
+        routable = [p for idx, p in enumerate(routable, start=1) if idx not in bad_set]
+        if not routable:
+            _finish([], skipped)
+            return 0, 0, len(skipped)
+        if len(routable) == 1:
+            _finish([routable[0][0]], skipped)
+            return 1, 0, len(skipped)
+        addresses = [config["depot"]] + [adres for _r, adres in routable]
+        matrix = _fetch_travel_matrix(config["api_key"], addresses)
+
+    try:
+        order_indices = _solve_open_tsp(matrix, len(routable))
+    except UserError:
+        # Beklenmedik: routable temizlendikten sonra hâlâ tam tur yok → hepsini atla.
+        _logger.warning(
+            "Rota: routable küme çözülemedi (%s teslimat atlandı)", len(routable)
+        )
+        skipped += [p[0] for p in routable]
+        _finish([], skipped)
+        return 0, 0, len(skipped)
 
     total_seconds = matrix[0][order_indices[0]] or 0
     for idx in range(len(order_indices) - 1):
@@ -311,19 +358,20 @@ def _sort_single_vehicle_day(records) -> Tuple[int, int]:
         if leg:
             total_seconds += leg
 
-    ordered_recs = [active[i - 1] for i in order_indices]
-    for sira, rec in enumerate(ordered_recs, start=1):
-        rec.write({"sira_no": sira})
-
-    return len(ordered_recs), int(total_seconds / 60)
+    ordered_recs = [routable[i - 1][0] for i in order_indices]
+    _finish(ordered_recs, skipped)
+    return len(ordered_recs), int(total_seconds / 60), len(skipped)
 
 
-def sort_vehicle_day_deliveries(records) -> Tuple[int, int]:
-    """Tek araç + tek gün teslimatlarını trafik süresine göre sırala."""
+def sort_vehicle_day_deliveries(records) -> Tuple[int, int, int]:
+    """Tek araç + tek gün teslimatlarını trafik süresine göre sırala.
+
+    Returns: (sıralanan, ~dakika, atlanan)
+    """
     return _sort_single_vehicle_day(records)
 
 
-def sort_deliveries_by_traffic(records) -> Tuple[int, int]:
+def sort_deliveries_by_traffic(records) -> Tuple[int, int, int]:
     """Teslimatları araç+gün grupları halinde trafik sırasına göre sırala."""
     env = records.env
     config = get_maps_route_config(env)
@@ -342,11 +390,13 @@ def sort_deliveries_by_traffic(records) -> Tuple[int, int]:
     )
     total_count = 0
     total_minutes = 0
+    total_skipped = 0
     for entry in groups:
-        count, minutes = _sort_single_vehicle_day(entry["records"])
+        count, minutes, skipped = _sort_single_vehicle_day(entry["records"])
         total_count += count
         total_minutes += minutes
-    return total_count, total_minutes
+        total_skipped += skipped
+    return total_count, total_minutes, total_skipped
 
 
 def cron_sort_today_deliveries(env) -> None:
@@ -356,11 +406,14 @@ def cron_sort_today_deliveries(env) -> None:
         return
 
     try:
-        count, minutes = sort_deliveries_by_traffic(env["teslimat.belgesi"].browse())
+        count, minutes, skipped = sort_deliveries_by_traffic(
+            env["teslimat.belgesi"].browse()
+        )
         _logger.info(
-            "Trafik rota cron: %s teslimat sıralandı, ~%s dk",
+            "Trafik rota cron: %s teslimat sıralandı, ~%s dk, %s atlandı",
             count,
             minutes,
+            skipped,
         )
     except UserError as exc:
         _logger.warning(
