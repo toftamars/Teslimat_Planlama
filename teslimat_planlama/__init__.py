@@ -36,5 +36,7 @@ def post_init_hook(cr, registry):
 
         env["teslimat.belgesi"].init_maps_config_parameters()
 
-    except Exception as e:
-        _logger.warning("Post-init hook hatası (ignored): %s", e)
+    except Exception:
+        # Kurulum devam eder (ilçe + maps'in XML <function> fallback'i ayrıca yükler);
+        # ama hatayı yutmak yerine ERROR + tam traceback logla ki teşhis edilebilsin.
+        _logger.exception("Post-init hook hatası (kurulum devam ediyor)")
