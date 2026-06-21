@@ -143,7 +143,14 @@ class TeslimatBelgesi(models.Model):
     )
 
     # Sıra
-    sira_no = fields.Integer(string="Sıra No", default=1)
+    sira_no = fields.Integer(string="Sıra No", default=1, group_operator=False)
+    teslimat_adet = fields.Integer(
+        string="Adet",
+        default=1,
+        readonly=True,
+        group_operator="sum",
+        help="Liste gruplamasında günlük teslimat sayısını gösterir (her kayıt = 1).",
+    )
 
     # Teslim Bilgileri
     teslim_alan_kisi = fields.Char(

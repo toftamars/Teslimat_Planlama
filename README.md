@@ -202,7 +202,7 @@ Harita için: formda **🗺️ Yol Tarifi** (tek teslimat, sürücü).
 
 ### Sürücü akışı
 
-- **Teslimat** menüsü varsayılan olarak **Teslimat Belgeleri** listesini açar; **Bugün** filtresi otomatik uygulanır (`search_default_bugun`).
+- **Teslimat** menüsü varsayılan olarak **Teslimat Belgeleri** listesini açar; **Gün** gruplaması otomatik uygulanır (`search_default_group_tarih`).
 - Sürücü formda: **🚗 Yolda** → **🗺️ Yol Tarifi** → **✅ Teslimatı Tamamla**.
 - **`sira_no`:** Trafik sıralaması veya oluşturma sırası; listede kolon olarak görünür, varsayılan sıralama `sira_no`.
 

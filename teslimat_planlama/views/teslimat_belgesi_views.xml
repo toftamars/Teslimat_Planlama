@@ -43,7 +43,8 @@
         <field name="name">teslimat.belgesi.tree</field>
         <field name="model">teslimat.belgesi</field>
         <field name="arch" type="xml">
-            <tree string="Teslimat Belgeleri" create="false" delete="0" default_order="sira_no asc" decoration-info="durum == 'hazir'" decoration-success="durum == 'teslim_edildi'" decoration-danger="durum == 'iptal'">
+            <tree string="Teslimat Belgeleri" create="false" delete="0" default_order="teslimat_tarihi asc, sira_no asc" decoration-info="durum == 'hazir'" decoration-success="durum == 'teslim_edildi'" decoration-danger="durum == 'iptal'">
+                <field name="teslimat_adet" sum="Toplam"/>
                 <field name="sira_no"/>
                 <field name="name"/>
                 <field name="teslimat_tarihi"/>
@@ -212,7 +213,7 @@
                 <filter string="Yolda" name="yolda" domain="[('durum','=','yolda')]"/>
                 <filter string="Teslim Edildi" name="teslim_edildi" domain="[('durum','=','teslim_edildi')]"/>
                 <group expand="0" string="Grupla">
-                    <filter string="Tarih" name="group_tarih" context="{'group_by': 'teslimat_tarihi'}"/>
+                    <filter string="Gün" name="group_tarih" context="{'group_by': 'teslimat_tarihi:day'}"/>
                     <filter string="Araç" name="group_arac" context="{'group_by': 'arac_id'}"/>
                     <filter string="İlçe" name="group_ilce" context="{'group_by': 'ilce_id'}"/>
                     <filter string="Durum" name="group_durum" context="{'group_by': 'durum'}"/>
@@ -226,7 +227,7 @@
         <field name="name">Teslimat Belgeleri</field>
         <field name="res_model">teslimat.belgesi</field>
         <field name="view_mode">tree,form,kanban</field>
-        <field name="context">{'create': False, 'search_default_bugun': 1}</field>
+        <field name="context">{'create': False, 'search_default_group_tarih': 1}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 Henüz teslimat belgesi oluşturulmamış

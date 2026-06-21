@@ -125,7 +125,7 @@ class TeslimatTamamlamaWizard(models.TransientModel):
                 'res_model': 'teslimat.belgesi',
                 'view_mode': 'tree,form,kanban',
                 'target': 'current',
-                'context': {'create': False, 'search_default_bugun': 1},
+                'context': {'create': False, 'search_default_group_tarih': 1},
             }
         return {
             'type': 'ir.actions.act_window',
