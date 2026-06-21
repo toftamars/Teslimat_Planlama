@@ -1,4 +1,5 @@
 """Teslimat Yardımcı Fonksiyonlar."""
+import logging
 import re
 from datetime import date, datetime
 from typing import List, Optional, Tuple
@@ -14,6 +15,8 @@ from .teslimat_constants import (
     SMALL_VEHICLE_TYPES,
     get_arac_kapatma_sebep_label,
 )
+
+_logger = logging.getLogger(__name__)
 
 
 def normalize_turkce(adi: str) -> str:
@@ -208,7 +211,13 @@ def format_address_for_google_maps(partner) -> str:
             return f"{sokak} No:{door_no}"
         return sokak
 
-    # Resmi format parse edilemezse sadeleştirilmiş yedek
+    # Resmi format parse edilemedi → sadeleştirilmiş yedek (Google geocode eder).
+    # Görünürlük: hangi adreslerin resmi formata uymadığını DEBUG'ta izle.
+    _logger.debug(
+        "Adres regex-parse edilemedi, fallback kullanıldı (partner=%s, street=%r)",
+        partner.id,
+        street,
+    )
     return prepare_maps_destination_fallback(partner)
 
 
