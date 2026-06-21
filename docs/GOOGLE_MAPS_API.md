@@ -27,7 +27,7 @@ Resmi fiyat listesi: [Google Maps Platform Pricing](https://developers.google.co
 | Anahtar | Açıklama |
 |---------|----------|
 | `teslimat_planlama.google_maps_api_key` | Google API anahtarı |
-| `teslimat_planlama.rota_baslangic_adres` | Depo/çıkış adresi (varsayılan: İstanbul, Türkiye) |
+| `teslimat_planlama.rota_baslangic_adres` | Depo/çıkış adresi (varsayılan: İstanbul, Türkiye — Ayarlar'dan kendi deponuzu girin) |
 
 Modül kurulumunda boş anahtar kaydı oluşturulur (`maps_parameter_data.xml`). Anahtar girilene kadar trafik cron’u sessizce atlanır.
 

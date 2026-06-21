@@ -19,9 +19,8 @@ GOOGLE_ROUTE_MATRIX_URL = (
 )
 PARAM_API_KEY = "teslimat_planlama.google_maps_api_key"
 PARAM_DEPOT = "teslimat_planlama.rota_baslangic_adres"
-DEFAULT_DEPOT_ADDRESS = (
-    "İstanbul, Türkiye"
-)
+# Generic placeholder — gerçek depo adresi Ayarlar'dan (PARAM_DEPOT) girilir.
+DEFAULT_DEPOT_ADDRESS = "İstanbul, Türkiye"
 ROTA_SIRALANABILIR_DURUMLAR = ("hazir", "yolda")
 
 
