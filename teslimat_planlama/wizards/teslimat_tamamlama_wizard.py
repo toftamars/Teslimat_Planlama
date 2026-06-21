@@ -67,12 +67,10 @@ class TeslimatTamamlamaWizard(models.TransientModel):
             'teslim_alan_kisi': self.teslim_alan_kisi,
         }
         
-        # Fotoğraf varsa belgede göster
+        # Fotoğraf varsa belgede göster (opsiyonel)
         if self.teslimat_fotografi:
             vals['teslimat_fotografi'] = self.teslimat_fotografi
             vals['fotograf_dosya_adi'] = self.fotograf_dosya_adi or 'teslimat_fotografi.jpg'
-        else:
-            _logger.warning("Fotoğraf yok - teslimat_fotografi boş")
         
         # Not ekle
         if self.tamamlama_notu:
@@ -86,11 +84,13 @@ class TeslimatTamamlamaWizard(models.TransientModel):
         # Müşteriye 2. SMS: Teslimat tamamlandı
         teslimat.send_sms_tamamlandi()
 
-        # Fotoğrafın kaydedildiğini doğrula
-        teslimat.invalidate_cache(['teslimat_fotografi'])
-        if not teslimat.teslimat_fotografi:
-            _logger.error("Fotoğraf kaydedilemedi - teslimat_fotografi hala boş!")
-        
+        # Fotoğraf yüklendiyse kaydın başarılı olduğunu doğrula
+        if self.teslimat_fotografi and not teslimat.teslimat_fotografi:
+            _logger.error(
+                "Fotoğraf kaydedilemedi — teslimat: %s",
+                teslimat.name,
+            )
+
         # Fotoğraf varsa chatter'a da ekle
         if self.teslimat_fotografi:
             attachment = self.env['ir.attachment'].create({
