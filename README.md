@@ -236,7 +236,10 @@ Detaylı adımlar: [`docs/SMS_ADIMLARI.md`](docs/SMS_ADIMLARI.md).
 
 ## Bilinen Sınırlamalar
 
-- **Dil:** Arayüz Türkçe. String'ler `_()` ile işaretli olsa da henüz çeviri katalogu (`i18n/*.pot`) üretilmemiştir → fiilen tek dil (TR).
+- **Dil:** Arayüz Türkçe; tüm Python string'leri `_()` ile çevrilebilir, görünüm (XML) metinleri Odoo tarafından otomatik dışa aktarılır. Çeviri katalogu (`i18n/*.pot`) üretilmemiştir → fiilen tek dil (TR). Başka dil gerekirse katalog tek komutla çıkarılır:
+  - **Arayüz:** Geliştirici modu açıkken **Ayarlar → Çeviriler → Çeviriyi Dışa Aktar** → biçim `PO`, modül `teslimat_planlama`.
+  - **CLI:** `odoo -d <db> --modules=teslimat_planlama --i18n-export=teslimat_planlama.pot --stop-after-init`
+  - Çıkan dosya `i18n/<dil>.po` (örn. `en.po`) olarak çevrilip modüle eklenir; yeniden kurulumda yüklenir.
 - **Otomatik test yok:** Doğrulama elle (staging) yapılır — proje sahibinin bilinçli tercihi.
 - **`uygun_ilceler` senkronizasyonu manueldir:** Yeni ilçe eklenince veya yaka değişince araçların uygun-ilçe listesi otomatik (cron'la) tazelenmez; yönetici "Senkronizasyon" düğmesiyle veya araç kaydını güncelleyerek tazeler.
 - **Satır düzeyi izolasyon yok** (yukarıda belirtildiği gibi, kabul edilmiş karar).
