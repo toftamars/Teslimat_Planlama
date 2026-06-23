@@ -488,6 +488,11 @@ class TeslimatBelgesi(models.Model):
         """
         if "durum" not in vals or vals["durum"] != CANCELLED_STATUS:
             return
+        # Transfer iptalinden gelen otomatik cascade: yetki kontrolü atlanır.
+        # Kullanıcı zaten transferi/siparişi iptal etme yetkisine sahiptir;
+        # teslimat belgesinin otomatik iptali bunun bir sonucudur.
+        if self.env.context.get("from_picking_cancel"):
+            return
         user = self.env.user
         for record in self:
             if is_manager(record.env) or (
